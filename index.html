@@ -128,7 +128,7 @@
           </nav>
         </div>
         <div class="topbar-right">
-          <span class="academic-year">Academic year <strong id="academic-year-label">2025–26</strong></span>
+          <span class="academic-year">School year <strong id="academic-year-label">2026 - 2027</strong></span>
           <button type="button" class="icon-btn theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" aria-pressed="false">
             <svg class="icon" aria-hidden="true"><use href="#i-moon"></use></svg>
             <span class="sr-only">Light mode</span>
@@ -192,56 +192,139 @@
                 </div>
                 <div class="field-grid">
                   <div class="form-group">
-                    <label for="class-selector">Class</label>
+                    <label for="strand-selector">Strand</label>
                     <div class="select-wrap">
-                      <select id="class-selector">
-                        <option value="Grade 5 · Section A" selected>Grade 5 · Section A</option>
-                        <option value="Grade 5 · Section B">Grade 5 · Section B</option>
-                        <option value="Grade 6 · Section A">Grade 6 · Section A</option>
-                        <option value="Grade 6 · Section B">Grade 6 · Section B</option>
+                      <select id="strand-selector">
+                        <option value="ABM" selected>ABM</option>
+                        <option value="GAS">GAS</option>
+                        <option value="GASCRIM">GASCRIM</option>
+                        <option value="HUMSS">HUMSS</option>
+                        <option value="STEM">STEM</option>
+                        <option value="HEALTH">HEALTH</option>
                       </select>
                       <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
                     </div>
                   </div>
                   <div class="form-group">
-                    <label for="term-selector">Term</label>
+                    <label for="grade-level-selector">Grade level</label>
                     <div class="select-wrap">
-                      <select id="term-selector">
-                        <option value="Term 1">Term 1</option>
-                        <option value="Term 2" selected>Term 2</option>
-                        <option value="Term 3">Term 3</option>
+                      <select id="grade-level-selector">
+                        <option value="11">11</option>
+                        <option value="12" selected>12</option>
                       </select>
                       <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
                     </div>
                   </div>
                   <div class="form-group">
-                    <label for="academic-year-selector">Academic year</label>
+                    <label for="school-year-selector">School year</label>
                     <div class="select-wrap">
-                      <select id="academic-year-selector">
-                        <option value="2024-25">2024–25</option>
-                        <option value="2025-26" selected>2025–26</option>
-                        <option value="2026-27">2026–27</option>
+                      <select id="school-year-selector">
+                        <option value="2026-2027" selected>2026 - 2027</option>
+                        <option value="2027-2028">2027 - 2028</option>
+                        <option value="2028-2029">2028 - 2029</option>
                       </select>
                       <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
                     </div>
                   </div>
                   <div class="form-group">
-                    <label for="grading-scale">Grading scale</label>
+                    <label for="status-selector">Status</label>
                     <div class="select-wrap">
-                      <select id="grading-scale">
-                        <option value="percentage" selected>Percentage · 0–100</option>
-                        <option value="deped">DepEd · 60–100</option>
+                      <select id="status-selector">
+                        <option value="Regular" selected>Regular</option>
+                        <option value="Repeater">Repeater</option>
                       </select>
                       <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
                     </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="graduation-status-selector">Graduation status</label>
+                    <div class="select-wrap">
+                      <select id="graduation-status-selector">
+                        <option value="Recommended" selected>Recommended</option>
+                        <option value="Not recommended">Not recommended</option>
+                      </select>
+                      <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="section-selector">Section</label>
+                    <div class="select-wrap">
+                      <select id="section-selector">
+                        <option value="UI-FA-ABM12-1" selected>UI-FA-ABM12-1</option>
+                        <option value="UI-FA-ABM12-2">UI-FA-ABM12-2</option>
+                        <option value="UI-FA-GAS12-1">UI-FA-GAS12-1</option>
+                        <option value="UI-FA-GAS12-2">UI-FA-GAS12-2</option>
+                        <option value="UI-FA-GASCRIM12-1">UI-FA-GASCRIM12-1</option>
+                        <option value="UI-FA-GASCRIM12-2">UI-FA-GASCRIM12-2</option>
+                        <option value="UI-FA-HEALTH12-1">UI-FA-HEALTH12-1</option>
+                        <option value="UI-FA-HEALTH12-2">UI-FA-HEALTH12-2</option>
+                        <option value="UI-FA-HUMSS12-1">UI-FA-HUMSS12-1</option>
+                        <option value="UI-FA-HUMSS12-2">UI-FA-HUMSS12-2</option>
+                        <option value="UI-FA-HUMSS12-3">UI-FA-HUMSS12-3</option>
+                        <option value="UI-FA-HUMSS12-4">UI-FA-HUMSS12-4</option>
+                        <option value="UI-FA-HUMSS12-5">UI-FA-HUMSS12-5</option>
+                        <option value="UI-FA-STEM12-1">UI-FA-STEM12-1</option>
+                        <option value="UI-FA-STEM12-2">UI-FA-STEM12-2</option>
+                        <option value="UI-FA-STEM12-3">UI-FA-STEM12-3</option>
+                        <option value="UI-FA-STEM12-4">UI-FA-STEM12-4</option>
+                      </select>
+                      <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="adviser-name">Adviser</label>
+                    <input class="form-text-input" id="adviser-name" type="text" autocomplete="name">
+                  </div>
+                  <div class="form-group">
+                    <label for="principal-name">Principal</label>
+                    <input class="form-text-input" id="principal-name" type="text" autocomplete="name">
                   </div>
                 </div>
+                <section class="sf10-upload" aria-labelledby="sf10-title">
+                  <div class="sf10-heading">
+                    <div>
+                      <h3 id="sf10-title">SF10 documents</h3>
+                      <p>Attach one class document or upload learner SF10s and assign each to a student.</p>
+                    </div>
+                    <span class="pill pill-blue">Optional</span>
+                  </div>
+                  <div class="sf10-options">
+                    <div class="sf10-option">
+                      <div>
+                        <strong>Class SF10</strong>
+                        <span>One document for this class</span>
+                      </div>
+                      <button type="button" class="btn btn-secondary btn-sm" id="browse-class-sf10">
+                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose file
+                      </button>
+                      <input type="file" class="input-file" id="class-sf10-upload">
+                      <div class="sf10-file-list" id="class-sf10-file-list" aria-live="polite"></div>
+                    </div>
+                    <div class="sf10-option">
+                      <div>
+                        <strong>Student SF10s</strong>
+                        <span>Upload multiple documents, then match each to a student</span>
+                      </div>
+                      <button type="button" class="btn btn-secondary btn-sm" id="browse-student-sf10">
+                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose files
+                      </button>
+                      <input type="file" class="input-file" id="student-sf10-upload" multiple>
+                      <div class="sf10-file-list" id="student-sf10-file-list" aria-live="polite"></div>
+                    </div>
+                  </div>
+                  <div class="sf10-analysis">
+                    <button type="button" class="btn btn-primary btn-sm" id="analyze-sf10-btn" disabled>Run demo analysis</button>
+                    <span class="sf10-demo-label">Simulated demo · no OCR or AI service is connected</span>
+                    <div class="sf10-analysis-result" id="sf10-analysis-result" role="status" hidden></div>
+                  </div>
+                  <p class="sf10-help">Any file type is accepted. This demo does not read SF10 contents; it summarizes class details and grade data entered in the app. Files stay in this browser session.</p>
+                </section>
               </article>
 
               <article class="card">
                 <div class="card-heading">
                   <h2>Add student grade files</h2>
-                  <p>Use one file per student. Each file should include the student's name and subject grades, plus an ID if available.</p>
+                  <p>Use one file per student. Download the template for quarterly grades, age, sex, LRN, monthly attendance, transfer details, and observed values.</p>
                 </div>
 
                 <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-describedby="file-help">
@@ -340,7 +423,7 @@
 
               <div class="simulation-note">
                 <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>
-                <span><strong>Demo simulation.</strong> Grades are processed locally in your browser. No external AI service is connected and no missing grade is invented.</span>
+                <span><strong>Demo simulation.</strong> SF10 files are not read by OCR or an AI service. Class details and grade sheets are handled locally in your browser, and no missing grade is invented.</span>
               </div>
 
               <div class="processing-actions">
@@ -381,11 +464,11 @@
             </article>
           </div>
 
-          <article class="card table-card">
+          <article class="card table-card verification-roster-card">
             <div class="table-card-head">
               <div>
                 <h2 id="verification-class-title">Grade 5 · Section A</h2>
-                <p><span id="verification-term">Term 2 · 2025–26</span> · <span id="verification-scale">All grades out of 100</span></p>
+                <p><span id="verification-term">Annual report · School year</span> · <span id="verification-scale">All grades out of 100</span></p>
               </div>
               <div class="table-tools">
                 <div class="search-field">
@@ -411,20 +494,17 @@
                   <tr>
                     <th scope="col">Roll</th>
                     <th scope="col">Student name</th>
-                    <th scope="col">English</th>
-                    <th scope="col">Math</th>
-                    <th scope="col">Science</th>
-                    <th scope="col">Social Sci.</th>
-                    <th scope="col">Art</th>
-                    <th scope="col">PE</th>
+                    <th scope="col">Age / sex</th>
+                    <th scope="col">LRN</th>
+                    <th scope="col">General average</th>
+                    <th scope="col">Grade entries</th>
                     <th scope="col">Review status</th>
-                    <th scope="col"><span class="sr-only">Edit student</span></th>
+                    <th scope="col">Review</th>
                   </tr>
                 </thead>
                 <tbody id="grades-table-body"></tbody>
               </table>
             </div>
-            <div class="form-error" id="grade-error" role="alert" hidden></div>
             <div class="table-footer">
               <span id="verification-showing">Showing 1–6 of 24 students</span>
               <div class="pager">
@@ -433,6 +513,11 @@
                 <button type="button" class="icon-btn" id="verification-next" aria-label="Next page"><svg class="icon" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
               </div>
             </div>
+          </article>
+
+          <article class="card grade-editor-card">
+            <div class="form-error" id="grade-error" role="alert" hidden></div>
+            <section id="grade-editor" class="grade-editor" aria-live="polite"></section>
           </article>
 
           <div class="page-actions">
@@ -449,7 +534,7 @@
           <div class="page-heading">
             <div>
               <h1 id="report-preview-title">Looking good, ready to share.</h1>
-              <p>Check both sides of your report card before creating the final PDF.</p>
+              <p>Review the report card before creating the final PDF.</p>
             </div>
             <span class="pill pill-green" id="preview-approved-pill"><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg> <span id="preview-approved-text">23 of 24 approved</span></span>
           </div>
@@ -476,17 +561,13 @@
               <span id="student-info">1 of 24</span>
               <button type="button" class="icon-btn" id="next-student" aria-label="Next student"><svg class="icon" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
             </div>
-            <span class="picker-meta"><svg class="icon" aria-hidden="true"><use href="#i-file-text"></use></svg> A4 portrait · 2 pages per student</span>
+            <span class="picker-meta"><svg class="icon" aria-hidden="true"><use href="#i-file-text"></use></svg> A4 landscape · 1 page per student</span>
           </div>
 
           <div class="preview-canvas">
             <div class="preview-column">
-              <div class="preview-label"><strong>Front</strong><span>Academic progress</span><span>Page 1</span></div>
-              <article class="report-sheet report-front" id="report-card-front" aria-label="Front of report card"></article>
-            </div>
-            <div class="preview-column">
-              <div class="preview-label"><strong>Back</strong><span>Teacher reflections</span><span>Page 2</span></div>
-              <article class="report-sheet report-back" id="report-card-back" aria-label="Back of report card"></article>
+              <div class="preview-label"><strong>Report card</strong><span>Learning progress and achievement</span><span>1 page</span></div>
+              <article class="report-sheet report-front" id="report-card-front" aria-label="Report card"></article>
             </div>
           </div>
           <p class="preview-hint"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg> This preview is live. Changes you make during verification appear here immediately.</p>
@@ -494,7 +575,7 @@
           <div class="page-actions">
             <a class="btn btn-secondary" href="#verification"><svg class="icon" aria-hidden="true"><use href="#i-arrow-left"></use></svg> Back to verification</a>
             <div class="action-end">
-              <span class="action-note" id="preview-readiness">24 students · 48 pages</span>
+              <span class="action-note" id="preview-readiness">24 students · 24 pages</span>
               <button type="button" class="btn btn-primary" id="generate-reports-btn">Generate 24 reports <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"></use></svg></button>
             </div>
           </div>
@@ -598,8 +679,8 @@
                   <label for="print-orientation">Orientation</label>
                   <div class="select-wrap">
                     <select id="print-orientation">
-                      <option value="portrait" selected>Portrait</option>
-                      <option value="landscape">Landscape</option>
+                      <option value="portrait">Portrait</option>
+                      <option value="landscape" selected>Landscape</option>
                     </select>
                     <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
                   </div>
@@ -608,8 +689,8 @@
                   <label for="print-layout">Sheet estimate</label>
                   <div class="select-wrap">
                     <select id="print-layout">
-                      <option value="double" selected>Duplex · One sheet per report</option>
-                      <option value="single">Single-sided · Two sheets per report</option>
+                      <option value="double" selected>Single-sided · One sheet per report</option>
+                      <option value="single">Duplex · Two reports per sheet</option>
                     </select>
                     <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
                   </div>
@@ -626,7 +707,7 @@
 
                 <div class="print-summary">
                   <div><span>Report cards</span><strong id="print-summary-cards">24</strong></div>
-                  <div><span>PDF pages</span><strong id="print-summary-pages">48</strong></div>
+                  <div><span>PDF pages</span><strong id="print-summary-pages">24</strong></div>
                   <div><span>Estimated sheets</span><strong id="print-summary-sheets">24</strong></div>
                 </div>
 
@@ -777,7 +858,7 @@
               <li><span>1</span><div><strong>Upload your grade sheet</strong><p>Choose a CSV or Excel file with each student and all six subject columns.</p></div></li>
               <li><span>2</span><div><strong>Process your class</strong><p>The local demo checks the data and prepares draft comments in your browser.</p></div></li>
               <li><span>3</span><div><strong>Verify every grade</strong><p>Review the table and correct missing or invalid grades before continuing.</p></div></li>
-              <li><span>4</span><div><strong>Preview the report cards</strong><p>Check both pages for each student before creating the final report set.</p></div></li>
+              <li><span>4</span><div><strong>Preview the report cards</strong><p>Review each student's report card before creating the final report set.</p></div></li>
               <li><span>5</span><div><strong>Generate and print</strong><p>Download a PDF or print the completed reports. Only report pages are sent to the printer.</p></div></li>
             </ol>
           </article>

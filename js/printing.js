@@ -9,6 +9,7 @@
   const GF = window.GradeFlow;
   const esc = GF.escapeHTML;
   const PAGE_SIZE = 6;
+  let logoDataPromise = null;
 
   const COLORS = {
     navy: [20, 44, 78],
@@ -140,7 +141,7 @@
         '<strong>' + esc(student.name) + '</strong>' +
         '<span>Roll ' + esc(student.roll) + ' · ' + esc(average) + ' average</span>' +
       '</div></td>' +
-      '<td>2 pages</td>' +
+      '<td>1 page</td>' +
       '<td><span class="status-badge status-approved"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> ' +
         (dataset.mode === 'archive' ? 'Archived' : 'Ready') + '</span></td>' +
       '<td class="align-right"><div class="report-actions">' +
@@ -217,16 +218,17 @@
     }
 
     const scope = scopeReports(dataset);
-    const layout = document.getElementById('print-layout');
-    const doubleSided = !layout || layout.value === 'double';
     const cards = document.getElementById('print-summary-cards');
     const pages = document.getElementById('print-summary-pages');
     const sheets = document.getElementById('print-summary-sheets');
     const printButton = document.getElementById('print-all-btn');
 
     if (cards) cards.textContent = String(scope.length);
-    if (pages) pages.textContent = String(scope.length * 2);
-    if (sheets) sheets.textContent = String(doubleSided ? scope.length : scope.length * 2);
+    if (pages) pages.textContent = String(scope.length);
+    const duplex = document.getElementById('print-layout');
+    if (sheets) sheets.textContent = String(duplex && duplex.value === 'single'
+      ? Math.ceil(scope.length / 2)
+      : scope.length);
 
     if (printButton) {
       const usingSelection = selector && selector.value === 'selected';
@@ -277,21 +279,46 @@
     doc.setDrawColor(color[0], color[1], color[2]);
   }
 
-  function drawHeader(doc, context, isBack, width, margin, top) {
-    setFillColor(doc, COLORS.navy);
-    doc.roundedRect(margin, top, 9, 9, 1.6, 1.6, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    setTextColor(doc, COLORS.white);
-    doc.text('M', margin + 4.5, top + 6.1, { align: 'center' });
+  function loadLogoData() {
+    if (!logoDataPromise) {
+      logoDataPromise = new Promise(function (resolve, reject) {
+        const image = new Image();
+        image.onload = function () {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+            const context = canvas.getContext('2d');
+            if (!context) throw new Error('Canvas is unavailable.');
+            context.drawImage(image, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } catch (error) {
+            reject(error);
+          }
+        };
+        image.onerror = function () {
+          reject(new Error('The University of Iloilo logo could not be loaded.'));
+        };
+        image.src = 'assets/ui-logo.png';
+      }).catch(function (error) {
+        logoDataPromise = null;
+        throw error;
+      });
+    }
+    return logoDataPromise;
+  }
+
+  function drawHeader(doc, context, isBack, width, margin, top, logoData) {
+    doc.addImage(logoData, 'PNG', margin, top, 9, 10.24);
 
     doc.setFontSize(10.5);
     setTextColor(doc, COLORS.navy);
     doc.text(pdfSafe(context.schoolName.toUpperCase()), margin + 13, top + 4);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.2);
+    doc.setFontSize(6.4);
     setTextColor(doc, COLORS.light);
-    doc.text(pdfSafe(context.schoolAddress), margin + 13, top + 8);
+    const addressLines = doc.splitTextToSize(pdfSafe(context.schoolAddress), width * 0.43);
+    doc.text(addressLines.slice(0, 2), margin + 13, top + 8);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(6.2);
@@ -302,43 +329,14 @@
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.4);
     setTextColor(doc, COLORS.light);
-    doc.text(pdfSafe(context.termLabel), width - margin, top + (titleLines.length > 1 ? 12 : 8.5), { align: 'right' });
+    doc.text('School Year ' + pdfSafe(GF.prettyYear(context.year)), width - margin, top + (titleLines.length > 1 ? 12 : 8.5), { align: 'right' });
 
     setDrawColor(doc, COLORS.border);
     doc.setLineWidth(0.5);
-    const headerBottom = top + (titleLines.length > 1 ? 16.5 : 12.5);
+    const headerBottom = top + Math.max(addressLines.length > 1 ? 17 : 12.5, titleLines.length > 1 ? 16.5 : 12.5);
     doc.line(margin, headerBottom, width - margin, headerBottom);
 
     return headerBottom;
-  }
-
-  function drawSignatures(doc, context, pageNumber, width, height, margin) {
-    const y = height - 28;
-    const contentWidth = width - margin * 2;
-    const signatureWidth = Math.min(52, contentWidth * 0.29);
-    const rightX = margin + Math.min(70, contentWidth * 0.39);
-
-    setDrawColor(doc, COLORS.border);
-    doc.setLineWidth(0.3);
-    doc.line(margin, y, margin + signatureWidth, y);
-    doc.line(rightX, y, rightX + signatureWidth, y);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.2);
-    setTextColor(doc, COLORS.light);
-    doc.text('CLASS ADVISER', margin, y + 4);
-    doc.text('SCHOOL HEAD', rightX, y + 4);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.2);
-    setTextColor(doc, COLORS.muted);
-    doc.text(pdfSafe(context.teacher), margin, y + 8.5);
-    doc.text(pdfSafe(context.principal), rightX, y + 8.5);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
-    setTextColor(doc, COLORS.light);
-    doc.text('Page ' + pageNumber + ' of 2', width - margin, y + 4, { align: 'right' });
   }
 
   function drawFooter(doc, context, width, height, margin) {
@@ -352,278 +350,398 @@
     doc.text(pdfSafe(context.schoolName + ' · ' + context.termLabel), width - margin, height - 4.5, { align: 'right' });
   }
 
-  function drawFront(doc, student, context) {
+  function drawFront(doc, student, context, logoData) {
     const width = doc.internal.pageSize.getWidth();
     const height = doc.internal.pageSize.getHeight();
-    const margin = width * 0.06;
+    const margin = Math.max(12.7, width * 0.043);
     const contentWidth = width - margin * 2;
-    const top = height * 0.052;
-    drawHeader(doc, context, false, width, margin, top);
+    const top = Math.max(12.7, height * 0.06);
+    const headerBottom = drawHeader(doc, context, false, width, margin, top, logoData);
+    const bodyY = headerBottom + 5;
+    const columnGap = contentWidth * 0.02;
+    const leftWidth = contentWidth * 0.47;
+    const rightWidth = contentWidth - columnGap - leftWidth;
+    const rightX = margin + leftWidth + columnGap;
+    const comment = "This report card shows your child's performance in the different learning areas as well as in character formation. The school welcomes you if you desire to know more about the progress of your child.";
+    const tan = [200, 192, 160];
+    const grid = [92, 88, 72];
 
-    const titleY = top + 24;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    setTextColor(doc, COLORS.navy);
-    doc.text('LEARNER INFORMATION', margin, titleY);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    setTextColor(doc, COLORS.muted);
-    doc.text('Issued ' + pdfSafe(context.issuedDateShort), width - margin, titleY, { align: 'right' });
-
-    const field = function (label, value, x, y, fieldWidth, valueSize) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(5.5);
-      setTextColor(doc, COLORS.light);
-      doc.text(label, x, y);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(valueSize || 8);
-      setTextColor(doc, COLORS.navy);
-      doc.text(pdfSafe(value), x, y + 4.2, { maxWidth: fieldWidth });
-      setDrawColor(doc, COLORS.border);
+    function drawCell(x, y, cellWidth, cellHeight, fill) {
+      setDrawColor(doc, grid);
+      if (fill) setFillColor(doc, tan);
       doc.setLineWidth(0.25);
-      doc.line(x, y + 6.4, x + fieldWidth, y + 6.4);
-    };
-    const fieldY = titleY + 6;
-    field('LEARNER\'S NAME', student.name, margin, fieldY, contentWidth, 9);
-    const fieldWidth = contentWidth / 4;
-    const detailY = fieldY + 9.5;
-    field('GRADE LEVEL', context.gradeLevel, margin, detailY, fieldWidth - 3);
-    field('SECTION', context.section, margin + fieldWidth, detailY, fieldWidth - 3);
-    field('ROLL / ROSTER NO.', student.roll, margin + fieldWidth * 2, detailY, fieldWidth - 3, 7);
-    field('SCHOOL YEAR', GF.prettyYear(context.year), margin + fieldWidth * 3, detailY, fieldWidth - 3);
+      doc.rect(x, y, cellWidth, cellHeight, fill ? 'FD' : 'S');
+    }
 
-    const tableY = detailY + 10;
-    const headerHeight = Math.max(6.5, height * 0.033);
-    const rowHeight = Math.max(6, height * 0.031);
-    const scoreX = margin + contentWidth * 0.73;
-    const letterX = margin + contentWidth * 0.89;
-
-    setFillColor(doc, COLORS.navy);
-    doc.rect(margin, tableY, contentWidth, headerHeight, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.6);
-    setTextColor(doc, COLORS.white);
-    doc.text('LEARNING AREA', margin + 3, tableY + headerHeight * 0.66);
-    doc.text('GRADE RECORDED', scoreX, tableY + headerHeight * 0.66, { align: 'center' });
-    doc.text('LETTER GRADE', letterX, tableY + headerHeight * 0.66, { align: 'center' });
-
-    GF.SUBJECTS.forEach(function (subject, index) {
-      const rowY = tableY + headerHeight + index * rowHeight;
-      if (index % 2 === 1) {
-        setFillColor(doc, COLORS.soft);
-        doc.rect(margin, rowY, contentWidth, rowHeight, 'F');
-      }
-      const value = student.grades[subject.key];
-      const missing = value === null || value === '' || Number.isNaN(Number(value));
+    function drawField(label, value, x, y, fieldWidth, fieldHeight) {
+      drawCell(x, y, fieldWidth, fieldHeight, false);
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.3);
+      doc.setFontSize(4.7);
       setTextColor(doc, COLORS.muted);
-      doc.text(pdfSafe(subject.name), margin + 3, rowY + rowHeight * 0.66);
-      doc.text(missing ? '-' : pdfSafe(String(value)), scoreX, rowY + rowHeight * 0.66, { align: 'center' });
+      doc.text(pdfSafe(label), x + 1.3, y + 2.4);
       doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.1);
       setTextColor(doc, COLORS.navy);
-      doc.text(missing ? '-' : pdfSafe(GF.letterFor(value)), letterX, rowY + rowHeight * 0.66, { align: 'center' });
-      setDrawColor(doc, COLORS.border);
-      doc.setLineWidth(0.2);
-      doc.line(margin, rowY + rowHeight, width - margin, rowY + rowHeight);
-    });
+      doc.text(pdfSafe(value || '-'), x + 1.3, y + fieldHeight - 1.5, { maxWidth: fieldWidth - 2.6 });
+    }
 
-    const tableBottom = tableY + headerHeight + rowHeight * GF.SUBJECTS.length;
-    const averageY = tableBottom + 5;
-    const averageHeight = Math.max(7, height * 0.04);
-    setFillColor(doc, COLORS.ice);
-    doc.roundedRect(margin, averageY, contentWidth, averageHeight, 1.4, 1.4, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.6);
-    setTextColor(doc, COLORS.navy);
-    doc.text('General average for ' + pdfSafe(context.term), margin + 4, averageY + averageHeight * 0.63);
-    const average = GF.averageGrade(student);
-    doc.text((average === null ? '-' : average + '%') + '   ' +
-      (average === null ? '-' : pdfSafe(GF.letterFor(average))), width - margin - 4, averageY + averageHeight * 0.63, { align: 'right' });
-
-    const boxY = averageY + averageHeight + 6;
-    const boxHeight = Math.max(12, height * 0.065);
-    const gap = 6;
-    const boxWidth = (contentWidth - gap) / 2;
-    const attendance = student.attendance || {};
-    const present = Number(attendance.present);
-    const total = Number(attendance.total);
-    const attendanceText = Number.isFinite(present) && Number.isFinite(total) && total > 0
-      ? present + ' of ' + total + ' days (' + Math.round((present / total) * 100) + '%)'
-      : 'Not provided';
-
-    [{
-      x: margin,
-      label: 'ATTENDANCE',
-      value: attendanceText
-    }, {
-      x: margin + boxWidth + gap,
-      label: 'OVERALL PERFORMANCE',
-      value: GF.performanceLabel(student)
-    }].forEach(function (box) {
-      setFillColor(doc, COLORS.soft);
-      setDrawColor(doc, [232, 238, 247]);
-      doc.roundedRect(box.x, boxY, boxWidth, boxHeight, 1.2, 1.2, 'FD');
+    function sectionHeading(text, x, y, sectionWidth, fontSize, headingHeight) {
+      const height = headingHeight || 5.2;
+      drawCell(x, y, sectionWidth, height, true);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(5.9);
-      setTextColor(doc, COLORS.light);
-      doc.text(box.label, box.x + 4, boxY + 5);
-      doc.setFontSize(8.2);
+      doc.setFontSize(fontSize || 5.7);
       setTextColor(doc, COLORS.navy);
-      const lines = doc.splitTextToSize(pdfSafe(box.value), boxWidth - 8);
-      doc.text(lines.slice(0, 2), box.x + 4, boxY + 10);
-    });
-
-    const scaleY = boxY + boxHeight + 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.3);
-    setTextColor(doc, COLORS.light);
-    const scaleText = 'Grades shown are the values provided in the uploaded sheet. ' + GF.gradeScaleDescription() +
-      ' - A 90-100, B 80-89, C 70-79, D 60-69, E below 60.';
-    doc.text(doc.splitTextToSize(pdfSafe(scaleText), contentWidth), margin, scaleY);
-
-    drawSignatures(doc, context, 1, width, height, margin);
-    drawFooter(doc, context, width, height, margin);
-  }
-
-  function fitComment(doc, text, width, maxHeight) {
-    let size = 9;
-    let lines = [];
-    let lineHeight = 4.2;
-    while (size >= 7.5) {
-      doc.setFontSize(size);
-      lines = doc.splitTextToSize(text, width);
-      lineHeight = size * 0.47;
-      if (13 + lines.length * lineHeight <= maxHeight) {
-        return { lines: lines, lineHeight: lineHeight, size: size };
-      }
-      size -= 0.5;
+      doc.text(pdfSafe(text), x + 1.5, y + height * 0.7);
     }
-    doc.setFontSize(7.5);
-    lineHeight = 7.5 * 0.47;
-    lines = doc.splitTextToSize(text, width);
-    const maxLines = Math.max(1, Math.floor((maxHeight - 15) / lineHeight));
-    if (lines.length > maxLines) {
-      lines = lines.slice(0, maxLines);
-      lines[maxLines - 1] = String(lines[maxLines - 1]).replace(/\s+\S*$/, '') + '...';
+
+    function gradeValue(value) {
+      return value === null || value === undefined || value === '' || Number.isNaN(Number(value))
+        ? '-' : pdfSafe(String(value));
     }
-    return { lines: lines, lineHeight: lineHeight, size: 7.5 };
-  }
 
-  function drawBack(doc, student, context) {
-    const width = doc.internal.pageSize.getWidth();
-    const height = doc.internal.pageSize.getHeight();
-    const margin = width * 0.06;
-    const contentWidth = width - margin * 2;
-    const top = height * 0.052;
-    drawHeader(doc, context, true, width, margin, top);
-
-    const titleY = top + 26;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(17);
-    setTextColor(doc, COLORS.navy);
-    doc.text("Teacher's reflections", margin, titleY);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    setTextColor(doc, COLORS.muted);
-    doc.text(pdfSafe(context.termLabel), width - margin, titleY, { align: 'right' });
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    setTextColor(doc, COLORS.navy);
-    doc.text(pdfSafe(student.name), margin, titleY + 16);
-
-    const metaY = titleY + 21;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.6);
-    setTextColor(doc, COLORS.muted);
-    doc.text('Roll ' + pdfSafe(student.roll), margin, metaY);
-    doc.text('Reviewed by ' + pdfSafe(context.teacher), width - margin, metaY, { align: 'right' });
-
-    const signatureY = height - 28;
-    const commentY = metaY + 8;
-    const maxCommentHeight = Math.max(24, signatureY - commentY - 76);
-    const commentText = student.comment && student.comment.trim()
-      ? student.comment.trim()
-      : 'A teacher comment has not been saved for this student yet.';
-    const fitted = fitComment(doc, pdfSafe(commentText), contentWidth - 10, maxCommentHeight);
-    const commentHeight = 14 + fitted.lines.length * fitted.lineHeight;
-
-    setFillColor(doc, COLORS.soft);
-    setDrawColor(doc, [229, 237, 247]);
-    doc.roundedRect(margin, commentY, contentWidth, commentHeight, 1.6, 1.6, 'FD');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.2);
-    setTextColor(doc, COLORS.blue);
-    doc.text('TEACHER COMMENT', margin + 5, commentY + 6);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(fitted.size);
-    setTextColor(doc, [74, 91, 112]);
-    doc.text(fitted.lines, margin + 5, commentY + 11.5);
-
-    const traits = student.traits || GF.makeTraits(student);
-    let cursor = commentY + commentHeight + 8;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.2);
-    setTextColor(doc, COLORS.navy);
-    doc.text('Learning habits', margin, cursor);
-    cursor += 5.6;
-    const traitRows = [
-      ['Participation', traits.participation],
-      ['Collaboration', traits.collaboration],
-      ['Work habits', traits.workHabits]
+    let leftY = bodyY;
+    const fieldY = leftY;
+    const fieldHeight = 6.7;
+    drawField('NAME', student.name, margin, fieldY, leftWidth, fieldHeight);
+    const details = [
+      ['AGE', student.age],
+      ['SEX', student.sex],
+      ['GRADE', context.gradeLevel],
+      ['SECTION', context.section],
+      ['SCHOOL YEAR', GF.prettyYear(context.year)],
+      ['LRN', student.lrn],
+      ['STATUS', context.studentStatus],
+      ['GRADUATION STATUS', context.graduationStatus]
     ];
-    const traitRowHeight = Math.max(4.8, Math.min(6.2, height * 0.021));
-    traitRows.forEach(function (trait) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      setTextColor(doc, COLORS.muted);
-      doc.text(pdfSafe(trait[0]), margin, cursor);
-      setTextColor(doc, [69, 86, 107]);
-      doc.text(pdfSafe(trait[1]), width - margin, cursor, { align: 'right' });
-      setDrawColor(doc, [237, 241, 246]);
-      doc.setLineWidth(0.2);
-      doc.line(margin, cursor + 1.8, width - margin, cursor + 1.8);
-      cursor += traitRowHeight;
+    const halfWidth = leftWidth / 2;
+    const detailsY = fieldY + fieldHeight;
+    details.forEach(function (item, index) {
+      drawField(item[0], item[1], margin + (index % 2) * halfWidth,
+        detailsY + Math.floor(index / 2) * fieldHeight, halfWidth, fieldHeight);
     });
+    const trackY = detailsY + Math.ceil(details.length / 2) * fieldHeight;
+    drawField('TRACK/STRAND', context.trackStrand || context.strand, margin, trackY, leftWidth, fieldHeight);
+    leftY = trackY + fieldHeight + 1.5;
 
-    const nextSteps = student.nextSteps || GF.makeNextSteps(student);
-    const nextY = cursor + 4;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.8);
-    const stepLines = [];
-    nextSteps.forEach(function (step) {
-      doc.setFontSize(7.8);
-      const lines = doc.splitTextToSize('- ' + pdfSafe(step), contentWidth - 10);
-      lines.forEach(function (line) { stepLines.push(line); });
-    });
-    const stepLineHeight = 3.9;
-    const nextHeight = 11 + stepLines.length * stepLineHeight;
-    setFillColor(doc, COLORS.ice);
-    doc.roundedRect(margin, nextY, contentWidth, nextHeight, 1.4, 1.4, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.8);
+    doc.setFontSize(5.6);
     setTextColor(doc, COLORS.navy);
-    doc.text('Next steps at home', margin + 4, nextY + 5.2);
-    doc.setFont('helvetica', 'normal');
-    setTextColor(doc, [81, 100, 123]);
-    doc.text(stepLines, margin + 4, nextY + 9.6);
+    doc.text('Dear Parent:', margin, leftY + 2.4);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(5.3);
+    setTextColor(doc, COLORS.muted);
+    const commentLines = doc.splitTextToSize(pdfSafe(comment), leftWidth - 2).slice(0, 2);
+    doc.text(commentLines, margin, leftY + 5.2);
+    leftY += 7 + commentLines.length * 2.5;
 
-    const closingY = nextY + nextHeight + 6;
-    if (closingY < signatureY - 8) {
-      const firstName = student.name.split(' ')[0];
-      const closing = 'Thank you for partnering with us in ' + firstName +
-        "'s learning this term. Please reach out if you would like to talk through this report.";
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(7.6);
+    const signatureWidth = (leftWidth - 8) / 2;
+    [
+      [context.teacher, 'Adviser'],
+      [context.principal, 'Principal']
+    ].forEach(function (signature, index) {
+      const x = margin + index * (signatureWidth + 8);
+      setDrawColor(doc, grid);
+      doc.setLineWidth(0.25);
+      doc.line(x, leftY + 12, x + signatureWidth, leftY + 12);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.4);
+      setTextColor(doc, COLORS.navy);
+      doc.text(pdfSafe(signature[0]), x + signatureWidth / 2, leftY + 9.8, { align: 'center', maxWidth: signatureWidth });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(4.9);
       setTextColor(doc, COLORS.muted);
-      const lines = doc.splitTextToSize(pdfSafe(closing), contentWidth);
-      doc.text(lines.slice(0, Math.max(1, Math.floor((signatureY - closingY) / 3.8))), margin, closingY);
-    }
+      doc.text(signature[1], x + signatureWidth / 2, leftY + 14, { align: 'center' });
+    });
+    leftY += 17;
 
-    drawSignatures(doc, context, 2, width, height, margin);
+    const transfer = student.transfer || {};
+    const transferFields = [
+      ['Certificate of Transfer', transfer.certificateOfTransfer],
+      ['Cancellation of Eligibility', transfer.cancellationOfEligibility],
+      ['Admitted to', transfer.admittedTo],
+      ['Admitted in', transfer.admittedIn],
+      ['Eligibility for Grade', transfer.eligibilityForGrade],
+      ['Date', transfer.transferDate],
+      ['Approved by', transfer.approvedBy]
+    ];
+    sectionHeading('CERTIFICATE OF TRANSFER / CANCELLATION OF ELIGIBILITY TO TRANSFER', margin, leftY, leftWidth);
+    leftY += 5.2;
+    const transferCellWidth = leftWidth / 2;
+    transferFields.forEach(function (field, index) {
+      const x = margin + (index % 2) * transferCellWidth;
+      const y = leftY + Math.floor(index / 2) * 6;
+      drawCell(x, y, transferCellWidth, 6, false);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(4.2);
+      setTextColor(doc, COLORS.muted);
+      doc.text(pdfSafe(field[0]), x + 1, y + 2.1, { maxWidth: transferCellWidth - 2 });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.2);
+      setTextColor(doc, COLORS.navy);
+      doc.text(pdfSafe(field[1] || ''), x + 1, y + 5.1, { maxWidth: transferCellWidth - 2 });
+    });
+    leftY += Math.ceil(transferFields.length / 2) * 6 + 2;
+
+    const attendance = student.attendance || {};
+    sectionHeading('REPORT OF ATTENDANCE', margin, leftY, leftWidth, 6.5, 5.8);
+    leftY += 5.8;
+    const labelWidth = leftWidth * 0.22;
+    const monthWidth = (leftWidth - labelWidth) / (GF.ATTENDANCE_MONTHS.length + 1);
+    const attendanceHeader = [''].concat(GF.ATTENDANCE_MONTHS.map(function (month) { return month.label; }), ['TOTAL']);
+    const attendanceRows = [
+      ['No. of school days', attendance.schoolDays || {}],
+      ['No. of days present', attendance.months || {}],
+      ['No. of days absent', attendance.absent || {}]
+    ];
+    const attendanceRowHeight = 4.5;
+    attendanceHeader.forEach(function (label, index) {
+      const x = index === 0 ? margin : margin + labelWidth + (index - 1) * monthWidth;
+      const cellWidth = index === 0 ? labelWidth : monthWidth;
+      drawCell(x, leftY, cellWidth, attendanceRowHeight, true);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.1);
+      setTextColor(doc, COLORS.navy);
+      doc.text(label, x + cellWidth / 2, leftY + 3.5, { align: 'center', maxWidth: cellWidth - 0.5 });
+    });
+    attendanceRows.forEach(function (row, rowIndex) {
+      const y = leftY + attendanceRowHeight * (rowIndex + 1);
+      drawCell(margin, y, labelWidth, attendanceRowHeight, false);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(4.8);
+      setTextColor(doc, COLORS.muted);
+      doc.text(pdfSafe(row[0]), margin + 1, y + 3.4, { maxWidth: labelWidth - 2 });
+      let totalValue = 0;
+      let hasValue = false;
+      GF.ATTENDANCE_MONTHS.forEach(function (month, monthIndex) {
+        const value = row[1][month.key];
+        const x = margin + labelWidth + monthIndex * monthWidth;
+        drawCell(x, y, monthWidth, attendanceRowHeight, false);
+        doc.setFontSize(5);
+        const shown = value == null || value === '' ? '' : String(value);
+        if (shown) {
+          totalValue += Number(value) || 0;
+          hasValue = true;
+        }
+        doc.text(pdfSafe(shown), x + monthWidth / 2, y + 3.4, { align: 'center' });
+      });
+      const totalX = margin + labelWidth + GF.ATTENDANCE_MONTHS.length * monthWidth;
+      drawCell(totalX, y, monthWidth, attendanceRowHeight, false);
+      doc.setFont('helvetica', 'bold');
+      doc.text(hasValue ? String(totalValue) : '', totalX + monthWidth / 2, y + 3.4, { align: 'center' });
+    });
+    leftY += attendanceRowHeight * 4 + 1.5;
+
+    sectionHeading("REPORT ON LEARNER'S OBSERVED VALUES", margin, leftY, leftWidth, 6.5, 5.8);
+    leftY += 5.8;
+    const values = [
+      ['makaDiyos', '1. Maka-Diyos', [
+        "Expresses one's spiritual beliefs while respecting the spiritual beliefs of others",
+        'Demonstrates adherence to ethical principles by upholding truth'
+      ]],
+      ['makatao', '2. Makatao', [
+        'Is sensitive to individual, social, and cultural differences',
+        'Demonstrates contributions toward solidarity'
+      ]],
+      ['makakalikasan', '3. Maka-kalikasan', [
+        'Cares for the environment and utilizes resources wisely, judiciously, and economically',
+        'Demonstrates stewardship in keeping a flourishing environment'
+      ]],
+      ['makabansa', '4. Makabansa', [
+        'Demonstrates pride in being a Filipino and knows the rights and responsibilities of a Filipino citizen',
+        'Demonstrates appropriate behavior in carrying out activities in the school, community, and country'
+      ]]
+    ];
+    const descriptorWidth = leftWidth * 0.49;
+    const valueNameWidth = leftWidth * 0.18;
+    const ratingWidth = (leftWidth - valueNameWidth - descriptorWidth) / 4;
+    const statementY = leftY;
+    drawCell(margin, statementY, valueNameWidth, 5.5, true);
+    drawCell(margin + valueNameWidth, statementY, descriptorWidth, 5.5, true);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(5.1);
+    setTextColor(doc, COLORS.navy);
+    doc.text('CORE VALUES', margin + valueNameWidth / 2, statementY + 3.7, { align: 'center' });
+    doc.text('BEHAVIOR STATEMENTS', margin + valueNameWidth + descriptorWidth / 2, statementY + 3.7, { align: 'center' });
+    ['1', '2', '3', '4'].forEach(function (label, index) {
+      const x = margin + valueNameWidth + descriptorWidth + index * ratingWidth;
+      drawCell(x, statementY, ratingWidth, 5.5, true);
+      doc.text(label, x + ratingWidth / 2, statementY + 3.7, { align: 'center' });
+    });
+    const behaviorRowHeight = ratingWidth * 0.48;
+    values.forEach(function (entry, valueIndex) {
+      const groupY = statementY + 5.5 + valueIndex * behaviorRowHeight * 2;
+      drawCell(margin, groupY, valueNameWidth, behaviorRowHeight * 2, false);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(4.8);
+      setTextColor(doc, COLORS.muted);
+      doc.text(pdfSafe(entry[1]), margin + 1, groupY + behaviorRowHeight, {
+        maxWidth: valueNameWidth - 2
+      });
+      const observations = student.observedValues && student.observedValues[entry[0]] || {};
+      entry[2].forEach(function (statement, statementIndex) {
+        const rowY = groupY + statementIndex * behaviorRowHeight;
+        const statementX = margin + valueNameWidth;
+        drawCell(statementX, rowY, descriptorWidth, behaviorRowHeight, false);
+        doc.setFontSize(4.2);
+        doc.text(pdfSafe(statement), statementX + 0.8, rowY + behaviorRowHeight * 0.72, {
+          maxWidth: descriptorWidth - 1.6
+        });
+        if (statementIndex === 0) {
+          ['q1', 'q2', 'q3', 'q4'].forEach(function (period, index) {
+            const x = statementX + descriptorWidth + index * ratingWidth;
+            drawCell(x, rowY, ratingWidth, behaviorRowHeight, false);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(4.8);
+            setTextColor(doc, COLORS.navy);
+            doc.text(pdfSafe(observations[period] || ''), x + ratingWidth / 2, rowY + behaviorRowHeight * 0.72, {
+              align: 'center'
+            });
+          });
+        } else {
+          ['q1', 'q2', 'q3', 'q4'].forEach(function (_, index) {
+            const x = statementX + descriptorWidth + index * ratingWidth;
+            drawCell(x, rowY, ratingWidth, behaviorRowHeight, false);
+          });
+        }
+      });
+    });
+
+    const columnAverage = function (semester) {
+      const semesterSubjects = semester.groups.reduce(function (all, group) {
+        return all.concat(group.subjects.map(function (entry) {
+          return GF.SUBJECTS.find(function (subject) { return subject.key === entry[0]; });
+        }));
+      }, []);
+      const scores = semesterSubjects.map(function (subject) { return (student.grades[subject.key] || {}).final; });
+      if (scores.some(function (score) { return score == null || score === '' || Number.isNaN(Number(score)); })) return '-';
+      return String(Math.round(scores.reduce(function (sum, score) { return sum + Number(score); }, 0) / scores.length));
+    };
+
+    let rightY = bodyY;
+    GF.SEMESTERS.forEach(function (semester) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.3);
+      setTextColor(doc, COLORS.navy);
+      doc.text(pdfSafe(semester.label), rightX, rightY + 3);
+      rightY += 4;
+      const subjectWidth = rightWidth * 0.67;
+      const scoreWidth = (rightWidth - subjectWidth) / 3;
+      const header1 = 3.5;
+      const header2 = 3.5;
+      drawCell(rightX, rightY, subjectWidth, header1 + header2, true);
+      drawCell(rightX + subjectWidth, rightY, scoreWidth * 2, header1, true);
+      drawCell(rightX + subjectWidth + scoreWidth * 2, rightY, scoreWidth, header1 + header2, true);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(4.8);
+      setTextColor(doc, COLORS.navy);
+      doc.text('Subjects', rightX + 1.5, rightY + 5);
+      doc.text('Quarter', rightX + subjectWidth + scoreWidth, rightY + 2.8, { align: 'center' });
+      doc.text('Semester Final Grade', rightX + subjectWidth + scoreWidth * 2 + scoreWidth / 2, rightY + 3.3, {
+        align: 'center', maxWidth: scoreWidth - 0.5
+      });
+      semester.quarterLabels.forEach(function (label, index) {
+        const x = rightX + subjectWidth + scoreWidth * index;
+        drawCell(x, rightY + header1, scoreWidth, header2, true);
+        doc.text(label, x + scoreWidth / 2, rightY + header1 + 2.8, { align: 'center' });
+      });
+      rightY += header1 + header2;
+
+      semester.groups.forEach(function (group) {
+        const groupHeight = 3.7;
+        drawCell(rightX, rightY, rightWidth, groupHeight, true);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(4.5);
+        doc.text(pdfSafe(group.name), rightX + 1.5, rightY + 2.8);
+        rightY += groupHeight;
+        group.subjects.forEach(function (subjectDefinition) {
+          const subject = GF.SUBJECTS.find(function (entry) { return entry.key === subjectDefinition[0]; });
+          const grades = student.grades[subject.key] || {};
+          const rowHeight = 4.1;
+          drawCell(rightX, rightY, subjectWidth, rowHeight, false);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(4.5);
+          setTextColor(doc, COLORS.muted);
+          doc.text(pdfSafe(subject.name), rightX + 1.5, rightY + 3, { maxWidth: subjectWidth - 3 });
+          semester.quarters.concat(semester.finalKey).forEach(function (period, index) {
+            const x = rightX + subjectWidth + scoreWidth * index;
+            drawCell(x, rightY, scoreWidth, rowHeight, false);
+            doc.setFont('helvetica', index === 2 ? 'bold' : 'normal');
+            setTextColor(doc, COLORS.navy);
+            doc.text(gradeValue(grades[period]), x + scoreWidth / 2, rightY + 3, { align: 'center' });
+          });
+          rightY += rowHeight;
+        });
+      });
+
+      const average = columnAverage(semester);
+      drawCell(rightX, rightY, subjectWidth + scoreWidth * 2, 5, true);
+      drawCell(rightX + subjectWidth + scoreWidth * 2, rightY, scoreWidth, 5, true);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(4.8);
+      setTextColor(doc, COLORS.navy);
+      doc.text('General Average for the Semester', rightX + 1.5, rightY + 3.4);
+      doc.text(average, rightX + rightWidth - scoreWidth / 2, rightY + 3.4, { align: 'center' });
+      rightY += 5.5;
+    });
+
+    const legendGap = 2;
+    const legendWidths = [
+      rightWidth * 0.25,
+      rightWidth * 0.5,
+      rightWidth * 0.25 - legendGap * 2
+    ];
+    const legends = [
+      {
+        title: 'Observed Values',
+        rows: [['AO', 'Always Observed'], ['SO', 'Sometimes Observed'], ['RO', 'Rarely Observed'], ['NO', 'Not Observed']]
+      },
+      {
+        title: 'Learning Progress & Achievement',
+        rows: [
+          ['Outstanding', '90-100', 'Passed'],
+          ['Very Satisfactory', '85-89', 'Passed'],
+          ['Satisfactory', '80-84', 'Passed'],
+          ['Fairly Satisfactory', '75-79', 'Passed'],
+          ['Did Not Meet Expectations', 'below 75', 'Failed']
+        ]
+      },
+      {
+        title: "Parent/Guardian's Signature",
+        rows: [['1st Q', ''], ['2nd Q', ''], ['3rd Q', ''], ['4th Q', '']]
+      }
+    ];
+    let legendX = rightX;
+    legends.forEach(function (legend, legendIndex) {
+      const legendWidth = legendWidths[legendIndex];
+      drawCell(legendX, rightY, legendWidth, 6, true);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(4.4);
+      setTextColor(doc, COLORS.navy);
+      const titleLines = doc.splitTextToSize(legend.title, legendWidth - 2);
+      doc.text(titleLines.slice(0, 2), legendX + legendWidth / 2, rightY + 2.5, { align: 'center' });
+      let rowY = rightY + 6;
+      legend.rows.forEach(function (row) {
+        const rowHeight = 3.8;
+        drawCell(legendX, rowY, legendWidth, rowHeight, false);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(4);
+        setTextColor(doc, COLORS.muted);
+        if (legendIndex === 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.text(row[0], legendX + 1, rowY + 2.8);
+          doc.setFont('helvetica', 'normal');
+          doc.text(row[1], legendX + 7, rowY + 2.8, { maxWidth: legendWidth - 8 });
+        } else if (legendIndex === 1) {
+          doc.text(row.join('   '), legendX + 1, rowY + 2.8, { maxWidth: legendWidth - 2 });
+        } else {
+          doc.setFont('helvetica', 'bold');
+          doc.text(row[0], legendX + 1, rowY + 2.8);
+        }
+        rowY += rowHeight;
+      });
+      legendX += legendWidth + legendGap;
+    });
+
     drawFooter(doc, context, width, height, margin);
   }
 
@@ -644,7 +762,7 @@
     return doc;
   }
 
-  function downloadReports(reports, options) {
+  async function downloadReports(reports, options) {
     const settings = options || {};
     if (!reports.length) {
       GF.showToast('Choose at least one report first.', 'error');
@@ -655,6 +773,13 @@
     const title = settings.single
       ? dataset.context.term + ' report card for ' + first.name
       : dataset.context.term + ' report cards for ' + dataset.context.className;
+    let logoData;
+    try {
+      logoData = await loadLogoData();
+    } catch (error) {
+      GF.showToast('The University of Iloilo logo could not be prepared for the PDF. ' + error.message, 'error');
+      return;
+    }
     const doc = createDocument(pdfSafe(title));
     if (!doc) {
       GF.showToast('PDF support did not load. Reload the page and try again.', 'error');
@@ -663,9 +788,7 @@
 
     reports.forEach(function (student, index) {
       if (index > 0) doc.addPage();
-      drawFront(doc, student, dataset.context);
-      doc.addPage();
-      drawBack(doc, student, dataset.context);
+      drawFront(doc, student, dataset.context, logoData);
     });
 
     let filename;
@@ -704,9 +827,7 @@
     const dataset = activeDataset();
     area.innerHTML = reports.map(function (student) {
       return '<div class="print-page"><article class="report-sheet report-front">' +
-        window.GradeFlowReports.buildFrontHTML(student, dataset.context) + '</article></div>' +
-        '<div class="print-page"><article class="report-sheet report-back">' +
-        window.GradeFlowReports.buildBackHTML(student, dataset.context) + '</article></div>';
+        window.GradeFlowReports.buildFrontHTML(student, dataset.context) + '</article></div>';
     }).join('');
 
     area.classList.toggle('print-letter', GF.state.paperSize === 'letter');

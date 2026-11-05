@@ -1,6 +1,6 @@
 /* ==========================================================================
    Report Card Preview
-   Renders the live front and back of a student's report card. Every value
+   Renders the live report card for a student. Every value
    comes from the verified class data; the preview never invents a grade.
    ========================================================================== */
 (function () {
@@ -29,129 +29,201 @@
     return { detail: 'Not provided', percent: '' };
   }
 
-  function headerHTML(context, isBack) {
-    return '<header class="rc-header">' +
-      '<div class="rc-school">' +
-        '<span class="rc-logo"><svg class="icon" aria-hidden="true"><use href="#i-graduation-cap"></use></svg></span>' +
-        '<div>' +
-          '<strong>' + esc(context.schoolName.toUpperCase()) + '</strong>' +
-          '<span>' + esc(context.schoolAddress) + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="rc-document-title">' +
-        '<strong>' + (isBack ? 'LEARNER PROGRESS AND OBSERVED VALUES' : 'REPORT ON LEARNING PROGRESS AND ACHIEVEMENT') + '</strong>' +
-        '<span>' + esc(context.termLabel) + '</span>' +
-      '</div>' +
-    '</header>';
-  }
-
-  function signaturesHTML(context, pageNumber) {
-    return '<div class="rc-signatures">' +
-      '<div class="rc-signature"><span>Class adviser</span><strong>' + esc(context.teacher) + '</strong></div>' +
-      '<div class="rc-signature"><span>School head</span><strong>' + esc(context.principal) + '</strong></div>' +
-      '<div class="rc-page">Page ' + pageNumber + ' of 2</div>' +
-    '</div>';
-  }
-
   function buildFrontHTML(student, context) {
-    const average = GF.averageGrade(student);
-    const averageText = average === null ? '—' : average + '%';
-    const letter = average === null ? '—' : GF.letterFor(average);
-    const attendance = attendanceParts(student);
+    function gradeValue(value) {
+      return value === null || value === undefined || value === '' || Number.isNaN(Number(value))
+        ? '—' : esc(String(value));
+    }
 
-    const rows = GF.SUBJECTS.map(function (subject) {
-      const value = student.grades[subject.key];
-      const missing = value === null || value === '' || Number.isNaN(Number(value));
-      return '<tr>' +
-        '<td>' + esc(subject.name) + '</td>' +
-        '<td class="rc-score">' + (missing ? '—' : esc(String(value))) + '</td>' +
-        '<td class="rc-letter">' + esc(missing ? '—' : GF.letterFor(value)) + '</td>' +
-      '</tr>';
+    function semesterAverage(semester) {
+      const subjects = semester.groups.reduce(function (all, group) {
+        return all.concat(group.subjects.map(function (entry) {
+          return GF.SUBJECTS.find(function (subject) { return subject.key === entry[0]; });
+        }));
+      }, []);
+      const values = subjects.map(function (subject) {
+        return (student.grades[subject.key] || {}).final;
+      });
+      if (values.some(function (value) { return value === null || value === undefined || value === '' || Number.isNaN(Number(value)); })) {
+        return '—';
+      }
+      return String(Math.round(values.reduce(function (sum, value) { return sum + Number(value); }, 0) / values.length));
+    }
+
+    const semestersHTML = GF.SEMESTERS.map(function (semester) {
+      const groupHTML = semester.groups.map(function (group) {
+        const subjectsHTML = group.subjects.map(function (entry) {
+          const subject = GF.SUBJECTS.find(function (item) { return item.key === entry[0]; });
+          const grades = student.grades[subject.key] || {};
+          return '<tr><td>' + esc(subject.name) + '</td>' +
+            '<td class="rc-score">' + gradeValue(grades[semester.quarters[0]]) + '</td>' +
+            '<td class="rc-score">' + gradeValue(grades[semester.quarters[1]]) + '</td>' +
+            '<td class="rc-score rc-semester-final">' + gradeValue(grades.final) + '</td></tr>';
+        }).join('');
+        return '<tr class="rc-subject-group"><th colspan="4">' + esc(group.name) + '</th></tr>' + subjectsHTML;
+      }).join('');
+      return '<section class="rc-semester">' +
+        '<h4>' + esc(semester.label) + '</h4>' +
+        '<table class="rc-table rc-official-grade-table">' +
+          '<caption class="sr-only">' + esc(semester.label) + ' subjects and grades</caption>' +
+          '<thead><tr><th rowspan="2" scope="col">Subjects</th><th colspan="2" scope="colgroup">Quarter</th>' +
+            '<th rowspan="2" scope="col">Semester<br>Final Grade</th></tr>' +
+            '<tr><th scope="col">' + semester.quarterLabels[0] + '</th><th scope="col">' +
+              semester.quarterLabels[1] + '</th></tr></thead>' +
+          '<tbody>' + groupHTML +
+            '<tr class="rc-semester-average"><th colspan="3" scope="row">General Average for the Semester</th>' +
+              '<td>' + semesterAverage(semester) + '</td></tr></tbody>' +
+        '</table>' +
+      '</section>';
     }).join('');
 
-    return headerHTML(context, false) +
-      '<div class="rc-heading">' +
-        '<div>' +
-          '<h3>Learner information</h3>' +
-          '<p>' + esc(context.gradeLevel + ' · ' + context.section) + '</p>' +
-        '</div>' +
-        '<p>Issued ' + esc(context.issuedDateShort) + '</p>' +
-      '</div>' +
-      '<div class="rc-learner-grid">' +
-        '<div class="rc-learner-field rc-learner-name"><span>Learner’s name</span><strong>' + esc(student.name) + '</strong></div>' +
-        '<div class="rc-learner-field"><span>Grade level</span><strong>' + esc(context.gradeLevel) + '</strong></div>' +
-        '<div class="rc-learner-field"><span>Section</span><strong>' + esc(context.section) + '</strong></div>' +
-        '<div class="rc-learner-field"><span>Roll / roster no.</span><strong>' + esc(student.roll) + '</strong></div>' +
-        '<div class="rc-learner-field"><span>School year</span><strong>' + esc(GF.prettyYear(context.year)) + '</strong></div>' +
-      '</div>' +
-      '<table class="rc-table">' +
-        '<caption class="sr-only">Subject scores for ' + esc(student.name) + '</caption>' +
-        '<thead><tr><th scope="col">Learning area</th><th scope="col">Grade recorded</th><th scope="col">Letter grade</th></tr></thead>' +
-        '<tbody>' + rows + '</tbody>' +
-      '</table>' +
-      '<div class="rc-average">' +
-        '<span>General average for ' + esc(context.term) + '</span>' +
-        '<span><strong>' + averageText + '</strong> <span class="rc-letter-badge">' + esc(letter) + '</span></span>' +
-      '</div>' +
-      '<div class="rc-two-col">' +
-        '<div class="rc-box">' +
-          '<span class="rc-box-label">Attendance</span>' +
-          '<div class="rc-box-value">' + esc(attendance.detail) +
-            (attendance.percent ? ' <span>· ' + esc(attendance.percent) + '</span>' : '') +
-          '</div>' +
-        '</div>' +
-        '<div class="rc-box">' +
-          '<span class="rc-box-label">Overall performance</span>' +
-          '<div class="rc-box-value">' + esc(GF.performanceLabel(student)) + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<p class="rc-scale">Grades shown are the values provided in the uploaded sheet. ' + esc(GF.gradeScaleDescription()) +
-        ' · A 90–100, B 80–89, C 70–79, D 60–69, E below 60.</p>' +
-      signaturesHTML(context, 1);
-  }
+    const attendance = student.attendance || {};
+    const attendanceRows = [
+      { label: 'No. of school days', values: attendance.schoolDays || {} },
+      { label: 'No. of days present', values: attendance.months || {} },
+      { label: 'No. of days absent', values: attendance.absent || {} }
+    ];
+    const attendanceHTML = '<div class="rc-attendance-wrap"><table class="rc-attendance-table"><caption>Report of attendance</caption>' +
+      '<thead><tr><th scope="col"></th>' + GF.ATTENDANCE_MONTHS.map(function (month) {
+        return '<th scope="col">' + esc(month.label) + '</th>';
+      }).join('') + '<th scope="col">Total</th></tr></thead><tbody>' +
+      attendanceRows.map(function (row) {
+        const values = GF.ATTENDANCE_MONTHS.map(function (month) { return row.values[month.key]; });
+        const total = values.reduce(function (sum, value) { return sum + (Number(value) || 0); }, 0);
+        const hasValue = values.some(function (value) { return value !== null && value !== undefined && value !== ''; });
+        return '<tr><th scope="row">' + esc(row.label) + '</th>' +
+          values.map(function (value) { return '<td>' + (value == null || value === '' ? '' : esc(String(value))) + '</td>'; }).join('') +
+          '<td>' + (hasValue ? String(total) : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
 
-  function buildBackHTML(student, context) {
-    const comment = student.comment && student.comment.trim()
-      ? student.comment.trim()
-      : 'A teacher comment has not been saved for this student yet.';
-    const traits = student.traits || GF.makeTraits(student);
-    const nextSteps = student.nextSteps || GF.makeNextSteps(student);
-    const firstName = student.name.split(' ')[0];
-
-    const nextStepsHTML = nextSteps.map(function (step) {
-      return '<li>' + esc(step) + '</li>';
+    const observedValueLabels = [
+      ['makaDiyos', '1. Maka-Diyos'],
+      ['makatao', '2. Makatao'],
+      ['makakalikasan', '3. Maka-kalikasan'],
+      ['makabansa', '4. Makabansa']
+    ];
+    const observedStatements = {
+      makaDiyos: [
+        "Expresses one's spiritual beliefs while respecting the spiritual beliefs of others",
+        'Demonstrates adherence to ethical principles by upholding truth'
+      ],
+      makatao: [
+        'Is sensitive to individual, social, and cultural differences',
+        'Demonstrates contributions toward solidarity'
+      ],
+      makakalikasan: [
+        'Cares for the environment and utilizes resources wisely, judiciously, and economically',
+        'Demonstrates stewardship in keeping a flourishing environment'
+      ],
+      makabansa: [
+        'Demonstrates pride in being a Filipino; expresses the rights and responsibilities of a Filipino citizen',
+        'Demonstrates appropriate behavior in carrying out activities in the school, community, and country'
+      ]
+    };
+    const observedValuesHTML = observedValueLabels.map(function (item) {
+      const values = student.observedValues && student.observedValues[item[0]] || {};
+      const statements = observedStatements[item[0]];
+      return '<tr><th scope="rowgroup" rowspan="2">' + esc(item[1]) + '</th><td>' +
+        esc(statements[0]) + '</td>' + ['q1', 'q2', 'q3', 'q4'].map(function (period) {
+          return '<td>' + esc(values[period] || '—') + '</td>';
+        }).join('') + '</tr><tr><td>' + esc(statements[1]) + '</td>' +
+          '<td></td><td></td><td></td><td></td></tr>';
     }).join('');
+    const transfer = student.transfer || {};
+    const addressLines = String(context.schoolAddress || '').split(' · ').filter(Boolean);
+    const schoolAddressHTML = addressLines.filter(function (line) {
+      return line.toLowerCase().indexOf('senior high school department') === -1;
+    }).map(function (line) {
+      return '<span>' + esc(line) + '</span>';
+    }).join('');
+    const transferLeftFields = [
+      ['Admitted to', transfer.admittedTo],
+      ['Section', transfer.section || context.section],
+      ['Eligibility for admission to grade', transfer.eligibilityForGrade],
+      ['Approved by', transfer.approvedBy]
+    ];
+    const transferRightFields = [
+      ['Admitted in', transfer.admittedIn],
+      ['Date', transfer.transferDate],
+      ['Approved by', transfer.cancellationOfEligibility]
+    ];
+    function transferRows(fields) {
+      return fields.map(function (field) {
+        return '<tr><th scope="row">' + esc(field[0]) + '</th><td>' +
+          (field[1] ? esc(field[1]) : '') +
+          '</td></tr>';
+      }).join('');
+    }
 
-    return headerHTML(context, true) +
-      '<div class="rc-heading">' +
-        '<div>' +
-          '<h3>Teacher comments and learning habits</h3>' +
-          '<p>' + esc(context.termLabel) + '</p>' +
+    return '<div class="rc-official-header">' +
+      '<div class="rc-official-school">' +
+        '<img class="rc-logo" src="assets/ui-logo.png" alt="University of Iloilo seal">' +
+        '<div>' + schoolAddressHTML + '<strong>' + esc(context.schoolName) + '</strong>' +
+          '<span>Senior High School Department</span></div>' +
+      '</div>' +
+      '<div class="rc-official-title"><strong>REPORT ON LEARNING PROGRESS AND ACHIEVEMENT</strong>' +
+        '<span>School Year ' + esc(GF.prettyYear(context.year)) + '</span></div>' +
+    '</div>' +
+    '<div class="rc-official-layout">' +
+      '<section class="rc-official-learner" aria-label="Learner details and observations">' +
+        '<div class="rc-official-fields">' +
+          '<div class="rc-official-field rc-official-name"><span>Name</span><strong>' + esc(student.name) + '</strong></div>' +
+          '<div class="rc-official-field"><span>Age</span><strong>' + esc(student.age || '—') + '</strong></div>' +
+          '<div class="rc-official-field"><span>Sex</span><strong>' + esc(student.sex || '—') + '</strong></div>' +
+          '<div class="rc-official-field"><span>Grade</span><strong>' + esc(context.gradeLevel) + '</strong></div>' +
+          '<div class="rc-official-field"><span>Section</span><strong>' + esc(context.section) + '</strong></div>' +
+          '<div class="rc-official-field"><span>School year</span><strong>' + esc(GF.prettyYear(context.year)) + '</strong></div>' +
+          '<div class="rc-official-field"><span>LRN</span><strong>' + esc(student.lrn || '—') + '</strong></div>' +
+          '<div class="rc-official-field"><span>Status</span><strong>' + esc(context.studentStatus || '—') + '</strong></div>' +
+          '<div class="rc-official-field"><span>Graduation status</span><strong>' + esc(context.graduationStatus || '—') + '</strong></div>' +
+          '<div class="rc-official-field rc-official-track"><span>Track/Strand</span><strong>' + esc(context.trackStrand || context.strand || '—') + '</strong></div>' +
         '</div>' +
-        '<p>' + esc(context.gradeLevel + ' · ' + context.section) + '</p>' +
-      '</div>' +
-      '<div class="rc-student">' + esc(student.name) + '</div>' +
-      '<div class="rc-meta">' +
-        '<span>Roll <strong>' + esc(student.roll) + '</strong></span>' +
-        '<span>Reviewed by <strong>' + esc(context.teacher) + '</strong></span>' +
-      '</div>' +
-      '<div class="rc-comment">' +
-        '<div class="rc-comment-label"><svg class="icon" aria-hidden="true"><use href="#i-message"></use></svg> Teacher comment</div>' +
-        '<p>' + esc(comment) + '</p>' +
-      '</div>' +
-      '<div class="rc-traits">' +
-        '<h4>Learning habits</h4>' +
-        '<div class="rc-trait-row"><span>Participation</span><span>' + esc(traits.participation) + '</span></div>' +
-        '<div class="rc-trait-row"><span>Collaboration</span><span>' + esc(traits.collaboration) + '</span></div>' +
-        '<div class="rc-trait-row"><span>Work habits</span><span>' + esc(traits.workHabits) + '</span></div>' +
-      '</div>' +
-      '<div class="rc-next">' +
-        '<strong>Next steps at home</strong>' +
-        '<ul>' + nextStepsHTML + '</ul>' +
-      '</div>' +
-      '<p class="rc-closing">Thank you for partnering with us in ' + esc(firstName) +
-        '\'s learning this term. Please reach out if you would like to talk through this report.</p>' +
-      signaturesHTML(context, 2);
+        '<div class="rc-official-note"><strong>Dear Parent:</strong>' +
+          '<p>This report card shows your child’s performance in the different learning areas as well as in character formation. ' +
+            'The school welcomes you if you desire to know more about the progress of your child.</p></div>' +
+        '<div class="rc-staff-signatures">' +
+          '<div><strong>' + esc(context.teacher || '') + '</strong><span>Adviser</span></div>' +
+          '<div><strong>' + esc(context.principal || '') + '</strong><span>Principal</span></div>' +
+        '</div>' +
+        '<section class="rc-transfer"><div class="rc-transfer-grid">' +
+          '<div><h4>Certificate of Transfer</h4><table><tbody>' + transferRows(transferLeftFields) +
+            '<tr class="rc-transfer-signature"><td colspan="2"><div class="rc-transfer-signatures">' +
+              '<span>Adviser</span><span>Principal</span></div></td></tr>' +
+            '</tbody></table></div>' +
+          '<div><h4>Cancellation of Eligibility to Transfer</h4><table><tbody>' + transferRows(transferRightFields) +
+            '<tr class="rc-transfer-spacer"><td colspan="2"></td></tr>' +
+            '<tr class="rc-transfer-signature"><td colspan="2"><span>Principal</span></td></tr>' +
+            '</tbody></table></div>' +
+        '</div></section>' +
+        attendanceHTML +
+        '<div class="rc-official-values-wrap"><table class="rc-official-values"><caption>Report on learner’s observed values</caption>' +
+          '<thead><tr><th scope="col">Core values</th><th scope="col">Behavior statements</th>' +
+            '<th colspan="4" scope="colgroup">Quarter</th></tr><tr><th></th><th></th>' +
+            '<th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody>' +
+          observedValuesHTML +
+        '</tbody></table></div>' +
+      '</section>' +
+      '<section class="rc-official-grades" aria-label="Learning progress and achievement">' +
+        semestersHTML +
+        '<div class="rc-official-legends">' +
+          '<table><caption>Observed values</caption><tbody>' +
+            '<tr><th>AO</th><td>Always Observed</td></tr><tr><th>SO</th><td>Sometimes Observed</td></tr>' +
+            '<tr><th>RO</th><td>Rarely Observed</td></tr><tr><th>NO</th><td>Not Observed</td></tr>' +
+          '</tbody></table>' +
+          '<table><caption>Learning Progress &amp; Achievement</caption><tbody>' +
+            '<tr><td>Outstanding</td><td>90–100</td><td>Passed</td></tr>' +
+            '<tr><td>Very Satisfactory</td><td>85–89</td><td>Passed</td></tr>' +
+            '<tr><td>Satisfactory</td><td>80–84</td><td>Passed</td></tr>' +
+            '<tr><td>Fairly Satisfactory</td><td>75–79</td><td>Passed</td></tr>' +
+            '<tr><td>Did Not Meet Expectations</td><td>below 75</td><td>Failed</td></tr>' +
+          '</tbody></table>' +
+          '<table class="rc-parent-signatures"><caption>Parent/Guardian’s Signature</caption><tbody>' +
+            '<tr><th>1st Q</th><td></td></tr><tr><th>2nd Q</th><td></td></tr>' +
+            '<tr><th>3rd Q</th><td></td></tr><tr><th>4th Q</th><td></td></tr>' +
+          '</tbody></table>' +
+        '</div>' +
+      '</section>' +
+    '</div>';
   }
 
   function currentIndex() {
@@ -251,7 +323,7 @@
 
     if (note) {
       if (ready) {
-        note.textContent = total + ' students · ' + (total * 2) + ' pages';
+        note.textContent = total + ' students · ' + total + ' pages';
       } else {
         const parts = [];
         if (missing) parts.push(missing + ' grade' + (missing === 1 ? '' : 's') + ' missing');
@@ -270,7 +342,6 @@
   function renderPreview() {
     const student = selectedStudent();
     const front = document.getElementById('report-card-front');
-    const back = document.getElementById('report-card-back');
     const info = document.getElementById('student-info');
     const previous = document.getElementById('prev-student');
     const next = document.getElementById('next-student');
@@ -280,7 +351,6 @@
     renderStudentOptions();
     renderStudentSearch();
     if (front) front.innerHTML = student ? buildFrontHTML(student, context) : '';
-    if (back) back.innerHTML = student ? buildBackHTML(student, context) : '';
     if (info) info.textContent = total ? (currentIndex() + 1) + ' of ' + total : '0 of 0';
     if (previous) previous.disabled = currentIndex() <= 0;
     if (next) next.disabled = currentIndex() >= total - 1;
@@ -304,8 +374,8 @@
     const reportLabel = total === 1 ? 'report card' : 'report cards';
     GF.openModal({
       title: 'Generate ' + total + ' ' + reportLabel + '?',
-      body: '<p>Each student gets a two-page report card: academic progress on the front, teacher reflections on the back.</p>' +
-        '<p><strong>' + total + ' ' + reportLabel + ' · ' + (total * 2) + ' pages</strong></p>' +
+      body: '<p>Each student gets a one-page landscape report card with learner details, attendance, observations, and grades.</p>' +
+        '<p><strong>' + total + ' ' + reportLabel + ' · ' + total + ' pages</strong></p>' +
         '<p>The final set will appear in Generated Reports, ready to download or print.</p>',
       confirmLabel: 'Generate reports',
       cancelLabel: 'Not yet',
@@ -401,7 +471,6 @@
 
   window.GradeFlowReports = {
     buildFrontHTML: buildFrontHTML,
-    buildBackHTML: buildBackHTML,
     contextForPreview: contextForPreview
   };
 

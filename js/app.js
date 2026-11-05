@@ -5,14 +5,85 @@
 (function () {
   'use strict';
 
-  const SUBJECTS = [
-    { key: 'english', name: 'English', short: 'English' },
-    { key: 'mathematics', name: 'Mathematics', short: 'Math' },
-    { key: 'science', name: 'Science', short: 'Science' },
-    { key: 'social', name: 'Social Studies', short: 'Social Sci.' },
-    { key: 'art', name: 'Art', short: 'Art' },
-    { key: 'pe', name: 'Physical Education', short: 'PE' }
+  const ATTENDANCE_MONTHS = [
+    { key: 'jun', label: 'JUN' }, { key: 'jul', label: 'JUL' }, { key: 'aug', label: 'AUG' },
+    { key: 'sep', label: 'SEP' }, { key: 'oct', label: 'OCT' }, { key: 'nov', label: 'NOV' },
+    { key: 'dec', label: 'DEC' }, { key: 'jan', label: 'JAN' }, { key: 'feb', label: 'FEB' },
+    { key: 'mar', label: 'MAR' }, { key: 'apr', label: 'APR' }
   ];
+
+  const SEMESTERS = [
+    {
+      key: 'first',
+      label: 'First Semester',
+      quarters: ['q1', 'q2'],
+      quarterLabels: ['1', '2'],
+      finalKey: 'final',
+      groups: [
+        {
+          name: 'Core Subjects',
+          subjects: [
+            ['media_information_literacy', 'Media and Information Literacy'],
+            ['philosophy', 'Introduction to Philosophy of the Human Person/Pambungad sa Pilosopiya ng Tao'],
+            ['contemporary_arts', 'Contemporary Philippine Arts from the Regions'],
+            ['physical_science', 'Physical Science'],
+            ['pe_health_first', 'Physical Education and Health']
+          ]
+        },
+        {
+          name: 'Applied and Specialized Subjects',
+          subjects: [
+            ['research_daily_life', 'Research in Daily Life 2'],
+            ['filipino_larang', 'Pagsulat sa Filipino sa Piling Larang'],
+            ['creative_writing', 'Creative Writing/Malikhaing Pagsulat'],
+            ['applied_social_sciences', 'Disciplines and Ideas in the Applied Social Sciences']
+          ]
+        }
+      ]
+    },
+    {
+      key: 'second',
+      label: 'Second Semester',
+      quarters: ['q3', 'q4'],
+      quarterLabels: ['3', '4'],
+      finalKey: 'final',
+      groups: [
+        {
+          name: 'Core Subjects',
+          subjects: [['pe_health_second', 'Physical Education and Health']]
+        },
+        {
+          name: 'Applied and Specialized Subjects',
+          subjects: [
+            ['entrepreneurship', 'Entrepreneurship'],
+            ['inquiries_immersion', 'Inquiries, Investigations and Immersion'],
+            ['empowerment_technologies', 'Empowerment Technologies'],
+            ['creative_nonfiction', 'Creative Nonfiction: The Literary Essay'],
+            ['philippine_politics', 'Philippine Politics and Governance'],
+            ['trends_networks', 'Trends, Networks and Critical Thinking in the 21st Century Culture'],
+            ['community_engagement', 'Community Engagement, Solidarity and Citizenship'],
+            ['culminating_activity', 'Culminating Activity']
+          ]
+        }
+      ]
+    }
+  ];
+
+  const SUBJECTS = SEMESTERS.reduce(function (subjects, semester) {
+    semester.groups.forEach(function (group) {
+      group.subjects.forEach(function (definition) {
+        subjects.push({
+          key: definition[0],
+          name: definition[1],
+          semester: semester.key,
+          group: group.name,
+          quarters: semester.quarters,
+          finalKey: semester.finalKey
+        });
+      });
+    });
+    return subjects;
+  }, []);
 
   const PAGE_META = {
     upload: { label: 'Upload Grades', breadcrumb: 'Upload Grades', nav: 'upload', fileTitle: 'Upload Grades' },
@@ -74,18 +145,28 @@
 
   const state = {
     school: {
-      name: 'Maplewood School',
-      address: '18 Oak Avenue · Learning for life',
+      name: 'University of Iloilo',
+      address: 'Republic of the Philippines · Department of Education · Region VI – Western Visayas · Iloilo City · Senior High School Department',
       principal: 'Elena Navarro'
     },
     teacher: 'Sarah Collins',
-    year: '2025-26',
-    term: 'Term 2',
-    className: 'Grade 5 · Section A',
+    year: '2026-2027',
+    term: 'Annual Report',
+    className: 'Grade 12 · UI-FA-ABM12-1',
+    strand: 'ABM',
+    gradeLevel: '12',
+    section: 'UI-FA-ABM12-1',
+    studentStatus: 'Regular',
+    graduationStatus: 'Recommended',
     gradingScale: 'percentage',
     students: [],
     archive: null,
     upload: null,
+    sf10: {
+      classFile: null,
+      studentFiles: [],
+      analysisRun: false
+    },
     processed: false,
     processing: false,
     progress: 0,
@@ -103,7 +184,7 @@
     reportSelectionMode: '',
     viewingArchive: false,
     paperSize: 'a4',
-    orientation: 'portrait',
+    orientation: 'landscape',
     printLayout: 'double'
   };
 
@@ -163,7 +244,10 @@
 
   function averageGrade(student) {
     if (!student || !student.grades) return null;
-    const values = SUBJECTS.map(function (subject) { return student.grades[subject.key]; });
+    const values = SUBJECTS.map(function (subject) {
+      const grades = student.grades[subject.key] || {};
+      return grades.final;
+    });
     if (values.some(function (value) { return value === null || value === '' || Number.isNaN(Number(value)); })) return null;
     const total = values.reduce(function (sum, value) { return sum + Number(value); }, 0);
     return Math.round(total / values.length);
@@ -199,7 +283,7 @@
     if (!student) return '';
     const first = student.name.split(' ')[0];
     const entries = SUBJECTS
-      .map(function (subject) { return { subject: subject, value: student.grades[subject.key] }; })
+      .map(function (subject) { return { subject: subject, value: (student.grades[subject.key] || {}).final }; })
       .filter(function (entry) { return entry.value !== null && entry.value !== '' && !Number.isNaN(Number(entry.value)); })
       .sort(function (a, b) { return Number(b.value) - Number(a.value); });
     const average = averageGrade(student);
@@ -228,7 +312,7 @@
 
   function makeNextSteps(student) {
     const entries = SUBJECTS
-      .map(function (subject) { return { subject: subject, value: student.grades[subject.key] }; })
+      .map(function (subject) { return { subject: subject, value: (student.grades[subject.key] || {}).final }; })
       .filter(function (entry) { return typeof entry.value === 'number'; })
       .sort(function (a, b) { return Number(a.value) - Number(b.value); });
     const growth = entries.length ? entries[0].subject : SUBJECTS[0];
@@ -246,17 +330,31 @@
       roll: String(index + 1).padStart(2, '0'),
       name: row[0],
       grades: {},
-      attendance: { present: row[2], total: 96 },
+      age: '',
+      sex: '',
+      lrn: '',
+      attendance: {
+        present: row[2],
+        total: 96,
+        months: {},
+        schoolDays: {},
+        absent: {}
+      },
+      transfer: {},
+      observedValues: {},
       comment: '',
       commentReviewed: settings.reviewed !== false,
       traits: null,
       nextSteps: null
     };
     SUBJECTS.forEach(function (subject, subjectIndex) {
-      let value = row[1][subjectIndex];
-      // The Term 1 archive was completed in the past, so it has no blank grade.
+      let value = row[1][subjectIndex % row[1].length];
       if (value === null && settings.fillMissing) value = 84;
-      student.grades[subject.key] = value === null ? null : Number(value);
+      const score = value === null ? null : Number(value);
+      const grades = { final: score };
+      grades[subject.quarters[0]] = score;
+      grades[subject.quarters[1]] = score;
+      student.grades[subject.key] = grades;
     });
     student.comment = buildComment(student);
     student.traits = makeTraits(student);
@@ -291,8 +389,11 @@
 
   function studentStatus(student) {
     const missing = SUBJECTS.some(function (subject) {
-      const value = student.grades[subject.key];
-      return value === null || value === '' || Number.isNaN(Number(value));
+      const grades = student.grades[subject.key] || {};
+      return subject.quarters.concat(subject.finalKey).some(function (period) {
+        const value = grades[period];
+        return value === null || value === '' || Number.isNaN(Number(value));
+      });
     });
     return missing ? 'needs-correction' : 'approved';
   }
@@ -301,10 +402,18 @@
     const list = [];
     (students || state.students).forEach(function (student) {
       SUBJECTS.forEach(function (subject) {
-        const value = student.grades[subject.key];
-        if (value === null || value === '' || Number.isNaN(Number(value))) {
-          list.push({ student: student, subject: subject });
-        }
+        const grades = student.grades[subject.key] || {};
+        subject.quarters.concat(subject.finalKey).forEach(function (period) {
+          const value = grades[period];
+          if (value === null || value === '' || Number.isNaN(Number(value))) {
+            list.push({
+              student: student,
+              subject: subject,
+              period: period,
+              periodLabel: period === 'final' ? 'Semester final' : 'Quarter ' + period.slice(1)
+            });
+          }
+        });
       });
     });
     return list;
@@ -362,8 +471,21 @@
       term: term,
       termLabel: term + ' · ' + prettyYear(year),
       className: className,
-      gradeLevel: parts[0] ? parts[0].trim() : 'Grade 5',
+      gradeLevel: options.gradeLevel || (options.className
+        ? (parts[0] ? parts[0].trim().replace(/^Grade\s+/, '') : '5')
+        : state.gradeLevel),
       section: parts[1] ? parts[1].trim() : 'Section A',
+      strand: state.strand,
+      trackStrand: ({
+        ABM: 'ACAD: ACCOUNTANCY, BUSINESS AND MANAGEMENT (ABM)',
+        GAS: 'ACAD: GENERAL ACADEMIC STRAND (GAS)',
+        GASCRIM: 'ACAD: GENERAL ACADEMIC STRAND - CRIMINOLOGY (GASCRIM)',
+        HUMSS: 'ACAD: HUMANITIES AND SOCIAL SCIENCES (HUMSS)',
+        STEM: 'ACAD: SCIENCE, TECHNOLOGY, ENGINEERING AND MATHEMATICS (STEM)',
+        HEALTH: 'TECHNICAL-VOCATIONAL: HEALTH'
+      })[state.strand] || state.strand,
+      studentStatus: state.studentStatus,
+      graduationStatus: state.graduationStatus,
       issuedDate: formatLongDate(generatedAt),
       issuedDateShort: formatDate(generatedAt),
       archive: Boolean(options.archive)
@@ -751,6 +873,8 @@
   window.GradeFlow = {
     state: state,
     SUBJECTS: SUBJECTS,
+    SEMESTERS: SEMESTERS,
+    ATTENDANCE_MONTHS: ATTENDANCE_MONTHS,
     PAGE_META: PAGE_META,
     registerPage: registerPage,
     navigateTo: navigateTo,

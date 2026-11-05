@@ -1045,89 +1045,93 @@ img { max-width: 100%; display: block; }
 .rc-closing { margin-top: 0.65em; color: #6a7a8e; font-size: 0.66em; line-height: 1.55; }
 
 .preview-canvas { grid-template-columns: minmax(0, 1fr); }
-.preview-column { width: 100%; max-width: 1200px; margin-inline: auto; }
+.preview-column { width: 100%; max-width: 1200px; margin-inline: auto; container-type: inline-size; }
 .report-sheet.report-front {
   width: 112%;
   margin-inline: -6%;
   aspect-ratio: 297 / 210;
-  padding: 3.4%;
-  color: #252525;
-  font-family: Arial, sans-serif;
-  font-size: clamp(9px, 0.92vw, 12px);
-  line-height: 1.18;
+  padding: 3.2% 3.6%;
+  color: #222;
+  font-family: Arial, "Liberation Sans", sans-serif;
+  font-size: 12px;
+  font-size: 1.17cqw;
+  line-height: 1.15;
 }
-.rc-official-header { display: grid; grid-template-columns: 47% 51%; align-items: center; gap: 2%; padding-bottom: 0.65em; border-bottom: 1px solid #827c63; }
-.rc-official-school { display: flex; align-items: flex-end; justify-content: center; gap: 0.7em; min-width: 0; }
+.rc-official-header { display: grid; grid-template-columns: 48.5% 49.5%; align-items: center; gap: 1.5%; padding-bottom: 0.45em; border-bottom: 1px solid #777; }
+.rc-official-school { display: flex; align-items: flex-end; justify-content: center; gap: 0.6em; min-width: 0; }
 .rc-official-school .rc-logo { display: block; flex: 0 0 5.4em; width: 5.4em; height: 6.1em; align-self: flex-end; object-fit: contain; border: 0; border-radius: 0; }
 .rc-official-school > div { display: flex; flex-direction: column; justify-content: center; align-self: flex-end; min-width: 0; min-height: 6.1em; text-align: center; }
 .rc-official-school strong, .rc-official-school span { display: block; }
-.rc-official-school strong { margin-top: 0.12em; color: #252525; font-size: 1.18em; }
-.rc-official-school span { margin-top: 0.08em; color: #555; font-size: 0.7em; line-height: 1.15; }
-.rc-official-title { text-align: center; font-family: Georgia, serif; font-size: 1.05em; }
-.rc-official-title strong, .rc-official-title span { display: block; }
-.rc-official-title span { margin-top: 0.3em; font-weight: 600; }
-.rc-official-layout { display: grid; flex: 1; grid-template-columns: minmax(0, 46.5fr) minmax(0, 51.5fr); gap: 2%; min-height: 0; padding-top: 0.65em; }
+.rc-official-school strong { margin-top: 0.1em; color: #222; font-size: 1.35em; }
+.rc-official-school span { margin-top: 0.06em; color: #444; font-size: 0.68em; line-height: 1.12; }
+.rc-official-title { text-align: center; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 1.22em; font-weight: 700; line-height: 1.15; letter-spacing: 0.01em; }
+.rc-official-title strong { display: block; }
+.rc-official-layout { display: grid; flex: 1; grid-template-columns: minmax(0, 48.5fr) minmax(0, 49.5fr); gap: 1.5%; min-height: 0; padding-top: 0.5em; }
 .rc-official-learner, .rc-official-grades { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.rc-official-grades { padding-left: 0.55em; border-left: 1px solid #c8c0a0; }
-.rc-official-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid #777; border-left: 1px solid #777; }
-.rc-official-field { display: flex; align-items: baseline; justify-content: flex-start; gap: 0.48em; min-width: 0; padding: 0.25em 0.4em; background: #fff; border-right: 1px solid #777; border-bottom: 1px solid #777; }
-.rc-official-field span { flex: 0 0 auto; color: #555; font-size: 0.72em; font-weight: 700; }
-.rc-official-field strong { overflow: hidden; font-size: 0.86em; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.rc-official-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 0.9em; }
+.rc-official-field { display: flex; align-items: baseline; gap: 0.3em; min-width: 0; padding: 0.46em 0; }
+.rc-official-field span { flex: 0 0 auto; color: #222; font-size: 0.72em; font-weight: 700; }
+.rc-official-field strong { overflow: hidden; font-size: 0.82em; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .rc-official-name { grid-column: 1 / -1; }
-.rc-official-name strong { font-size: 1em; }
+.rc-official-name strong { font-size: 0.94em; font-weight: 700; }
 .rc-official-track { grid-column: 1 / -1; }
-.rc-official-note { margin-top: 0.48em; padding: 0.35em 0.5em; background: #f7f6f0; border-left: 2px solid #c8c0a0; font-size: 0.76em; }
-.rc-official-note p { margin-top: 0.18em; font-style: italic; line-height: 1.25; }
-.rc-official-note > span { display: block; margin-top: 0.2em; color: #555; font-size: 0.84em; text-align: right; }
-.rc-staff-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 1.3em; margin: 0.5em 0 0.2em; }
-.rc-staff-signatures > div { min-width: 0; text-align: center; }
-.rc-staff-signatures strong { display: block; overflow: hidden; padding: 3em 0 0.12em; border-bottom: 1px solid #555; font-size: 0.83em; text-overflow: ellipsis; white-space: nowrap; }
-.rc-staff-signatures span { display: block; margin-top: 0.12em; font-size: 0.7em; }
-.rc-transfer { margin-top: 0.58em; }
+.rc-official-note { margin-top: 0.45em; font-size: 0.74em; line-height: 1.2; }
+.rc-official-note strong { font-size: 0.98em; }
+.rc-official-note p { margin-top: 0.1em; font-style: italic; line-height: 1.2; }
+.rc-cert-signatories { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 0.55em; margin-bottom: 0.2em; }
+.rc-cert-signatories > div { min-width: 0; padding: 0 0 0.12em; border-bottom: 1px solid #777; text-align: center; }
+.rc-cert-signatories strong { display: block; overflow: hidden; font-size: 0.78em; text-overflow: ellipsis; white-space: nowrap; }
+.rc-transfer { margin-top: 0.2em; }
 .rc-transfer-grid { display: grid; grid-template-columns: 1fr 1fr; }
-.rc-transfer h4 { min-height: 2.1em; padding: 0.3em 0.35em; background: #c8c0a0; border: 1px solid #555; font-size: 0.67em; line-height: 1.15; text-align: center; }
+.rc-transfer-panel { min-width: 0; }
+.rc-transfer h4 { min-height: 1.7em; margin: 0; padding: 0.18em 0.24em; background: #c8c0a0; border: 1px solid #555; font-size: 0.64em; line-height: 1.1; text-align: center; }
 .rc-transfer table, .rc-attendance-table, .rc-official-values { width: 100%; border-collapse: collapse; }
-.rc-transfer th, .rc-transfer td, .rc-attendance-table th, .rc-attendance-table td, .rc-official-values th, .rc-official-values td { padding: 0.18em 0.28em; border: 1px solid #777; font-size: 0.64em; text-align: left; }
-.rc-transfer th { width: 58%; font-weight: 500; }
+.rc-transfer th, .rc-transfer td, .rc-attendance-table th, .rc-attendance-table td, .rc-official-values th, .rc-official-values td { padding: 0.12em 0.22em; border: 1px solid #777; font-size: 0.6em; text-align: left; }
+.rc-transfer th { width: 55%; font-weight: 400; }
 .rc-transfer td { min-width: 2em; }
-.rc-transfer-spacer td { height: 1.66em; border-top: 0; border-bottom: 0; }
-.rc-transfer .rc-transfer-signature td { height: 2.7em; padding: 1.65em 0.28em 0.15em; text-align: center; }
-.rc-transfer-signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7em; }
-.rc-transfer-signatures span, .rc-transfer-signature > td > span { display: block; width: 68%; justify-self: center; padding-top: 0.14em; border-top: 1px solid #777; font-size: 0.62em; text-align: center; }
-.rc-attendance-wrap, .rc-official-values-wrap { display: flex; flex: 1 1 0; flex-direction: column; min-width: 0; min-height: 0; margin-top: 0.32em; border: 1px solid #777; }
+.rc-transfer-spacer td { height: 1.55em; border-top: 0; border-bottom: 0; }
+.rc-transfer .rc-transfer-signature td { height: 2.1em; padding: 1.25em 0.22em 0.12em; text-align: center; }
+.rc-transfer-signature > td > span { display: block; width: 68%; margin-inline: auto; padding-top: 0.12em; border-top: 1px solid #777; font-size: 0.58em; text-align: center; }
+.rc-attendance-wrap { display: flex; flex: 0 0 auto; flex-direction: column; min-width: 0; margin-top: 0.26em; border: 1px solid #777; }
+.rc-official-values-wrap { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; min-height: 0; margin-top: 0.32em; border: 1px solid #777; }
 .rc-attendance-table, .rc-official-values { flex: 0 0 auto; width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; }
-.rc-attendance-table caption, .rc-official-values caption, .rc-official-legends caption { padding: 0.35em 0.45em; background: #c8c0a0; border: 1px solid #777; font-size: 0.72em; font-weight: 700; text-align: center; }
-.rc-attendance-table caption, .rc-official-values caption { padding: 0.1em 0.3em; font-size: 0.84em; line-height: 1; }
-.rc-attendance-table thead tr, .rc-attendance-table tbody tr { height: 0.76em; }
-.rc-attendance-table th, .rc-attendance-table td { padding: 0.02em 0.06em; font-size: 0.66em; line-height: 1; text-align: center; }
-.rc-attendance-table tbody th { width: 20%; text-align: left; }
-.rc-official-values thead tr { height: 0.68em; }
-.rc-official-values tbody tr { height: 0.68em; }
-.rc-official-values th, .rc-official-values td { padding: 0.005em 0.06em; font-size: 0.58em; line-height: 0.96; }
-.rc-official-values thead th { background: #f2efdf; font-size: 0.64em; text-align: center; }
-.rc-official-values thead th:first-child { width: 13%; }
-.rc-official-values thead th:nth-child(2) { width: 66%; }
-.rc-official-values thead th[colspan="4"] { width: 21%; }
-.rc-official-values tbody th { width: 13%; vertical-align: middle; }
-.rc-official-values tbody td:first-of-type { width: 66%; vertical-align: middle; }
-.rc-official-values tbody td:not(:first-of-type) { font-size: 0.62em; }
-.rc-official-values tbody td:not(:first-of-type) { text-align: center; vertical-align: middle; }
+.rc-official-values { flex: 1 1 auto; height: auto; }
+.rc-attendance-table caption, .rc-official-values caption { padding: 0.14em 0.24em; background: #c8c0a0; border-bottom: 1px solid #777; font-size: 0.76em; font-weight: 700; line-height: 1.05; text-align: center; text-transform: uppercase; }
+.rc-attendance-table col.rc-attendance-label { width: 20%; }
+.rc-attendance-table col.rc-attendance-total { width: 8%; }
+.rc-attendance-table th, .rc-attendance-table td { padding: 0.14em 0.12em; font-size: 0.58em; line-height: 1.05; text-align: center; }
+.rc-attendance-table thead th { background: #c8c0a0; font-size: 0.56em; font-weight: 700; }
+.rc-attendance-table tbody th { text-align: left; font-weight: 400; }
+.rc-official-values col.rc-values-core { width: 13%; }
+.rc-official-values col.rc-values-statement { width: 61%; }
+.rc-official-values col.rc-values-quarter { width: 6.5%; }
+.rc-official-values th, .rc-official-values td { padding: 0.1em 0.16em; font-size: 0.56em; line-height: 1.08; }
+.rc-official-values thead tr { height: 1.6em; }
+.rc-official-values tbody tr { height: 2.2em; }
+.rc-official-values thead th { background: #f2efdf; font-size: 0.6em; text-align: center; }
+.rc-official-values tbody th { vertical-align: middle; font-weight: 400; text-align: left; }
+.rc-official-values tbody td:first-of-type { vertical-align: middle; }
+.rc-official-values tbody td:not(:first-of-type) { font-size: 0.6em; text-align: center; vertical-align: middle; }
 .rc-semester { display: flex; flex: 1 1 0; flex-direction: column; min-height: 0; margin-top: 0; }
-.rc-semester + .rc-semester { margin-top: 0.35em; }
-.rc-semester h4 { margin: 0 0 0.24em; padding: 0.3em 0.45em; background: #f2efdf; border-left: 2px solid #9a9272; font-family: Georgia, serif; font-size: 0.84em; line-height: 1.05; }
-.report-front .rc-official-grade-table { width: 100%; height: 100%; margin: 0; border: 1px solid #555; border-collapse: collapse; table-layout: fixed; }
-.report-front .rc-official-grade-table th { padding: 0.22em 0.32em; color: #222; background: #c8c0a0; border: 1px solid #555; font-size: 0.68em; letter-spacing: 0; line-height: 1.05; text-align: center; text-transform: none; }
-.report-front .rc-official-grade-table th:first-child { width: 67%; text-align: left; }
-.report-front .rc-official-grade-table td { padding: 0.2em 0.32em; border: 1px solid #777; font-size: 0.68em; line-height: 1.08; }
-.report-front .rc-official-grade-table td:not(:first-child) { width: 11%; text-align: center; }
-.report-front .rc-official-grade-table .rc-subject-group th { padding-block: 0.3em; background: #c8c0a0; font-size: 0.68em; text-align: left; }
+.rc-semester + .rc-semester { margin-top: 0.3em; }
+.rc-semester h4 { margin: 0 0 0.12em; padding: 0; background: transparent; border: 0; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 0.95em; font-weight: 700; line-height: 1.05; text-align: center; }
+.report-front .rc-official-grade-table { width: 100%; height: 100%; margin: 0; border: 1.5px solid #444; border-collapse: collapse; table-layout: fixed; }
+.report-front .rc-official-grade-table col.rc-col-subject { width: 47%; }
+.report-front .rc-official-grade-table col.rc-col-score { width: 17.5%; }
+.report-front .rc-official-grade-table col.rc-col-final { width: 18%; }
+.report-front .rc-official-grade-table th { padding: 0.16em 0.26em; color: #222; background: #c8c0a0; border: 1px solid #555; font-size: 0.6em; font-weight: 700; letter-spacing: 0; line-height: 1.05; text-align: center; text-transform: none; }
+.report-front .rc-official-grade-table th:first-child { text-align: left; }
+.report-front .rc-official-grade-table td { padding: 0.14em 0.18em; border: 1px solid #555; font-size: 0.56em; line-height: 1.1; }
+.report-front .rc-official-grade-table td:not(:first-child) { text-align: center; }
+.report-front .rc-official-grade-table .rc-subject-group th { padding-block: 0.22em; background: #c8c0a0; font-size: 0.6em; text-align: left; }
 .report-front .rc-official-grade-table .rc-semester-final { font-weight: 700; }
-.report-front .rc-official-grade-table .rc-semester-average th { padding: 0.3em 0.32em; font-size: 0.66em; text-align: left; }
+.report-front .rc-official-grade-table .rc-semester-average th { padding: 0.22em 0.26em; font-size: 0.6em; text-align: left; }
 .report-front .rc-official-grade-table .rc-semester-average td { background: #f0eddf; font-weight: 700; }
-.rc-official-legends { display: grid; grid-template-columns: 0.82fr 1.45fr 0.92fr; gap: 0.4em; margin-top: 0.45em; }
-.rc-official-legends table { width: 100%; border-collapse: collapse; }
-.rc-official-legends th, .rc-official-legends td { padding: 0.24em 0.28em; border: 1px solid #777; font-size: 0.62em; line-height: 1.1; }
-.rc-official-legends caption { padding: 0.35em 0.2em; font-size: 0.64em; line-height: 1.1; }
+.rc-official-legends { display: grid; grid-template-columns: 0.9fr 1.9fr 0.9fr; gap: 0; margin-top: 0.28em; border: 1px solid #555; border-right: 0; border-bottom: 0; }
+.rc-official-legends table { width: 100%; height: 100%; border-collapse: collapse; }
+.rc-official-legends th, .rc-official-legends td { padding: 0.14em 0.22em; border-right: 1px solid #555; border-bottom: 1px solid #555; font-size: 0.56em; line-height: 1.1; }
+.rc-official-legends th { font-weight: 700; text-align: left; }
+.rc-official-legends caption { padding: 0.18em 0.14em; background: #c8c0a0; border-right: 1px solid #555; border-bottom: 1px solid #555; font-size: 0.6em; font-weight: 700; line-height: 1.05; text-align: center; }
 .rc-parent-signatures td { min-width: 2em; height: 1.7em; }
 
 .preview-hint { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 9px; color: var(--muted-light); font-size: 9.3px; }
@@ -1465,7 +1469,7 @@ img { max-width: 100%; display: block; }
   .reports-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .preview-canvas { grid-template-columns: 1fr; }
   .preview-column { width: 100%; max-width: 560px; margin: 0 auto; }
-  .report-sheet.report-front { width: 100%; margin-inline: 0; font-size: clamp(5px, 0.76vw, 7px); }
+  .report-sheet.report-front { width: 100%; margin-inline: 0; font-size: 5.4px; font-size: 0.967cqw; }
   .report-sheet { font-size: clamp(8px, 1.5vw, 10.5px); }
 }
 
@@ -1597,5 +1601,5 @@ img { max-width: 100%; display: block; }
   #print-area.print-landscape .report-sheet { padding: 10mm 16mm; }
   #print-area.print-landscape .rc-student { font-size: 1.6em; }
   #print-area.print-landscape .rc-heading h3 { font-size: 1.35em; }
-  #print-area .report-sheet.report-front { width: 100%; margin-inline: 0; aspect-ratio: auto; height: var(--print-page-height, 208mm); padding: 10mm; font-size: 9pt; }
+  #print-area .report-sheet.report-front { width: 100%; margin-inline: 0; aspect-ratio: auto; height: var(--print-page-height, 208mm); padding: 7mm 8mm; font-size: 8.2pt; }
 }

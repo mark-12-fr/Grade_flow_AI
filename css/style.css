@@ -1682,3 +1682,8 @@ img { max-width: 100%; display: block; }
 .sf10-info.sf10-sign { width: 100%; margin-bottom: 0.5rem; }
 .sf10-info.sf10-sign td { vertical-align: top; }
 .sf10-remedial thead th { font-size: 0.66rem; }
+.sf10-head { display: grid; grid-template-columns: 90px 1fr 120px; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.sf10-head .sf10-title { text-align: center; }
+.sf10-seal { width: 70px; height: 70px; justify-self: end; }
+.sf10-deped { width: 110px; height: auto; justify-self: start; }
+.sf10-formno { position: absolute; right: 0; top: -0.4rem; }

@@ -97,8 +97,11 @@
         '<p class="sf10-remarks">Name of Teacher/Adviser: ____________________ &nbsp; Signature: ____________________</p>';
     }).join('');
 
-    return '<div class="sf10-head"><span class="sf10-formno">SF10-SHS</span><p>REPUBLIC OF THE PHILIPPINES</p><p>DEPARTMENT OF EDUCATION</p>' +
+    return '<div class="sf10-head"><span class="sf10-formno">SF10-SHS</span>' +
+      '<img class="sf10-seal" src="assets/deped-seal.png" alt="DepEd seal">' +
+      '<div class="sf10-title"><p>REPUBLIC OF THE PHILIPPINES</p><p>DEPARTMENT OF EDUCATION</p>' +
       '<h2>SENIOR HIGH SCHOOL STUDENT PERMANENT RECORD</h2></div>' +
+      '<img class="sf10-deped" src="assets/deped-logo.png" alt="DepEd logo"></div>' +
       (isComplete(student) ? '' : '<p class="sf10-incomplete" role="status">Incomplete record: some grades are still missing. Fix them in Grade Verification.</p>') +
       '<div class="sf10-band">LEARNER\'S INFORMATION</div>' +
       '<table class="sf10-info"><tbody>' +
@@ -137,6 +140,27 @@
       .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7E]/g, '?');
   }
 
+  const logos = { seal: null, deped: null };
+
+  function loadImage(url) {
+    return new Promise(function (resolve) {
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        try { resolve(canvas.toDataURL('image/png')); } catch (e) { resolve(null); }
+      };
+      img.onerror = function () { resolve(null); };
+      img.src = url;
+    });
+  }
+
+  function loadLogos() {
+    if (logos.seal && logos.deped) return Promise.resolve();
+    return Promise.all([loadImage('assets/deped-seal.png'), loadImage('assets/deped-logo.png')]).then(function (r) { logos.seal = r[0]; logos.deped = r[1]; });
+  }
+
   function drawPage(doc, student) {
     const context = GF.reportContext();
     const n = nameParts(student.name);
@@ -172,9 +196,11 @@
 
     doc.setLineWidth(0.2); doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(6); text('SF10-SHS', 200, y, { align: 'right' });
+    if (logos.seal) doc.addImage(logos.seal, 'PNG', 32, y - 1, 16, 16);
+    if (logos.deped) doc.addImage(logos.deped, 'PNG', 138, y + 1, 30, 15.4);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7); text('REPUBLIC OF THE PHILIPPINES', 105, y + 1, { align: 'center' });
     text('DEPARTMENT OF EDUCATION', 105, y + 4.5, { align: 'center' });
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); text('SENIOR HIGH SCHOOL STUDENT PERMANENT RECORD', 105, y + 10, { align: 'center' }); y += 13;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); text('SENIOR HIGH SCHOOL STUDENT PERMANENT RECORD', 105, y + 10, { align: 'center' }); y += 17;
     if (!isComplete(student)) {
       doc.setTextColor(170, 20, 20); doc.setFontSize(7);
       text('INCOMPLETE RECORD: some grades are missing.', 105, y, { align: 'center' }); doc.setTextColor(0, 0, 0); y += 3;
@@ -247,6 +273,10 @@
   function download(students, filename) {
     const JsPDF = jsPdfClass();
     if (!JsPDF) { GF.showToast('PDF support did not load. Reload the page and try again.', 'error'); return; }
+    loadLogos().then(function () { buildPdf(JsPDF, students, filename); });
+  }
+
+  function buildPdf(JsPDF, students, filename) {
     const doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     students.forEach(function (student, i) {
       if (i > 0) doc.addPage();

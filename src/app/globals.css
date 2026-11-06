@@ -386,10 +386,10 @@ img { max-width: 100%; display: block; }
 }
 
 .page { display: none; }
-.page.active { display: block; animation: pageIn 0.22s ease; }
+.page.active { display: block; animation: pageIn 0.4s var(--ease-out, ease) both; }
 
 @keyframes pageIn {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
 
@@ -1711,3 +1711,69 @@ img { max-width: 100%; display: block; }
 .sf10-pick { flex-wrap: wrap; }
 .sf10-pick .sf10-file-name { flex: 1 1 calc(100% - 40px); white-space: normal; }
 .sf10-pick .select-wrap { flex: 1 1 200px; }
+
+/* ==========================================================================
+   Motion: smooth, calm transitions. Everything is switched off for people
+   who ask their system for reduced motion (see the last block).
+   ========================================================================== */
+:root { --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1); --ease-soft: cubic-bezier(0.4, 0, 0.2, 1); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes swapIn { from { opacity: 0; transform: translateY(8px) scale(0.995); } to { opacity: 1; transform: none; } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* Cards and sections glide in one after another when a page opens. */
+.page.active > * { animation: rise 0.5s var(--ease-out) both; }
+.page.active > *:nth-child(2) { animation-delay: 0.05s; }
+.page.active > *:nth-child(3) { animation-delay: 0.1s; }
+.page.active > *:nth-child(4) { animation-delay: 0.15s; }
+.page.active > *:nth-child(5) { animation-delay: 0.2s; }
+.page.active > *:nth-child(n+6) { animation-delay: 0.25s; }
+.page.active { animation: none; }
+
+/* Switching learner: the report fades and settles instead of jumping. */
+.swap-in { animation: swapIn 0.35s var(--ease-out) both; }
+
+/* Table rows and uploaded files appear softly. */
+.grade-table tbody tr, .reports-table tbody tr, .summary-table tbody tr { animation: fadeIn 0.35s var(--ease-soft) both; }
+.grade-table tbody tr:nth-child(2), .reports-table tbody tr:nth-child(2) { animation-delay: 0.04s; }
+.grade-table tbody tr:nth-child(3), .reports-table tbody tr:nth-child(3) { animation-delay: 0.08s; }
+.grade-table tbody tr:nth-child(4), .reports-table tbody tr:nth-child(4) { animation-delay: 0.12s; }
+.grade-table tbody tr:nth-child(5), .reports-table tbody tr:nth-child(5) { animation-delay: 0.16s; }
+.grade-table tbody tr:nth-child(n+6), .reports-table tbody tr:nth-child(n+6) { animation-delay: 0.2s; }
+.uploaded-file, .sf10-file-row, .form-error, .student-search-results { animation: swapIn 0.35s var(--ease-out) both; }
+.notifications-popover { animation: slideDown 0.22s var(--ease-out) both; }
+
+/* Progress and processing: the ring and bar move continuously. */
+@property --progress { syntax: '<number>'; inherits: true; initial-value: 0; }
+.progress-ring { transition: --progress 0.25s linear; }
+.progress-fill { transition: width 0.25s linear; }
+.timeline-item { transition: background-color 0.35s var(--ease-soft), border-color 0.35s var(--ease-soft), opacity 0.35s var(--ease-soft); }
+.timeline-icon { transition: background-color 0.35s var(--ease-soft), color 0.35s var(--ease-soft), transform 0.35s var(--ease-out); }
+.timeline-item.done .timeline-icon { transform: scale(1.06); }
+.timeline-status { transition: color 0.3s var(--ease-soft); }
+
+/* Buttons, links and cards respond to the pointer. */
+.btn { transition: background-color 0.2s var(--ease-soft), border-color 0.2s var(--ease-soft), color 0.2s var(--ease-soft), box-shadow 0.25s var(--ease-soft), transform 0.2s var(--ease-out); }
+.btn:not(:disabled):hover { transform: translateY(-1px); }
+.btn:not(:disabled):active { transform: translateY(0) scale(0.985); }
+.icon-btn { transition: background-color 0.2s var(--ease-soft), color 0.2s var(--ease-soft), transform 0.2s var(--ease-out); }
+.icon-btn:not(:disabled):active { transform: scale(0.92); }
+.card { transition: box-shadow 0.3s var(--ease-soft), border-color 0.3s var(--ease-soft); }
+.nav-link, .step-link, .step-marker { transition: background-color 0.25s var(--ease-soft), color 0.25s var(--ease-soft), border-color 0.25s var(--ease-soft); }
+.grade-table tbody tr, .reports-table tbody tr { transition: background-color 0.2s var(--ease-soft); }
+.grade-input, .report-data-input, select, input[type="search"] { transition: border-color 0.2s var(--ease-soft), box-shadow 0.2s var(--ease-soft), background-color 0.2s var(--ease-soft); }
+.toast { transition: opacity 0.3s var(--ease-soft), transform 0.35s var(--ease-out), visibility 0.3s; }
+.modal[open] { animation: modalIn 0.28s var(--ease-out); }
+.modal[open]::backdrop { animation: fadeIn 0.28s var(--ease-soft); }
+.sidebar { transition: transform 0.3s var(--ease-out), width 0.3s var(--ease-out), margin 0.3s var(--ease-out); }
+
+/* Smooth scrolling for in-page jumps. */
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

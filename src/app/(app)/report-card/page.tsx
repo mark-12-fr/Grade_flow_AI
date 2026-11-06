@@ -130,7 +130,7 @@ export default function ReportCardPage() {
           <div className="preview-label"><strong>Report card</strong><span>Learning progress and achievement</span><span>1 page</span></div>
           <article className="report-sheet report-front" aria-label="Report card">
             {student
-              ? <ReportCard student={student} context={context} school={state.school} />
+              ? <div key={student.id} className="swap-in"><ReportCard student={student} context={context} school={state.school} /></div>
               : <p className="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>}
           </article>
         </div>

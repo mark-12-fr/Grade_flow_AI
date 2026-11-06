@@ -47,18 +47,24 @@ export default function ProcessingPage() {
     if (s.processing || s.processed) return;
     if (!s.students.length && !s.sf10Students.length) { toast('Add a grade sheet before processing.', 'error'); return; }
     setState({ processing: true, processed: false, progress: 0, generated: false, generatedAt: null });
-    const timer = window.setInterval(() => {
-      const next = Math.min(100, getState().progress + 4);
-      if (next >= 100) {
-        window.clearInterval(timer);
+    // Time based easing (slow start, steady middle, soft finish) so the ring and bar glide instead of stepping.
+    const DURATION = 4200;
+    const startedAt = performance.now();
+    let frame = 0;
+    const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startedAt) / DURATION);
+      if (t >= 1) {
         setState({ processing: false, progress: 100, processed: true });
         toast('Draft ready. Review every grade before generating reports.');
-      } else {
-        setState({ progress: next });
+        return;
       }
-    }, 150);
+      setState({ progress: Math.round(ease(t) * 1000) / 10 });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
     return () => {
-      window.clearInterval(timer);
+      cancelAnimationFrame(frame);
       if (getState().processing) setState({ processing: false, progress: 0 });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

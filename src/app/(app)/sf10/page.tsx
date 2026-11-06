@@ -53,7 +53,7 @@ export default function Sf10Page() {
         </button>
       </div>
       <article className="card sf10-sheet" aria-label="SF10 record">
-        {student ? <Sf10Sheet student={student} state={state} /> : <p className="sf10-incomplete">Upload an SF10 or SF9 file first.</p>}
+        {student ? <div key={`${student.id}-${index}`} className="swap-in"><Sf10Sheet student={student} state={state} /></div> : <p className="sf10-incomplete">Upload an SF10 or SF9 file first.</p>}
       </article>
     </section>
   );

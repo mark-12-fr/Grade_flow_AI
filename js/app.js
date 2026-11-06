@@ -87,7 +87,7 @@
 
   const PAGE_META = {
     upload: { label: 'Upload Grades', breadcrumb: 'Upload Grades', nav: 'upload', fileTitle: 'Upload Grades' },
-    processing: { label: 'AI Processing', breadcrumb: 'AI Processing', nav: 'processing', fileTitle: 'AI Processing' },
+    processing: { label: 'Preparing Reports', breadcrumb: 'Preparing Reports', nav: 'processing', fileTitle: 'Preparing Reports' },
     verification: { label: 'Grade Verification', breadcrumb: 'Grade Verification', nav: 'verification', fileTitle: 'Grade Verification' },
     'report-card': { label: 'Report Cards', breadcrumb: 'Report Cards', nav: 'report-card', fileTitle: 'Report Cards' },
     'generated-reports': { label: 'Generated Reports', breadcrumb: 'Report Cards', nav: 'report-card', fileTitle: 'Generated Reports' },

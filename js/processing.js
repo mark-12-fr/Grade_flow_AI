@@ -1,6 +1,6 @@
 /* ==========================================================================
-   AI Processing (local demo)
-   The timeline and progress are a simulation. No external AI service is used.
+   Local report preparation
+   The timeline is a demo. No external AI service is used.
    ========================================================================== */
 (function () {
   'use strict';
@@ -42,7 +42,7 @@
       return {
         headline: 'Your reports are ready',
         subtitle: 'Every grade is ready for your final check.',
-        count: 'All ' + total + ' student' + (total === 1 ? '' : 's') + ' record' + (total === 1 ? '' : 's') + ' prepared',
+        count: 'All ' + total + ' learner' + (total === 1 ? ' record' : ' records') + ' prepared',
         eta: 'Ready when you are. Review the grades next.'
       };
     }
@@ -50,7 +50,7 @@
       return {
         headline: 'Building your report card drafts',
         subtitle: 'Putting the final pages together for your review.',
-        count: total + ' of ' + total + ' comment' + (total === 1 ? '' : 's') + ' prepared',
+        count: total + ' learner' + (total === 1 ? ' summary' : ' summaries') + ' prepared',
         eta: 'Almost there. About ' + Math.max(1, Math.ceil((100 - progress) / 20)) + ' seconds remaining.'
       };
     }
@@ -58,8 +58,8 @@
       const prepared = Math.min(total, Math.round(((progress - 60) / 20) * total));
       return {
         headline: 'Your reports are taking shape',
-        subtitle: 'Writing thoughtful student comments...',
-        count: prepared + ' of ' + total + ' comment' + (total === 1 ? '' : 's') + ' prepared',
+        subtitle: 'Preparing learner summaries from the imported grades...',
+        count: prepared + ' of ' + total + ' learner' + (total === 1 ? ' summary' : ' summaries') + ' prepared',
         eta: 'About ' + Math.max(2, Math.ceil((100 - progress) / 20)) + ' seconds remaining. You don\'t need to do anything yet.'
       };
     }
@@ -75,16 +75,16 @@
     }
     if (progress >= 20) {
       return {
-        headline: 'Students and subjects found',
-        subtitle: 'Validating names, roll numbers, and class details.',
-        count: total + ' student' + (total === 1 ? '' : 's') + ' found',
+        headline: 'Learners and subjects found',
+        subtitle: 'Validating names, roll numbers, and imported class details.',
+        count: total + ' learner' + (total === 1 ? '' : 's') + ' found',
         eta: 'About ' + Math.max(2, Math.ceil((100 - progress) / 20)) + ' seconds remaining.'
       };
     }
     return {
       headline: 'Your reports are taking shape',
-      subtitle: 'Reading your grade sheet and matching the columns...',
-      count: 'Reading the grade sheet',
+      subtitle: 'Checking the uploaded workbook and organizing grade data...',
+      count: 'Organizing the class workbook',
       eta: 'This local demo takes a few seconds. Nothing is sent anywhere.'
     };
   }

@@ -18,7 +18,20 @@
     'approvedBy'
   ];
   const CORE_VALUE_KEYS = ['makaDiyos', 'makatao', 'makakalikasan', 'makabansa'];
+  const CLASS_METADATA_ALIASES = {
+    className: ['classname', 'class'],
+    strand: ['strand'],
+    gradeLevel: ['gradelevel'],
+    year: ['schoolyear', 'academicyear'],
+    term: ['term', 'gradingperiod', 'reportingperiod'],
+    section: ['section', 'sectionname'],
+    studentStatus: ['studentstatus', 'learnerstatus'],
+    graduationStatus: ['graduationstatus'],
+    teacher: ['adviser', 'advisor', 'teacher', 'classadviser'],
+    principal: ['principal']
+  };
   let nextSf10FileId = 1;
+  let manualClassDetailsConfirmed = false;
 
   const HEADER_ALIASES = {
     roll: ['roll', 'rollno', 'rollnumber', 'no', 'number', 'id', 'studentid'],
@@ -155,8 +168,32 @@
     return Number.isFinite(numeric) && Number.isInteger(numeric) && numeric >= 0 ? numeric : NaN;
   }
 
+  function readClassMetadata(headerRow, dataRows) {
+    const details = {};
+    const errors = [];
+    Object.keys(CLASS_METADATA_ALIASES).forEach(function (key) {
+      const columnIndex = getColumnIndex(headerRow, CLASS_METADATA_ALIASES[key]);
+      if (columnIndex < 0) return;
+      const values = Array.from(new Set(dataRows.map(function (row) {
+        return String(row[columnIndex] == null ? '' : row[columnIndex]).trim();
+      }).filter(Boolean)));
+      if (values.length > 1) {
+        errors.push('Class detail "' + key + '" has different values in the learner rows.');
+      } else if (values.length === 1) {
+        details[key] = values[0];
+      }
+    });
+    if (errors.length) throw new Error(errors.join('\n'));
+    return details;
+  }
+
   function buildStudentsFromRows(rows, headerIndex) {
     const headerRow = rows[headerIndex];
+    const dataRows = rows.slice(headerIndex + 1).filter(function (row) {
+      return row.some(function (cell) { return String(cell).trim() !== ''; });
+    });
+    if (dataRows.length === 0) throw new Error('The file has headers but no learner row.');
+
     const columns = {
       roll: getColumnIndex(headerRow, HEADER_ALIASES.roll),
       name: getColumnIndex(headerRow, HEADER_ALIASES.name),
@@ -207,12 +244,6 @@
 
     const students = [];
     const errors = [];
-    const dataRows = rows.slice(headerIndex + 1).filter(function (row) {
-      return row.some(function (cell) { return String(cell).trim() !== ''; });
-    });
-
-    if (dataRows.length === 0) throw new Error('The file has headers but no student row.');
-    if (dataRows.length > 1) throw new Error('Each file must contain grades for one student only.');
 
     dataRows.forEach(function (row, rowIndex) {
       const name = String(row[columns.name] || '').trim();
@@ -304,7 +335,19 @@
       student.traits = GF.makeTraits(student);
       student.nextSteps = GF.makeNextSteps(student);
     });
-    return students;
+    return {
+      students: students,
+      classDetails: readClassMetadata(headerRow, dataRows)
+    };
+  }
+
+  function setSelectValue(select, value) {
+    if (!select || !value) return;
+    const exists = Array.from(select.options).some(function (option) {
+      return option.value === value;
+    });
+    if (!exists) select.add(new Option(value, value));
+    select.value = value;
   }
 
   function syncSelects() {
@@ -316,14 +359,28 @@
     const sectionSelect = document.getElementById('section-selector');
     const adviserInput = document.getElementById('adviser-name');
     const principalInput = document.getElementById('principal-name');
-    if (strandSelect) strandSelect.value = GF.state.strand;
-    if (gradeLevelSelect) gradeLevelSelect.value = GF.state.gradeLevel;
-    if (schoolYearSelect) schoolYearSelect.value = GF.state.year;
-    if (statusSelect) statusSelect.value = GF.state.studentStatus;
-    if (graduationStatusSelect) graduationStatusSelect.value = GF.state.graduationStatus;
-    if (sectionSelect) sectionSelect.value = GF.state.section;
+    const termInput = document.getElementById('term-name');
+    setSelectValue(strandSelect, GF.state.strand);
+    setSelectValue(gradeLevelSelect, GF.state.gradeLevel);
+    setSelectValue(schoolYearSelect, GF.state.year);
+    setSelectValue(statusSelect, GF.state.studentStatus);
+    setSelectValue(graduationStatusSelect, GF.state.graduationStatus);
+    setSelectValue(sectionSelect, GF.state.section);
     if (adviserInput) adviserInput.value = GF.state.teacher;
     if (principalInput) principalInput.value = GF.state.school.principal;
+    if (termInput) termInput.value = GF.state.term;
+  }
+
+  function hasCompleteImportedClassDetails(details) {
+    const required = ['strand', 'gradeLevel', 'year', 'term', 'section',
+      'studentStatus', 'graduationStatus', 'teacher', 'principal'];
+    return required.every(function (key) { return Boolean(details && details[key]); });
+  }
+
+  function invalidateManualClassDetailsConfirmation() {
+    manualClassDetailsConfirmed = false;
+    const confirmation = document.getElementById('confirm-manual-class-details');
+    if (confirmation) confirmation.checked = false;
   }
 
   function setError(message) {
@@ -350,7 +407,7 @@
     if (!info) return;
     if (!upload) {
       info.hidden = true;
-      if (emptyHint) emptyHint.textContent = 'No student files uploaded';
+      if (emptyHint) emptyHint.textContent = 'No class file uploaded';
       if (details) details.textContent = '—';
       if (continueBtn) continueBtn.disabled = true;
       return;
@@ -359,8 +416,9 @@
     info.hidden = false;
     if (emptyHint) emptyHint.textContent = upload.name;
     if (details) {
-      details.textContent = upload.rows + ' individual student file' + (upload.rows === 1 ? '' : 's') +
-        ' · ' + upload.rows + ' student' + (upload.rows === 1 ? '' : 's');
+      const fileCount = upload.files.length;
+      details.textContent = upload.rows + ' learner' + (upload.rows === 1 ? '' : 's') +
+        ' · ' + fileCount + ' grade file' + (fileCount === 1 ? '' : 's');
     }
     if (continueBtn) continueBtn.disabled = false;
   }
@@ -526,6 +584,9 @@
     GF.state.progress = 0;
     GF.state.generated = false;
     GF.state.generatedAt = null;
+    manualClassDetailsConfirmed = false;
+    const manualConfirmation = document.getElementById('confirm-manual-class-details');
+    if (manualConfirmation) manualConfirmation.checked = false;
     const input = document.getElementById('file-upload');
     if (input) input.value = '';
     setError('');
@@ -539,11 +600,18 @@
     if (!files.length) return;
     const input = document.getElementById('file-upload');
     setError('');
-    const existingUpload = GF.state.upload;
-    const students = existingUpload ? GF.state.students.slice() : [];
+    if (files.length > 1) {
+      setError('Upload one complete class gradebook at a time.');
+      GF.showToast('Choose one class grade file.', 'error');
+      if (input) input.value = '';
+      return;
+    }
+
+    const students = [];
     const addedFiles = [];
     const errors = [];
-    let totalSize = existingUpload ? existingUpload.size : 0;
+    const importedClassDetails = {};
+    let totalSize = 0;
 
     for (const file of files) {
       const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
@@ -566,21 +634,41 @@
 
       try {
         const rows = await readWorkbook(file);
-        if (!rows || rows.length === 0) throw new Error('file is empty. Add a header row and one student row.');
+        if (!rows || rows.length === 0) throw new Error('file is empty. Add a header row and at least one learner row.');
         const headerIndex = findHeaderRow(rows);
         if (headerIndex === -1) {
           throw new Error('header row not found. Include Student Name and one column per subject.');
         }
-        const parsedStudents = buildStudentsFromRows(rows, headerIndex);
-        const student = parsedStudents[0];
-        if (student.roll && students.some(function (existing) {
-          return existing.roll.toLowerCase() === student.roll.toLowerCase();
-        })) {
-          throw new Error('student ID "' + student.roll + '" is already in the class.');
+        const parsed = buildStudentsFromRows(rows, headerIndex);
+        if (students.length + parsed.students.length > 200) {
+          throw new Error('the class limit of 200 learners would be exceeded.');
         }
-        student.id = students.length + 1;
-        student.roll = student.roll || String(student.id).padStart(2, '0');
-        students.push(student);
+
+        const nextClassDetails = Object.assign({}, importedClassDetails);
+        Object.keys(parsed.classDetails).forEach(function (key) {
+          const value = parsed.classDetails[key];
+          if (nextClassDetails[key] && nextClassDetails[key] !== value) {
+            throw new Error('class detail "' + key + '" does not match the other uploaded files.');
+          }
+          nextClassDetails[key] = value;
+        });
+
+        const seenRolls = new Set(students.map(function (student) {
+          return String(student.roll || '').toLowerCase();
+        }).filter(Boolean));
+        parsed.students.forEach(function (student, index) {
+          const id = students.length + index + 1;
+          student.id = id;
+          student.roll = student.roll || String(id).padStart(2, '0');
+          const normalizedRoll = student.roll.toLowerCase();
+          if (seenRolls.has(normalizedRoll)) {
+            throw new Error('student ID "' + student.roll + '" is duplicated in the class.');
+          }
+          seenRolls.add(normalizedRoll);
+        });
+
+        students.push.apply(students, parsed.students);
+        Object.assign(importedClassDetails, nextClassDetails);
         addedFiles.push(file.name);
         totalSize += file.size;
       } catch (error) {
@@ -589,20 +677,34 @@
     }
 
     if (!addedFiles.length) {
-      setError(errors.join('\n') || 'Choose a student grade file before continuing.');
-      GF.showToast('No student grade files were added.', 'error');
+      setError(errors.join('\n') || 'Choose a class grade file before continuing.');
+      GF.showToast('No class grade files were added.', 'error');
       if (input) input.value = '';
       return;
     }
+
+    if (importedClassDetails.strand) GF.state.strand = importedClassDetails.strand;
+    if (importedClassDetails.gradeLevel) {
+      GF.state.gradeLevel = importedClassDetails.gradeLevel.replace(/^grade\s*/i, '');
+    }
+    if (importedClassDetails.year) GF.state.year = importedClassDetails.year;
+    if (importedClassDetails.term) GF.state.term = importedClassDetails.term;
+    if (importedClassDetails.section) GF.state.section = importedClassDetails.section;
+    if (importedClassDetails.studentStatus) GF.state.studentStatus = importedClassDetails.studentStatus;
+    if (importedClassDetails.graduationStatus) GF.state.graduationStatus = importedClassDetails.graduationStatus;
+    if (importedClassDetails.teacher) GF.state.teacher = importedClassDetails.teacher;
+    if (importedClassDetails.principal) GF.state.school.principal = importedClassDetails.principal;
+    GF.state.className = importedClassDetails.className ||
+      (importedClassDetails.section
+        ? 'Grade ' + GF.state.gradeLevel + ' · ' + importedClassDetails.section
+        : GF.state.className);
 
     const missing = students.reduce(function (count, student) {
       return count + GF.missingGradeCells([student]).length;
     }, 0);
 
     GF.state.students = students;
-    if (!existingUpload) {
-      sf10State().studentFiles.forEach(function (entry) { entry.studentId = ''; });
-    }
+    sf10State().studentFiles.forEach(function (entry) { entry.studentId = ''; });
     GF.state.selectedStudentId = (students.find(function (student) {
       return GF.studentStatus(student) === 'needs-correction';
     }) || students[0]).id;
@@ -619,21 +721,27 @@
     GF.state.generated = false;
     GF.state.generatedAt = null;
     GF.state.upload = {
-      name: students.length + ' individual student files',
+      name: addedFiles[0],
       size: totalSize,
       rows: students.length,
-      type: 'individual',
+      type: 'class',
       parsedAt: new Date(),
-      mode: 'individual-files',
-      files: (existingUpload ? existingUpload.files : []).concat(addedFiles)
+      mode: 'class-workbook',
+      files: addedFiles,
+      classDetails: Object.assign({}, importedClassDetails)
     };
 
+    manualClassDetailsConfirmed = false;
+    const manualConfirmation = document.getElementById('confirm-manual-class-details');
+    if (manualConfirmation) manualConfirmation.checked = false;
+    syncSelects();
     updateFileUI();
     renderSf10UI();
     if (input) input.value = '';
     GF.refreshChrome();
     if (errors.length) setError(errors.slice(0, 4).join('\n'));
-    GF.showToast(addedFiles.length + ' student file' + (addedFiles.length === 1 ? '' : 's') + ' added. ' +
+    GF.showToast(addedFiles.length + ' class file' + (addedFiles.length === 1 ? '' : 's') + ' read. ' +
+      students.length + ' learner' + (students.length === 1 ? '' : 's') + ' found. ' +
       (missing ? missing + ' grade' + (missing === 1 ? '' : 's') + ' need review.' : 'All grades are complete.'),
     errors.length ? 'info' : missing ? 'info' : 'success');
   }
@@ -650,7 +758,12 @@
   }
 
   function templateRows() {
-    const headers = ['Roll', 'Student Name', 'Age', 'Sex', 'LRN'];
+    const context = GF.reportContext();
+    const headers = [
+      'Class Name', 'Strand', 'Grade Level', 'School Year', 'Term', 'Section',
+      'Student Status', 'Graduation Status', 'Adviser', 'Principal',
+      'Roll', 'Student Name', 'Age', 'Sex', 'LRN'
+    ];
     GF.SUBJECTS.forEach(function (subject) {
       subject.quarters.forEach(function (period) {
         headers.push(subject.name + ' ' + period.toUpperCase());
@@ -671,7 +784,11 @@
     });
     const rows = [headers];
     GF.state.students.forEach(function (student) {
-      const row = [student.roll, student.name, student.age || '', student.sex || '', student.lrn || ''];
+      const row = [
+        context.className, context.strand, context.gradeLevel, context.year, context.term, context.section,
+        context.studentStatus, context.graduationStatus, context.teacher, context.principal,
+        student.roll, student.name, student.age || '', student.sex || '', student.lrn || ''
+      ];
       GF.SUBJECTS.forEach(function (subject) {
         const grades = student.grades[subject.key] || {};
         subject.quarters.forEach(function (period) {
@@ -707,7 +824,7 @@
     if (window.XLSX) {
       const worksheet = window.XLSX.utils.aoa_to_sheet(rows);
       worksheet['!cols'] = rows[0].map(function (header, index) {
-        return { wch: index < 5 ? (index === 1 ? 28 : 14) : Math.max(12, Math.min(42, String(header).length + 2)) };
+        return { wch: index < 15 ? (index === 11 ? 28 : 16) : Math.max(12, Math.min(42, String(header).length + 2)) };
       });
       const workbook = window.XLSX.utils.book_new();
       window.XLSX.utils.book_append_sheet(workbook, worksheet, 'Grade sheet');
@@ -730,8 +847,15 @@
   function validateCurrentFile() {
     const fileInput = document.getElementById('file-upload');
     if (!GF.state.upload) {
-      setError('Add at least one student grade file before continuing.');
-      GF.showToast('Add a student grade file first.', 'error');
+      setError('Upload a class gradebook before continuing.');
+      GF.showToast('Upload a class gradebook first.', 'error');
+      return false;
+    }
+    const manualConfirmation = document.getElementById('confirm-manual-class-details');
+    const manualConfirmed = manualClassDetailsConfirmed && manualConfirmation && manualConfirmation.checked;
+    if (!hasCompleteImportedClassDetails(GF.state.upload.classDetails) && !manualConfirmed) {
+      setError('Class details are missing from the workbook. Use the template or open the manual details and confirm them.');
+      GF.showToast('Add or confirm the class details before continuing.', 'error');
       return false;
     }
     const errors = [];
@@ -757,6 +881,7 @@
       return false;
     }
     if (fileInput) fileInput.value = '';
+    setError('');
     return true;
   }
 
@@ -776,6 +901,8 @@
     const analyzeSf10Button = document.getElementById('analyze-sf10-btn');
     const adviserInput = document.getElementById('adviser-name');
     const principalInput = document.getElementById('principal-name');
+    const termInput = document.getElementById('term-name');
+    const manualConfirmation = document.getElementById('confirm-manual-class-details');
 
     if (analyzeSf10Button) {
       analyzeSf10Button.addEventListener('click', function () {
@@ -791,12 +918,24 @@
     [adviserInput, principalInput].forEach(function (field) {
       if (!field) return;
       field.addEventListener('change', function () {
+        invalidateManualClassDetailsConfirmation();
         GF.state.teacher = adviserInput ? adviserInput.value.trim() : GF.state.teacher;
         GF.state.school.principal = principalInput ? principalInput.value.trim() : GF.state.school.principal;
         renderSf10UI();
         GF.refreshChrome();
       });
     });
+    if (termInput) {
+      termInput.addEventListener('change', function () {
+        invalidateManualClassDetailsConfirmation();
+        GF.state.term = termInput.value.trim();
+      });
+    }
+    if (manualConfirmation) {
+      manualConfirmation.addEventListener('change', function () {
+        manualClassDetailsConfirmed = manualConfirmation.checked;
+      });
+    }
 
     if (classSf10Browse && classSf10Input) {
       classSf10Browse.addEventListener('click', function () { classSf10Input.click(); });
@@ -883,6 +1022,7 @@
 
     document.querySelectorAll('#strand-selector, #grade-level-selector, #school-year-selector, #status-selector, #graduation-status-selector, #section-selector').forEach(function (field) {
       field.addEventListener('change', function () {
+        invalidateManualClassDetailsConfirmation();
         GF.state.strand = document.getElementById('strand-selector').value;
         GF.state.gradeLevel = document.getElementById('grade-level-selector').value;
         GF.state.year = document.getElementById('school-year-selector').value;
@@ -899,7 +1039,7 @@
     if (remove) {
       remove.addEventListener('click', function () {
         resetFile();
-        GF.showToast('Student files removed. Demo sample records restored.', 'info');
+        GF.showToast('Class gradebook removed. Sample records restored.', 'info');
       });
     }
     if (template) template.addEventListener('click', downloadTemplate);

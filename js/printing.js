@@ -413,8 +413,9 @@
       ['School Year', GF.prettyYear(context.year), 'LRN', student.lrn || '-'],
       ['Track/Strand', context.trackStrand || context.strand || '-']
     ];
+    const fieldRowHeight = 5.5;
     fieldRows.forEach(function (row, index) {
-      const y = bodyTop + index * 5.0 + 2.4;
+      const y = bodyTop + index * fieldRowHeight + 2.6;
       if (index === 0 || index === 4) {
         drawLabelValue(row[0], row[1], left, y, leftWidth, 5.1);
       } else {
@@ -422,24 +423,24 @@
         drawLabelValue(row[2], row[3], left + leftWidth / 2, y, leftWidth / 2, 5.0);
       }
     });
-    let leftY = bodyTop + fieldRows.length * 5.0 + 1.4;
+    let leftY = bodyTop + fieldRows.length * fieldRowHeight + 1.4;
 
     /* ---------- Dear Parent ---------- */
     setFont('bold', 5.2, ink);
-    doc.text('Dear Parent:', X(left), Y(leftY + 2.1), { baseline: 'middle' });
+    doc.text('Dear Parent:', X(left), Y(leftY + 2.2), { baseline: 'middle' });
     setFont('italic', 4.7, ink);
     const noteLines = doc.splitTextToSize(pdfSafe(
       'This report card shows your child\'s performance in the different learning areas as well as in character formation. ' +
       'The school welcomes you if you desire to know more about the progress of your child.'
     ), S(leftWidth));
-    doc.text(noteLines.slice(0, 2).map(pdfSafe), X(left), Y(leftY + 5.1), {
+    doc.text(noteLines.slice(0, 2).map(pdfSafe), X(left), Y(leftY + 5.4), {
       baseline: 'top',
       lineHeightFactor: 1.35
     });
-    leftY += 6.1 + Math.min(noteLines.length, 2) * 2.35;
+    leftY += 6.4 + Math.min(noteLines.length, 2) * 2.5;
 
     /* ---------- Adviser and principal names ---------- */
-    leftY += 1.6;
+    leftY += 1.7;
     [
       [context.teacher, left, leftWidth / 2, 'Adviser'],
       [context.principal, left + leftWidth / 2, leftWidth / 2, 'Principal']
@@ -448,14 +449,15 @@
       centeredText(signature[0], signature[1], leftY, signature[2]);
       setDrawColor(doc, line);
       doc.setLineWidth(S(0.22));
-      doc.line(X(signature[1] + 1), Y(leftY + 1.4), X(signature[1] + signature[2] - 1), Y(leftY + 1.4));
+      doc.line(X(signature[1] + 1), Y(leftY + 1.5), X(signature[1] + signature[2] - 1), Y(leftY + 1.5));
     });
-    leftY += 3.4;
+    leftY += 3.6;
 
     /* ---------- Certificate panels ---------- */
     const panelWidth = leftWidth / 2;
-    const headingHeight = 4.3;
-    const transferRowHeight = 4.0;
+    const headingHeight = 4.6;
+    const transferRowHeight = 4.7;
+    const signatureHeight = 7.2;
     function transferPanel(x, title, fields, signatureLabel) {
       cell(x, leftY, panelWidth, headingHeight, { fill: tan, stroke: line });
       setFont('bold', 4.4, ink);
@@ -471,16 +473,15 @@
         leftText(field[1] || '', x + labelWidth, rowY + transferRowHeight / 2, panelWidth - labelWidth, { inset: 0.9 });
         rowY += transferRowHeight;
       });
-      const signatureHeight = 6.2;
-      cell(x, rowY, panelWidth, signatureHeight, { stroke: line });
       const signatureWidth = panelWidth * 0.55;
+      cell(x, rowY, panelWidth, signatureHeight, { stroke: line });
       setDrawColor(doc, line);
       doc.setLineWidth(S(0.22));
       const signatureCenter = x + panelWidth / 2;
-      doc.line(X(signatureCenter - signatureWidth / 2), Y(rowY + 1.6),
-        X(signatureCenter + signatureWidth / 2), Y(rowY + 1.6));
+      doc.line(X(signatureCenter - signatureWidth / 2), Y(rowY + 2.0),
+        X(signatureCenter + signatureWidth / 2), Y(rowY + 2.0));
       setFont('normal', 3.8, soft);
-      centeredText(signatureLabel, x, rowY + 3.5, panelWidth);
+      centeredText(signatureLabel, x, rowY + 4.3, panelWidth);
     }
 
     const transfer = student.transfer || {};
@@ -523,14 +524,14 @@
       X(left + panelWidth), Y(rightRowY));
     doc.line(X(left + panelWidth * 2), Y(rightRowY - transferRowHeight),
       X(left + panelWidth * 2), Y(rightRowY));
-    cell(left + panelWidth, rightRowY, panelWidth, 6.2, { stroke: line });
+    cell(left + panelWidth, rightRowY, panelWidth, signatureHeight, { stroke: line });
     const rightSignatureCenter = left + panelWidth + panelWidth / 2;
     const rightSignatureWidth = panelWidth * 0.55;
-    doc.line(X(rightSignatureCenter - rightSignatureWidth / 2), Y(rightRowY + 1.6),
-      X(rightSignatureCenter + rightSignatureWidth / 2), Y(rightRowY + 1.6));
+    doc.line(X(rightSignatureCenter - rightSignatureWidth / 2), Y(rightRowY + 2.0),
+      X(rightSignatureCenter + rightSignatureWidth / 2), Y(rightRowY + 2.0));
     setFont('normal', 3.8, soft);
-    centeredText('Principal', left + panelWidth, rightRowY + 3.5, panelWidth);
-    leftY += headingHeight + 4 * transferRowHeight + 6.2 + 1.6;
+    centeredText('Principal', left + panelWidth, rightRowY + 4.3, panelWidth);
+    leftY += headingHeight + 4 * transferRowHeight + signatureHeight + 1.6;
 
     /* ---------- Attendance ---------- */
     function drawTableCaption(text, x, y, width, height) {
@@ -540,13 +541,13 @@
     }
 
     const attendance = student.attendance || {};
-    drawTableCaption('REPORT OF ATTENDANCE', left, leftY, leftWidth, 4.0);
-    let attendanceY = leftY + 4.0;
+    drawTableCaption('REPORT OF ATTENDANCE', left, leftY, leftWidth, 4.2);
+    let attendanceY = leftY + 4.2;
     const attendanceLabelWidth = leftWidth * 0.20;
     const attendanceTotalWidth = leftWidth * 0.08;
     const attendanceMonthWidth = (leftWidth - attendanceLabelWidth - attendanceTotalWidth) /
       GF.ATTENDANCE_MONTHS.length;
-    const attendanceHeaderHeight = 3.4;
+    const attendanceHeaderHeight = 3.6;
     cell(left, attendanceY, attendanceLabelWidth, attendanceHeaderHeight, { fill: cream, stroke: line });
     GF.ATTENDANCE_MONTHS.forEach(function (month, index) {
       const x = left + attendanceLabelWidth + index * attendanceMonthWidth;
@@ -568,7 +569,7 @@
       ['No. of days present', attendance.months || {}],
       ['No. of days absent', attendance.absent || {}]
     ];
-    const attendanceRowHeight = 3.3;
+    const attendanceRowHeight = 4.3;
     attendanceRows.forEach(function (row, rowIndex) {
       const y = attendanceY + attendanceHeaderHeight + rowIndex * attendanceRowHeight;
       cell(left, y, attendanceLabelWidth, attendanceRowHeight, { stroke: line });
@@ -593,14 +594,14 @@
       centeredText(hasValue ? String(total) : '', totalX, y + attendanceRowHeight / 2,
         attendanceTotalWidth, { inset: 0.2 });
     });
-    leftY = attendanceY + attendanceHeaderHeight + attendanceRows.length * attendanceRowHeight + 2.0;
+    leftY = attendanceY + attendanceHeaderHeight + attendanceRows.length * attendanceRowHeight + 2.2;
 
     /* ---------- Observed values ---------- */
     const valuesTop = leftY;
     const valuesBottom = bodyBottom;
-    const valuesCaptionHeight = 4.1;
-    const valuesHeaderOne = 3.6;
-    const valuesHeaderTwo = 3.2;
+    const valuesCaptionHeight = 4.3;
+    const valuesHeaderOne = 3.7;
+    const valuesHeaderTwo = 3.3;
     const valuesBodyHeight = valuesBottom - valuesTop - valuesCaptionHeight -
       valuesHeaderOne - valuesHeaderTwo;
     const valuesRowHeight = valuesBodyHeight / 8;
@@ -802,19 +803,23 @@
       setFont('bold', 4.1, ink);
       centeredText(title, x, legendTop + captionHeight / 2, width, { inset: 0.4 });
       const columnWidths = columns || [width];
+      let dividerX = x;
+      columnWidths.slice(0, -1).forEach(function (columnWidth) {
+        dividerX += columnWidth;
+        setDrawColor(doc, line);
+        doc.setLineWidth(S(0.22));
+        doc.line(X(dividerX), Y(legendTop + captionHeight), X(dividerX), Y(legendTop + legendHeight));
+      });
       rows.forEach(function (row, rowIndex) {
         const rowY = legendTop + captionHeight + rowIndex * rowHeight;
+        if (rowIndex > 0) {
+          setDrawColor(doc, line);
+          doc.setLineWidth(S(0.22));
+          doc.line(X(x), Y(rowY), X(x + width), Y(rowY));
+        }
         let columnX = x;
         row.forEach(function (value, columnIndex) {
           const cellWidth = columnWidths[columnIndex] || width;
-          if (columnIndex > 0) {
-            setDrawColor(doc, line);
-            doc.setLineWidth(S(0.22));
-            doc.line(X(columnX), Y(rowY), X(columnX), Y(rowY + rowHeight));
-          }
-          if (rowIndex > 0) {
-            doc.line(X(columnX), Y(rowY), X(columnX + cellWidth), Y(rowY));
-          }
           setFont(columnIndex === 0 ? 'bold' : 'normal', 3.9, ink);
           leftText(value, columnX, rowY + rowHeight / 2, cellWidth, { inset: 0.7 });
           columnX += cellWidth;

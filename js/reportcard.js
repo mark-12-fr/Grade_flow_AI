@@ -60,7 +60,8 @@
             '<td class="rc-score">' + gradeValue(grades[semester.quarters[1]]) + '</td>' +
             '<td class="rc-score rc-semester-final">' + gradeValue(grades.final) + '</td></tr>';
         }).join('');
-        return '<tr class="rc-subject-group"><th colspan="4">' + esc(group.name) + '</th></tr>' + subjectsHTML;
+        return '<tr class="rc-subject-group"><th colspan="4">' + esc(group.name) + '</th></tr>' + subjectsHTML +
+          '<tr class="rc-grade-spacer"><td colspan="4"></td></tr>';
       }).join('');
       return '<section class="rc-semester">' +
         '<h4>' + esc(semester.label) + '</h4>' +
@@ -104,7 +105,7 @@
     const observedValueLabels = [
       ['makaDiyos', '1. Maka-Diyos'],
       ['makatao', '2. Makatao'],
-      ['makakalikasan', '3. Maka-kalikasan'],
+      ['makakalikasan', '3. Maka kalikasan'],
       ['makabansa', '4. Makabansa']
     ];
     const observedStatements = {
@@ -131,7 +132,7 @@
       const values = student.observedValues && student.observedValues[item[0]] || {};
       const statements = observedStatements[item[0]];
       const ratingCells = ['q1', 'q2', 'q3', 'q4'].map(function (period) {
-        return '<td>' + esc(values[period] || '—') + '</td>';
+        return '<td>' + esc(values[period] || '') + '</td>';
       }).join('');
       return '<tr><th scope="rowgroup" rowspan="2">' + esc(item[1]) + '</th><td>' +
         esc(statements[0]) + '</td>' + ratingCells + '</tr><tr><td>' +
@@ -147,32 +148,28 @@
     const transferLeftFields = [
       ['Admitted to', transfer.admittedTo],
       ['Section', transfer.section || context.section],
-      ['Eligibility for admission to grade', transfer.eligibilityForGrade],
-      ['Approved by', transfer.approvedBy]
+      ['Eligibility for Admission to Grade', transfer.eligibilityForGrade],
+      ['Approved', transfer.approvedBy]
     ];
     const transferRightFields = [
       ['Admitted in', transfer.admittedIn],
-      ['Date', transfer.transferDate],
-      ['Approved by', transfer.cancellationOfEligibility]
+      ['Date', transfer.transferDate]
     ];
     function transferRows(fields) {
       return fields.map(function (field) {
-        return '<tr><th scope="row">' + esc(field[0]) + '</th><td>' +
+        return '<tr><th scope="row">' + esc(field[0]) + ':</th><td>' +
           (field[1] ? esc(field[1]) : '') +
           '</td></tr>';
       }).join('');
     }
 
-    return '<div class="rc-official-header">' +
-      '<div class="rc-official-school">' +
-        '<img class="rc-logo" src="assets/ui-logo.png" alt="University of Iloilo seal">' +
-        '<div>' + schoolAddressHTML + '<strong>' + esc(context.schoolName) + '</strong>' +
-          '<span>Senior High School Department</span></div>' +
-      '</div>' +
-      '<div class="rc-official-title"><strong>REPORT ON LEARNING PROGRESS AND ACHIEVEMENT</strong></div>' +
-    '</div>' +
-    '<div class="rc-official-layout">' +
+    return '<div class="rc-official-layout">' +
       '<section class="rc-official-learner" aria-label="Learner details and observations">' +
+        '<div class="rc-official-school">' +
+          '<img class="rc-logo" src="assets/ui-logo.png" alt="University of Iloilo seal">' +
+          '<div>' + schoolAddressHTML + '<strong>' + esc(context.schoolName) + '</strong>' +
+            '<span>Senior High School Department</span></div>' +
+        '</div>' +
         '<div class="rc-official-fields">' +
           '<div class="rc-official-field rc-official-name"><span>Name:</span><strong>' + esc(student.name) + '</strong></div>' +
           '<div class="rc-official-field"><span>Age:</span><strong>' + esc(student.age || '—') + '</strong></div>' +
@@ -184,20 +181,24 @@
           '<div class="rc-official-field rc-official-track"><span>Track/Strand:</span><strong>' + esc(context.trackStrand || context.strand || '—') + '</strong></div>' +
         '</div>' +
         '<div class="rc-official-note"><strong>Dear Parent:</strong>' +
-          '<p>This report card shows your child’s performance in the different learning areas as well as in character formation. ' +
-            'The school welcomes you if you desire to know more about the progress of your child.</p></div>' +
+          '<p>This report card shows your child’s performance in the different learning areas as well as in character formation.</p>' +
+          '<p>The school welcomes you if you desire to know more about the progress of your child.</p></div>' +
         '<section class="rc-transfer">' +
           '<div class="rc-cert-signatories">' +
-            '<div><strong>' + esc(context.teacher || '') + '</strong></div>' +
-            '<div><strong>' + esc(context.principal || '') + '</strong></div>' +
+            '<div><strong>' + esc(context.teacher || '') + '</strong><span>Adviser</span></div>' +
+            '<div><strong>' + esc(context.principal || '') + '</strong><span>Principal</span></div>' +
           '</div>' +
           '<div class="rc-transfer-grid">' +
             '<div class="rc-transfer-panel"><h4>Certificate of Transfer</h4><table><tbody>' + transferRows(transferLeftFields) +
-              '<tr class="rc-transfer-signature"><td colspan="2"><span>Adviser</span></td></tr>' +
+              '<tr class="rc-transfer-signature"><td colspan="2">' +
+                '<div class="rc-signature-pair"><span>Adviser</span><span>Principal</span></div>' +
+              '</td></tr>' +
               '</tbody></table></div>' +
             '<div class="rc-transfer-panel"><h4>Cancellation of Eligibility to Transfer</h4><table><tbody>' + transferRows(transferRightFields) +
               '<tr class="rc-transfer-spacer"><td colspan="2"></td></tr>' +
-              '<tr class="rc-transfer-signature"><td colspan="2"><span>Principal</span></td></tr>' +
+              '<tr class="rc-transfer-signature"><td colspan="2">' +
+                '<div class="rc-signature-single"><span>Principal</span></div>' +
+              '</td></tr>' +
               '</tbody></table></div>' +
           '</div>' +
         '</section>' +
@@ -206,13 +207,14 @@
           '<caption>Report on learner’s observed values</caption>' +
           '<colgroup><col class="rc-values-core"><col class="rc-values-statement">' +
             '<col span="4" class="rc-values-quarter"></colgroup>' +
-          '<thead><tr><th scope="col">Core values</th><th scope="col">Behavior statements</th>' +
+          '<thead><tr><th scope="col">Core values</th><th scope="col">Behavior Statements</th>' +
             '<th colspan="4" scope="colgroup">Quarter</th></tr><tr><th></th><th></th>' +
             '<th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody>' +
           observedValuesHTML +
         '</tbody></table></div>' +
       '</section>' +
       '<section class="rc-official-grades" aria-label="Learning progress and achievement">' +
+        '<div class="rc-official-title"><strong>REPORT ON LEARNING PROGRESS AND ACHIEVEMENT</strong></div>' +
         semestersHTML +
         '<div class="rc-official-legends">' +
           '<table><caption>Observed values</caption><tbody>' +
@@ -226,7 +228,7 @@
             '<tr><td>Fairly Satisfactory</td><td>75–79</td><td>Passed</td></tr>' +
             '<tr><td>Did Not Meet Expectations</td><td>below 75</td><td>Failed</td></tr>' +
           '</tbody></table>' +
-          '<table class="rc-parent-signatures"><caption>Parent/Guardian’s Signature</caption><tbody>' +
+          '<table class="rc-parent-signatures"><caption>Parent/Guardian’s<br>Signature</caption><tbody>' +
             '<tr><th>1st Q</th><td></td></tr><tr><th>2nd Q</th><td></td></tr>' +
             '<tr><th>3rd Q</th><td></td></tr><tr><th>4th Q</th><td></td></tr>' +
           '</tbody></table>' +

@@ -1701,7 +1701,6 @@ img { max-width: 100%; display: block; }
 .docs-row .docs-label { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
 .docs-sub { color: var(--muted-light); font-size: 11.5px; }
 .docs-desc { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; max-width: 38ch; }
-.docs-formats { color: var(--muted-light); font-size: 11px; }
 .docs-row .dropzone-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 @container (max-width: 560px) {
   .docs-item, .docs-item:first-child, .docs-item:last-child { padding: 0; border-left: 0; }

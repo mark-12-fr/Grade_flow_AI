@@ -38,7 +38,7 @@ The Claude call is mocked in tests; they cover column mapping, value copying, fo
 
 ## Hosting
 
-No hosting is configured in this repo. The frontend is plain static files (`index.html`, `css/`, `js/`, `assets/`), so it can be hosted anywhere, e.g. Vercel. **"Try demo class"** works on a static host with no backend.
+No hosting is configured in this repo. The frontend is plain static files (`index.html`, `css/`, `js/`, `assets/`), so it can be hosted anywhere, e.g. Vercel.
 
 The AI import needs the FastAPI app (`uvicorn backend.main:app`) running somewhere with `ANTHROPIC_API_KEY` set (optional `ANTHROPIC_MODEL`, default `claude-sonnet-5-5`). On a static-only host, uploads fall back to the built-in template reader.
 

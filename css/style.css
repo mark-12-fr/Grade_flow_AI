@@ -1643,18 +1643,20 @@ img { max-width: 100%; display: block; }
 .upload-inline h3 { margin: 0; font-size: 13px; font-weight: 600; }
 .upload-inline-sub { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
 .upload-inline .dropzone-actions { justify-content: flex-start; }
-/* SF9 + SF10 documents: one card, flat rows (no nested boxes) */
-.docs-list { display: flex; flex-direction: column; gap: 18px; }
-.docs-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-.docs-text { flex: 1 1 auto; min-width: 0; }
+/* SF9 + SF10 documents: one card, two aligned columns (stacked when the card is narrow) */
+.docs-upload { container-type: inline-size; }
+.docs-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; align-items: start; }
+.docs-item { min-width: 0; }
+.docs-row { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
 .docs-label { color: var(--navy); font-size: 12px; font-weight: 600; }
-.docs-row .dropzone-actions { flex: 0 0 auto; justify-content: flex-end; margin-top: 0; }
-.docs-row .file-help { margin-top: 4px; }
+.docs-row .dropzone-actions { justify-content: flex-start; margin-top: 0; }
+.docs-row .file-help { margin: 0; }
 .docs-row .file-help:empty, .docs-item > .sf10-file-list:empty { display: none; }
 .docs-upload .upload-inline { margin: 0; padding: 0; background: none; border: 0; border-radius: 8px; }
 .docs-upload .upload-inline.dragover { outline: 2px dashed var(--blue); outline-offset: 8px; background: none; }
-.docs-item > .sf10-file-list, .docs-item > .uploaded-file, .docs-item > .form-error { margin-top: 10px; }
-@media (max-width: 768px) {
-  .docs-row { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .docs-row .dropzone-actions { justify-content: flex-start; }
+.docs-item > .sf10-file-list, .docs-item > .uploaded-file, .docs-item > .form-error { margin-top: 12px; }
+.docs-item .uploaded-file { flex-wrap: wrap; }
+.docs-item .uploaded-file-text { flex: 1 1 140px; }
+@container (max-width: 640px) {
+  .docs-list { grid-template-columns: minmax(0, 1fr); }
 }

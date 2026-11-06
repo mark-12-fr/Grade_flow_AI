@@ -1051,91 +1051,98 @@ img { max-width: 100%; display: block; }
   width: 112%;
   margin-inline: -6%;
   aspect-ratio: 297 / 210;
-  padding: 3.2% 3.6%;
+  padding: 3% 3.4%;
   color: #222;
   font-family: Arial, "Liberation Sans", sans-serif;
   font-size: 12px;
   font-size: 1.17cqw;
   line-height: 1.15;
 }
-.rc-official-header { display: grid; grid-template-columns: 48.5% 49.5%; align-items: center; gap: 1.5%; padding-bottom: 0.45em; border-bottom: 1px solid #777; }
-.rc-official-school { display: flex; align-items: flex-end; justify-content: center; gap: 0.6em; min-width: 0; }
-.rc-official-school .rc-logo { display: block; flex: 0 0 5.4em; width: 5.4em; height: 6.1em; align-self: flex-end; object-fit: contain; border: 0; border-radius: 0; }
-.rc-official-school > div { display: flex; flex-direction: column; justify-content: center; align-self: flex-end; min-width: 0; min-height: 6.1em; text-align: center; }
+.rc-official-school { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 0.5em; min-width: 0; margin-bottom: 0.45em; }
+.rc-official-school .rc-logo { display: block; flex: 0 0 6.4em; width: 6.4em; height: 7.1em; align-self: center; object-fit: contain; border: 0; border-radius: 0; }
+.rc-official-school > div { display: flex; flex-direction: column; justify-content: center; align-self: center; min-width: 0; min-height: 7.1em; text-align: center; }
 .rc-official-school strong, .rc-official-school span { display: block; }
-.rc-official-school strong { margin-top: 0.1em; color: #222; font-size: 1.35em; }
-.rc-official-school span { margin-top: 0.06em; color: #444; font-size: 0.68em; line-height: 1.12; }
-.rc-official-title { text-align: center; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 1.22em; font-weight: 700; line-height: 1.15; letter-spacing: 0.01em; }
+.rc-official-school strong { margin-top: 0.08em; color: #222; font-size: 1.7em; }
+.rc-official-school span { margin-top: 0.06em; color: #444; font-size: 0.82em; line-height: 1.12; }
+.rc-official-title { flex: 0 0 auto; margin-bottom: 0.3em; text-align: center; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 1.45em; font-weight: 700; line-height: 1.15; letter-spacing: 0.01em; }
 .rc-official-title strong { display: block; }
-.rc-official-layout { display: grid; flex: 1; grid-template-columns: minmax(0, 48.5fr) minmax(0, 49.5fr); gap: 1.5%; min-height: 0; padding-top: 0.5em; }
+.rc-official-layout { display: grid; flex: 1; grid-template-columns: minmax(0, 46.5fr) minmax(0, 50.9fr); gap: 2.6%; min-height: 0; }
 .rc-official-learner, .rc-official-grades { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.rc-official-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 0.9em; }
-.rc-official-field { display: flex; align-items: baseline; gap: 0.3em; min-width: 0; padding: 0.78em 0; }
-.rc-official-field span { flex: 0 0 auto; color: #222; font-size: 0.72em; font-weight: 700; }
-.rc-official-field strong { overflow: hidden; font-size: 0.82em; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.rc-official-fields { display: grid; flex: 0 0 auto; grid-template-columns: 1.05fr 1fr; gap: 0 1em; }
+.rc-official-field { display: flex; align-items: flex-end; gap: 0.28em; min-width: 0; padding: 0.24em 0 0.06em; }
+.rc-official-field span { flex: 0 0 auto; color: #222; font-size: 1em; font-weight: 700; line-height: 1.2; }
+.rc-official-field strong { flex: 1 1 auto; overflow: hidden; border-bottom: 1.5px solid #4a4a4a; font-size: 1.1em; font-weight: 400; line-height: 1.22; text-overflow: ellipsis; white-space: nowrap; }
 .rc-official-name { grid-column: 1 / -1; }
-.rc-official-name strong { font-size: 0.94em; font-weight: 700; }
+.rc-official-name strong { font-size: 1.18em; font-weight: 700; }
 .rc-official-track { grid-column: 1 / -1; }
-.rc-official-note { margin-top: 0.9em; font-size: 0.74em; line-height: 1.3; }
-.rc-official-note strong { font-size: 0.98em; }
-.rc-official-note p { margin-top: 0.1em; font-style: italic; line-height: 1.2; }
-.rc-cert-signatories { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 0.85em; margin-bottom: 0.45em; }
-.rc-cert-signatories > div { min-width: 0; padding: 0 0 0.12em; border-bottom: 1px solid #777; text-align: center; }
-.rc-cert-signatories strong { display: block; overflow: hidden; font-size: 0.78em; text-overflow: ellipsis; white-space: nowrap; }
-.rc-transfer { margin-top: 0.2em; }
-.rc-transfer-grid { display: grid; grid-template-columns: 1fr 1fr; }
-.rc-transfer-panel { min-width: 0; }
-.rc-transfer h4 { min-height: 2.5em; margin: 0; padding: 0.18em 0.24em; background: #c8c0a0; border: 1px solid #555; font-size: 0.64em; line-height: 1.1; text-align: center; }
+.rc-official-note { flex: 0 0 auto; margin-top: 0.32em; font-size: 0.88em; line-height: 1.2; }
+.rc-official-note strong { display: block; font-size: 1em; line-height: 1.2; }
+.rc-official-note p { margin-top: 0.26em; font-style: italic; line-height: 1.28; }
+.rc-cert-signatories { display: grid; flex: 0 0 auto; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 0.5em; margin-bottom: 0; }
+.rc-cert-signatories > div { min-width: 0; padding: 0; border: 0; text-align: center; }
+.rc-cert-signatories strong { display: block; overflow: hidden; font-size: 0.86em; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.rc-cert-signatories span { display: block; font-size: 0.76em; line-height: 1.15; }
+.rc-transfer { flex: 0 0 auto; margin-top: 0.15em; }
+.rc-transfer-grid { display: grid; grid-template-columns: 54.3% 45.7%; }
+.rc-transfer-panel { min-width: 0; border: 1px solid #555; border-top: 0; }
+.rc-transfer-panel table { height: auto; }
+.rc-transfer h4 { margin: 0; padding: 0.22em 0.18em; background: #c8c0a0; border-bottom: 1px solid #555; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 0.82em; line-height: 1.12; text-align: center; }
 .rc-transfer table, .rc-attendance-table, .rc-official-values { width: 100%; border-collapse: collapse; }
-.rc-transfer th, .rc-transfer td, .rc-attendance-table th, .rc-attendance-table td, .rc-official-values th, .rc-official-values td { padding: 0.38em 0.22em; border: 1px solid #777; font-size: 0.6em; text-align: left; }
-.rc-transfer th { width: 55%; font-weight: 400; }
-.rc-transfer td { min-width: 2em; }
-.rc-transfer-spacer td { height: 1.55em; border-top: 0; border-bottom: 0; }
-.rc-transfer .rc-transfer-signature td { height: 3.8em; padding: 2em 0.22em 0.12em; text-align: center; }
-.rc-transfer-signature > td > span { display: block; width: 68%; margin-inline: auto; padding-top: 0.12em; border-top: 1px solid #777; font-size: 0.58em; text-align: center; }
-.rc-attendance-wrap { display: flex; flex: 0 0 auto; flex-direction: column; min-width: 0; margin-top: 0.26em; border: 1px solid #777; }
-.rc-official-values-wrap { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; min-height: 0; margin-top: 0.32em; border: 1px solid #777; }
+.rc-transfer th, .rc-transfer td, .rc-attendance-table th, .rc-attendance-table td, .rc-official-values th, .rc-official-values td { padding: 0.1em 0.24em; border: 1px solid #555; font-size: 0.92em; text-align: left; }
+.rc-transfer th { width: 1%; padding-right: 0.15em; border-right: 0; font-weight: 400; white-space: nowrap; }
+.rc-transfer td { border-left: 0; }
+.rc-transfer-spacer td { height: 3.1em; border-bottom: 0; }
+.rc-transfer .rc-transfer-signature td { height: 2.5em; padding: 0.55em 0.3em 0.1em; border-bottom: 0; text-align: center; }
+.rc-signature-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7em; width: 100%; margin-top: auto; }
+.rc-signature-pair > span, .rc-signature-single > span { display: block; padding-top: 0.1em; border-top: 1px solid #444; font-size: 0.9em; text-align: center; }
+.rc-signature-single { width: 62%; margin-inline: auto; margin-top: auto; }
+.rc-attendance-wrap { display: flex; flex: 0 0 auto; flex-direction: column; min-width: 0; margin-top: 0.3em; border: 1px solid #555; }
+.rc-official-values-wrap { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; min-height: 0; margin-top: 0.3em; border: 1px solid #555; }
 .rc-attendance-table, .rc-official-values { flex: 0 0 auto; width: 100%; margin: 0; border-collapse: collapse; table-layout: fixed; }
 .rc-official-values { flex: 1 1 auto; height: auto; }
-.rc-attendance-table caption, .rc-official-values caption { padding: 0.14em 0.24em; background: #c8c0a0; border-bottom: 1px solid #777; font-size: 0.76em; font-weight: 700; line-height: 1.05; text-align: center; text-transform: uppercase; }
-.rc-attendance-table col.rc-attendance-label { width: 20%; }
-.rc-attendance-table col.rc-attendance-total { width: 8%; }
-.rc-attendance-table th, .rc-attendance-table td { padding: 0.55em 0.12em; font-size: 0.58em; line-height: 1.05; text-align: center; }
-.rc-attendance-table thead th { background: #c8c0a0; font-size: 0.56em; font-weight: 700; }
+.rc-attendance-table caption, .rc-official-values caption { padding: 0.22em 0.24em; background: #c8c0a0; border-bottom: 1px solid #555; font-size: 0.92em; font-weight: 700; line-height: 1.05; text-align: center; text-transform: uppercase; }
+.rc-attendance-table col.rc-attendance-label { width: 14%; }
+.rc-attendance-table col.rc-attendance-total { width: 9%; }
+.rc-attendance-table th, .rc-attendance-table td { padding: 0.16em 0.06em; font-size: 0.84em; line-height: 1.08; text-align: center; }
+.rc-attendance-table thead th { background: #fff; font-size: 0.79em; font-weight: 700; }
 .rc-attendance-table tbody th { text-align: left; font-weight: 400; }
-.rc-official-values col.rc-values-core { width: 13%; }
-.rc-official-values col.rc-values-statement { width: 61%; }
-.rc-official-values col.rc-values-quarter { width: 6.5%; }
-.rc-official-values th, .rc-official-values td { padding: 0.1em 0.16em; font-size: 0.6em; line-height: 1.1; }
-.rc-official-values thead tr { height: 1.6em; }
-.rc-official-values tbody tr { height: 1.6em; }
-.rc-official-values thead th { background: #f2efdf; font-size: 0.6em; text-align: center; }
+.rc-official-values col.rc-values-core { width: 19%; }
+.rc-official-values col.rc-values-statement { width: 51%; }
+.rc-official-values col.rc-values-quarter { width: 7.5%; }
+.rc-official-values th, .rc-official-values td { padding: 0.02em 0.2em; font-size: 0.88em; line-height: 1.1; }
+.rc-official-values thead tr { height: auto; }
+.rc-official-values tbody tr { height: auto; }
+.rc-official-values thead th { background: #fff; font-size: 0.86em; font-weight: 700; text-align: center; }
+.rc-official-values thead th:first-child { text-transform: uppercase; }
 .rc-official-values tbody th { vertical-align: middle; font-weight: 400; text-align: left; }
 .rc-official-values tbody td:first-of-type { vertical-align: middle; }
-.rc-official-values tbody td:not(:first-of-type) { font-size: 0.6em; text-align: center; vertical-align: middle; }
-.rc-semester { display: flex; flex: 1 1 0; flex-direction: column; min-height: 0; margin-top: 0; }
-.rc-semester + .rc-semester { margin-top: 0.3em; }
-.rc-semester h4 { margin: 0 0 0.12em; padding: 0; background: transparent; border: 0; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 0.95em; font-weight: 700; line-height: 1.05; text-align: center; }
-.report-front .rc-official-grade-table { width: 100%; height: 100%; margin: 0; border: 1.5px solid #444; border-collapse: collapse; table-layout: fixed; }
-.report-front .rc-official-grade-table col.rc-col-subject { width: 38%; }
-.report-front .rc-official-grade-table col.rc-col-score { width: 14%; }
-.report-front .rc-official-grade-table col.rc-col-final { width: 16%; }
-.report-front .rc-official-grade-table col.rc-col-remarks { width: 18%; }
+.rc-official-values tbody td:not(:first-of-type) { font-size: 0.86em; text-align: center; vertical-align: middle; }
+.rc-semester { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; margin-top: 0; }
+.rc-semester + .rc-semester { margin-top: 1.1em; }
+.rc-semester h4 { margin: 0 0 0.18em; padding: 0; background: transparent; border: 0; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 0.92em; font-weight: 700; line-height: 1.05; text-align: left; }
+.report-front .rc-official-grade-table { width: 100%; height: 100%; margin: 0; border: 1px solid #444; border-collapse: collapse; table-layout: fixed; }
+.report-front .rc-official-grade-table col.rc-col-subject { width: 58%; }
+.report-front .rc-official-grade-table col.rc-col-score { width: 9%; }
+.report-front .rc-official-grade-table col.rc-col-final { width: 12%; }
+.report-front .rc-official-grade-table col.rc-col-remarks { width: 12%; }
 .report-front .rc-official-grade-table .rc-remarks-failed { color: #a11; font-weight: 700; }
-.report-front .rc-official-grade-table th { padding: 0.16em 0.26em; color: #222; background: #c8c0a0; border: 1px solid #555; font-size: 0.6em; font-weight: 700; letter-spacing: 0; line-height: 1.05; text-align: center; text-transform: none; }
-.report-front .rc-official-grade-table th:first-child { text-align: left; }
-.report-front .rc-official-grade-table td { padding: 0.14em 0.18em; border: 1px solid #555; font-size: 0.56em; line-height: 1.1; }
+.report-front .rc-official-grade-table th { padding: 0.26em 0.18em; color: #222; background: #c8c0a0; border: 1px solid #555; font-size: 0.95em; font-weight: 700; letter-spacing: 0; line-height: 1.06; text-align: center; text-transform: none; }
+.report-front .rc-official-grade-table th:first-child { text-align: center; }
+.report-front .rc-official-grade-table td { padding: 0.04em 0.28em; border: 1px solid #555; font-size: 0.95em; line-height: 1.06; }
 .report-front .rc-official-grade-table td:not(:first-child) { text-align: center; }
-.report-front .rc-official-grade-table .rc-subject-group th { padding-block: 0.22em; background: #c8c0a0; font-size: 0.6em; text-align: left; }
+.report-front .rc-official-grade-table .rc-subject-group th { padding: 0.14em 0.3em; background: #fff; font-size: 0.95em; text-align: left; }
+.report-front .rc-official-grade-table .rc-grade-spacer td { height: 1.05em; padding: 0; }
 .report-front .rc-official-grade-table .rc-semester-final { font-weight: 700; }
-.report-front .rc-official-grade-table .rc-semester-average th { padding: 0.22em 0.26em; font-size: 0.6em; text-align: left; }
-.report-front .rc-official-grade-table .rc-semester-average td { background: #f0eddf; font-weight: 700; }
-.rc-official-legends { display: grid; grid-template-columns: 0.9fr 1.9fr 0.9fr; gap: 0; margin-top: 0.28em; border: 1px solid #555; border-right: 0; border-bottom: 0; }
-.rc-official-legends table { width: 100%; height: 100%; border-collapse: collapse; }
-.rc-official-legends th, .rc-official-legends td { padding: 0.14em 0.22em; border-right: 1px solid #555; border-bottom: 1px solid #555; font-size: 0.56em; line-height: 1.1; }
+.report-front .rc-official-grade-table .rc-semester-average th { padding: 0.38em 0.3em; background: #fff; font-size: 0.95em; text-align: left; }
+.report-front .rc-official-grade-table .rc-semester-average td { background: #fff; font-weight: 700; }
+.rc-official-legends { display: grid; grid-template-columns: 23fr 44.5fr 26.5fr; gap: 2.8%; margin-top: 1.1em; border: 0; }
+.rc-official-legends table { width: 100%; height: 100%; border: 1px solid #555; border-collapse: collapse; }
+.rc-official-legends th, .rc-official-legends td { padding: 0.14em 0.26em; border-right: 1px solid #555; border-bottom: 1px solid #555; font-size: 0.88em; line-height: 1.1; }
+.rc-official-legends tr > *:last-child { border-right: 0; }
+.rc-official-legends tr:last-child > * { border-bottom: 0; }
 .rc-official-legends th { font-weight: 700; text-align: left; }
-.rc-official-legends caption { padding: 0.18em 0.14em; background: #c8c0a0; border-right: 1px solid #555; border-bottom: 1px solid #555; font-size: 0.6em; font-weight: 700; line-height: 1.05; text-align: center; }
-.rc-parent-signatures td { min-width: 2em; height: 1.7em; }
+.rc-official-legends caption { padding: 0.24em 0.12em; background: #c8c0a0; border-bottom: 1px solid #555; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 0.84em; font-weight: 700; line-height: 1.08; text-align: center; }
+.rc-parent-signatures td { min-width: 2em; height: 1.9em; }
 
 .preview-hint { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 9px; color: var(--muted-light); font-size: 9.3px; }
 .preview-hint .icon { width: 12px; height: 12px; }

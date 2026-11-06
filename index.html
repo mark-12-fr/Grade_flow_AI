@@ -195,12 +195,20 @@
                   <div class="docs-list">
                     <div class="docs-item">
                       <div class="docs-row upload-inline" id="dropzone" aria-describedby="file-help">
-                        <strong class="docs-label" id="sf9-label">SF9</strong>
+                        <div class="docs-head">
+                          <span class="docs-icon" aria-hidden="true"><svg class="icon"><use href="#i-file-sheet"></use></svg></span>
+                          <div class="docs-title">
+                            <strong class="docs-label" id="sf9-label">SF9</strong>
+                            <span class="docs-sub">Learner's Report Card</span>
+                          </div>
+                        </div>
+                        <p class="docs-desc">Quarterly grades for every learner in the class, used to build the report cards.</p>
                         <div class="dropzone-actions">
                           <button type="button" class="btn btn-secondary btn-sm" id="browse-btn" aria-labelledby="browse-btn sf9-label">
                             <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose file
                           </button>
                           <input type="file" class="input-file" id="file-upload" accept=".csv,.xlsx,.xls">
+                          <span class="docs-formats">CSV, XLSX or XLS</span>
                         </div>
                         <p class="file-help" id="file-help" aria-live="polite"></p>
                       </div>
@@ -220,12 +228,20 @@
 
                     <div class="docs-item">
                       <div class="docs-row">
-                        <strong class="docs-label" id="sf10-label">SF10</strong>
+                        <div class="docs-head">
+                          <span class="docs-icon" aria-hidden="true"><svg class="icon"><use href="#i-file-sheet"></use></svg></span>
+                          <div class="docs-title">
+                            <strong class="docs-label" id="sf10-label">SF10</strong>
+                            <span class="docs-sub">Learner's Permanent Record</span>
+                          </div>
+                        </div>
+                        <p class="docs-desc">Cumulative record of past semesters, used to prepare the permanent record.</p>
                         <div class="dropzone-actions">
                           <button type="button" class="btn btn-secondary btn-sm" id="browse-class-sf10" aria-labelledby="browse-class-sf10 sf10-label">
                             <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose file
                           </button>
                           <input type="file" class="input-file" id="class-sf10-upload">
+                          <span class="docs-formats">CSV, XLSX or XLS</span>
                         </div>
                       </div>
                       <div class="sf10-file-list" id="class-sf10-file-list" aria-live="polite"></div>

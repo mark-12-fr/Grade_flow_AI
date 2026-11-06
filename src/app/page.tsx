@@ -1,1 +1,5 @@
-export default function Home() { return <p>ok</p>; }
+import { redirect } from 'next/navigation';
+
+export default function Home() {
+  redirect('/upload');
+}

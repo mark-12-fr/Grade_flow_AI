@@ -105,3 +105,12 @@ def test_title_row_does_not_leak_into_header_labels():
     grid = Grid(rows=[["Sample School", "", "", ""], ["No.", "Name", "Math", "Sci"], [1, "Ana", 90, 91]], sheet="t")
     from backend.mapper import header_labels
     assert header_labels(grid, 2, {1: "name"}) == {1: "Name"}
+
+
+def test_model_field_formatting_slips_are_tolerated():
+    from backend.mapper import _clean_field
+
+    assert _clean_field("Learner:name") == "name"
+    assert _clean_field("student.lrn") == "lrn"
+    assert _clean_field(" Grade:philosophy:q1 ") == "grade:philosophy:q1"
+    assert _clean_field("grade:media_information_literacy:final") == "grade:media_information_literacy:final"

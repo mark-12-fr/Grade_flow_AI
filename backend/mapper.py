@@ -82,7 +82,7 @@ You see only the top rows of the sheet. Row and column indexes are 0-based and s
 Call submit_column_mapping exactly once.
 
 Field names you may use in `columns[].field`:
-- Learner: {', '.join(LEARNER_FIELDS)}  (name = full learner name; birthdate = date of birth)
+- Learner fields, written EXACTLY as one of these words with no prefix: {', '.join(LEARNER_FIELDS)}  (name = full learner name; birthdate = date of birth)
 - Grades: grade:<subjectKey>:<period>   period is one of q1,q2,q3,q4,final.
   `final` is that subject's semester final grade. Subjects 1st semester use q1,q2; 2nd semester use q3,q4.
 - Attendance: att:<month>:<schoolDays|present|absent>   months: {', '.join(schema['months'])}
@@ -142,6 +142,14 @@ def _sex(value: object) -> str:
     return str(value).strip()
 
 
+def _clean_field(value: object) -> str:
+    """Tolerate small formatting slips from the model, e.g. 'Learner:name' or ' Grade:x:q1 '."""
+    text = re.sub(r"\s+", "", str(value))
+    text = re.sub(r"^(learner|student)[:.]", "", text, flags=re.I)
+    head, _, rest = text.partition(":")
+    return head.lower() + (":" + rest if rest else "") if head.lower() in ("grade", "att", "ov", "transfer") else text
+
+
 def validate_mapping(raw: dict, schema: dict, width: int, nrows: int) -> tuple[dict, list[str]]:
     allowed = allowed_fields(schema)
     warnings = [str(w) for w in raw.get("warnings", []) if str(w).strip()]
@@ -149,7 +157,7 @@ def validate_mapping(raw: dict, schema: dict, width: int, nrows: int) -> tuple[d
     used: set[str] = set()
     for item in raw.get("columns", []):
         try:
-            col, name = int(item["col"]), str(item["field"])
+            col, name = int(item["col"]), _clean_field(item["field"])
         except (KeyError, TypeError, ValueError):
             continue
         if not (0 <= col < width) or name not in allowed:

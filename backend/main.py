@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -55,12 +56,15 @@ async def import_class(file: UploadFile = File(...), spec: str = Form(...)) -> d
         parsed_schema = parse_schema(spec)
     except MappingError as exc:
         raise HTTPException(400, str(exc)) from exc
-    try:
+    def work() -> dict:
         grid = read_grid(file.filename or "", data)
         limiter.take_call()
         result = run_import(grid, parsed_schema)
         result["schoolLogo"] = extract_logo(file.filename or "", data)
         return result
+
+    try:
+        return await run_in_threadpool(work)
     except ExtractError as exc:
         raise HTTPException(400, str(exc)) from exc
     except LimitExceeded as exc:
@@ -78,7 +82,7 @@ async def import_sf10(file: UploadFile = File(...)) -> dict:
         raise HTTPException(400, "The file is empty.")
     if len(data) > MAX_BYTES:
         raise HTTPException(413, "The file is larger than 10 MB.")
-    try:
+    def work() -> dict:
         grids = read_sheets(file.filename or "", data, limit=1000)
         cfg = settings()
         if cfg["max_sheets"] and len(grids) > cfg["max_sheets"]:
@@ -87,6 +91,9 @@ async def import_sf10(file: UploadFile = File(...)) -> dict:
         result = run_import_sf10(grids, spend=limiter.take_call, max_chars=cfg["max_sheet_chars"])
         result["schoolLogo"] = extract_logo(file.filename or "", data)
         return result
+
+    try:
+        return await run_in_threadpool(work)
     except ExtractError as exc:
         raise HTTPException(400, str(exc)) from exc
     except LimitExceeded as exc:

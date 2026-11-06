@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from typing import Any
 
 PROVIDERS = {
@@ -74,15 +75,26 @@ def call_ai(prompt: str, tool: dict, client: Any | None = None, max_tokens: int 
     system = ("You are a careful data-extraction engine. Reply with ONE JSON object only (no prose, no markdown) "
               "that follows this JSON Schema exactly. Use empty strings or empty arrays when a value is not present.\n"
               + json.dumps(tool["input_schema"]))
-    body = {"model": model, "max_tokens": max_tokens, "temperature": 0,
+    # Output budget: JSON for a whole gradebook mapping is long, and thinking models spend tokens before answering.
+    body = {"model": model, "max_tokens": max(max_tokens, 8192), "temperature": 0,
             "response_format": {"type": "json_object"},
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]}
+    if name == "gemini":
+        body["reasoning_effort"] = "none"  # extraction needs no deliberation; keeps answers fast and complete
     headers = {"Authorization": f"Bearer {key}"} if key else {}
-    try:
-        with httpx.Client(timeout=120) as http:
-            r = http.post(f"{base}/chat/completions", json=body, headers=headers)
-    except httpx.HTTPError as exc:
-        raise AiError(f"Could not reach the AI service ({name}): {exc.__class__.__name__}.") from exc
+    r = None
+    for attempt, pause in enumerate((0, 2, 5, 10)):
+        if pause:
+            time.sleep(pause)
+        try:
+            with httpx.Client(timeout=120) as http:
+                r = http.post(f"{base}/chat/completions", json=body, headers=headers)
+        except httpx.HTTPError as exc:
+            if attempt == 3:
+                raise AiError(f"Could not reach the AI service ({name}): {exc.__class__.__name__}.") from exc
+            continue
+        if r.status_code not in (500, 502, 503, 504):  # free tiers drop busy requests; try again shortly
+            break
     if r.status_code == 429:
         raise AiError("The free AI quota was reached. Wait a minute and try again.")
     if r.status_code in (401, 403):
@@ -90,7 +102,10 @@ def call_ai(prompt: str, tool: dict, client: Any | None = None, max_tokens: int 
     if r.status_code >= 400:
         raise AiError(f"The AI service failed (HTTP {r.status_code}): {r.text[:200]}")
     try:
-        content = r.json()["choices"][0]["message"]["content"]
+        choice = r.json()["choices"][0]
+        content = choice["message"]["content"]
     except (ValueError, KeyError, IndexError, TypeError) as exc:
         raise AiError("The AI service returned an unexpected answer.") from exc
+    if choice.get("finish_reason") == "length":
+        raise AiError("The AI answer was cut off (too long for this model). Try a smaller file or a model with a larger output limit.")
     return parse_json(content or "")

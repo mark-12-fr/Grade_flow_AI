@@ -1024,13 +1024,6 @@
       GF.showToast('Upload a class gradebook first.', 'error');
       return false;
     }
-    const manualConfirmation = document.getElementById('confirm-manual-class-details');
-    const manualConfirmed = manualClassDetailsConfirmed && manualConfirmation && manualConfirmation.checked;
-    if (!hasCompleteImportedClassDetails(GF.state.upload.classDetails) && !manualConfirmed) {
-      setError('Class details are missing from the workbook. Open the manual details and confirm them.');
-      GF.showToast('Add or confirm the class details before continuing.', 'error');
-      return false;
-    }
     const errors = [];
     GF.state.students.forEach(function (student) {
       GF.SUBJECTS.forEach(function (subject) {

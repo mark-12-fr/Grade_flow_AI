@@ -37,6 +37,7 @@ def test_call_ai_sends_openai_style_request(monkeypatch):
 
 @pytest.mark.parametrize("status,kind", [(401, "config"), (429, "ai"), (500, "ai")])
 def test_call_ai_errors_are_clear(monkeypatch, status, kind):
+    monkeypatch.setattr(llm.time, "sleep", lambda seconds: None)
     monkeypatch.setenv("AI_PROVIDER", "gemini")
     monkeypatch.setenv("AI_API_KEY", "k")
     monkeypatch.setattr(httpx, "Client", fake_client(lambda r: httpx.Response(status, text="x")))
@@ -49,3 +50,19 @@ def test_ollama_needs_no_key(monkeypatch):
     monkeypatch.setenv("AI_PROVIDER", "ollama")
     monkeypatch.delenv("AI_API_KEY", raising=False)
     assert llm.is_configured()
+
+
+def test_busy_provider_is_retried(monkeypatch):
+    monkeypatch.setattr(llm.time, "sleep", lambda seconds: None)
+    monkeypatch.setenv("AI_PROVIDER", "gemini")
+    monkeypatch.setenv("AI_API_KEY", "k")
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        if len(calls) < 3:
+            return httpx.Response(503, text="busy")
+        return httpx.Response(200, json={"choices": [{"message": {"content": '{"a": "ok"}'}, "finish_reason": "stop"}]})
+
+    monkeypatch.setattr(httpx, "Client", fake_client(handler))
+    assert llm.call_ai("p", TOOL) == {"a": "ok"} and len(calls) == 3

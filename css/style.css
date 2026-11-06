@@ -1664,3 +1664,4 @@ img { max-width: 100%; display: block; }
 .upload-inline-sub { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
 .upload-inline .dropzone-actions { justify-content: flex-start; }
 .upload-main .card > .sf10-upload:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.sf9-upload .upload-inline { margin-top: 11px; }

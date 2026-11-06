@@ -192,6 +192,40 @@
           <div class="upload-layout">
             <div class="upload-main">
               <article class="card">
+                <section class="sf9-upload" aria-labelledby="sf9-title">
+                  <div class="sf10-heading">
+                    <div>
+                      <h3 id="sf9-title">SF9 · Class grade sheet</h3>
+                      <p>Upload the class workbook. Class details, learners, and grades are read automatically.</p>
+                    </div>
+                    <span class="pill pill-blue">Required</span>
+                  </div>
+                  <div class="upload-inline" id="dropzone" aria-describedby="file-help">
+                    <p class="upload-inline-sub">Upload the Excel or CSV you already have, in any layout. AI finds the learners, subjects, grades and class details, and you review everything before anything is printed.</p>
+                    <div class="dropzone-actions">
+                      <button type="button" class="btn btn-primary btn-sm" id="browse-btn">
+                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose class file
+                      </button>
+                      <button type="button" class="btn btn-secondary btn-sm" id="demo-class-btn">
+                        <svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg> Try demo class
+                      </button>
+                      <input type="file" class="input-file" id="file-upload" accept=".csv,.xlsx,.xls">
+                    </div>
+                    <p class="file-help" id="file-help">One class workbook · Any column layout · CSV or Excel up to 10 MB · Maximum 200 learners</p>
+                  </div>
+                  <div class="form-error" id="file-error" role="alert" hidden></div>
+                  <div class="uploaded-file" id="file-info" hidden>
+                    <span class="file-type-icon"><svg class="icon" aria-hidden="true"><use href="#i-file-sheet"></use></svg></span>
+                    <div class="uploaded-file-text">
+                      <strong id="selected-filename">No file selected</strong>
+                      <span id="file-details">—</span>
+                    </div>
+                    <span class="pill pill-green"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Ready</span>
+                    <button type="button" class="icon-btn" id="remove-file-btn" aria-label="Remove the uploaded class files">
+                      <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                    </button>
+                  </div>
+                </section>
                 <section class="sf10-upload" aria-labelledby="sf10-title">
                   <div class="sf10-heading">
                     <div>

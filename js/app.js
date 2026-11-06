@@ -149,8 +149,13 @@
     school: {
       name: 'University of Iloilo',
       address: 'Republic of the Philippines · Department of Education · Region VI – Western Visayas · Iloilo City · Senior High School Department',
-      principal: 'Elena Navarro'
+      principal: 'Elena Navarro',
+      department: '',
+      region: '',
+      division: '',
+      logo: ''
     },
+    sf10Students: [],
     teacher: 'Sarah Collins',
     year: '2026-2027',
     term: 'Annual Report',

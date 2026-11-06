@@ -158,7 +158,7 @@
     return '<div class="rc-official-layout">' +
       '<section class="rc-official-learner" aria-label="Learner details and observations">' +
         '<div class="rc-official-school">' +
-          '<img class="rc-logo" src="assets/ui-logo.png" alt="University of Iloilo seal">' +
+          '<img class="rc-logo" src="' + esc(GF.state.school.logo || 'assets/ui-logo.png') + '" alt="University of Iloilo seal">' +
           '<div>' + schoolAddressHTML + '<strong>' + esc(context.schoolName) + '</strong>' +
             '<span>Senior High School Department</span></div>' +
         '</div>' +

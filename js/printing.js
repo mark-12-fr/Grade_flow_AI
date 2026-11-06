@@ -10,6 +10,7 @@
   const esc = GF.escapeHTML;
   const PAGE_SIZE = 6;
   let logoDataPromise = null;
+  let logoDataSource = '';
 
   /* ---------- Data ---------- */
   function activeDataset() {
@@ -268,6 +269,8 @@
   }
 
   function loadLogoData() {
+    const logoSource = GF.state.school.logo || 'assets/ui-logo.png';
+    if (logoDataSource !== logoSource) { logoDataPromise = null; logoDataSource = logoSource; }
     if (!logoDataPromise) {
       logoDataPromise = new Promise(function (resolve, reject) {
         const image = new Image();
@@ -287,7 +290,7 @@
         image.onerror = function () {
           reject(new Error('The University of Iloilo logo could not be loaded.'));
         };
-        image.src = 'assets/ui-logo.png';
+        image.src = logoSource;
       }).catch(function (error) {
         logoDataPromise = null;
         throw error;

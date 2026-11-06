@@ -397,6 +397,10 @@
     box.hidden = false;
   }
 
+  function hasSf10Records() {
+    return Array.isArray(GF.state.sf10Students) && GF.state.sf10Students.length > 0;
+  }
+
   function updateFileUI() {
     const info = document.getElementById('file-info');
     const emptyHint = document.getElementById('selected-filename');
@@ -409,7 +413,7 @@
       info.hidden = true;
       if (emptyHint) emptyHint.textContent = 'No class file uploaded';
       if (details) details.textContent = '—';
-      if (continueBtn) continueBtn.disabled = true;
+      if (continueBtn) continueBtn.disabled = !hasSf10Records();
       return;
     }
 
@@ -445,12 +449,15 @@
     if (classList) {
       classList.innerHTML = state.classFile
         ? '<div class="sf10-file-row"><span class="file-type-icon"><svg class="icon" aria-hidden="true"><use href="#i-file-text"></use></svg></span>' +
-          '<span class="sf10-file-name">' + sf10FileLabel(state.classFile) + '</span>' +
+          '<span class="sf10-file-name">' + sf10FileLabel(state.classFile) + ' · ' + GF.state.sf10Students.length + ' learner' +
+            (GF.state.sf10Students.length === 1 ? '' : 's') + ' read' +
+            (state.info && state.info.warnings.length ? ' · ' + state.info.warnings.length + ' note(s)' : '') + '</span>' +
           '<button type="button" class="icon-btn" data-remove-class-sf10 aria-label="Remove class SF10">' +
             '<svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg></button></div>'
         : '';
     }
 
+    updateFileUI();
     if (!studentList) return;
     if (!state.studentFiles.length) {
       studentList.innerHTML = '<span class="sf10-empty">No student SF10s selected</span>';
@@ -535,7 +542,32 @@
       '<p>Attendance and learner-observed values can be reviewed and edited in grade verification.</p>';
   }
 
-  function addSf10Files(fileList, isClassFile) {
+  // Reads an SF10 workbook with AI: one learner per sheet, all form fields.
+  async function importSf10WithAI(file) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(function () { controller.abort(); }, AI_TIMEOUT_MS * 2);
+    try {
+      const list = document.getElementById('class-sf10-file-list');
+      if (list) list.innerHTML = '<span class="sf10-empty">Reading ' + GF.escape(file.name) + ' with AI: learner, eligibility, scholastic records and completion details...</span>';
+      const body = new FormData();
+      body.append('file', file);
+      const response = await fetch('/api/import-sf10', { method: 'POST', body: body, signal: controller.signal });
+      if (!response.ok) {
+        let detail = 'HTTP ' + response.status;
+        try { detail = (await response.json()).detail || detail; } catch (ignore) { /* not JSON */ }
+        return { error: detail };
+      }
+      const result = await response.json();
+      if (!result || !Array.isArray(result.students) || !result.students.length) return { error: 'No SF10 record was found in this file.' };
+      return result;
+    } catch (error) {
+      return { error: error.name === 'AbortError' ? 'The AI import took too long.' : 'The AI import service is not reachable.' };
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
+  async function addSf10Files(fileList, isClassFile) {
     const files = Array.from(fileList || []);
     if (!files.length) return;
     const state = sf10State();
@@ -545,8 +577,21 @@
     const validFiles = files.filter(function (file) { return file.size > 0; });
 
     if (isClassFile) {
-      if (validFiles.length) state.classFile = validFiles[0];
-      if (files.length > 1) errors.push('Choose one file for the class SF10.');
+      if (files.length > 1) errors.push('Choose one file for the SF10.');
+      if (validFiles.length) {
+        const result = await importSf10WithAI(validFiles[0]);
+        if (result.error) {
+          errors.push('SF10 could not be read: ' + result.error);
+          state.classFile = null;
+          GF.state.sf10Students = [];
+        } else {
+          state.classFile = validFiles[0];
+          state.info = { sheets: result.sheets || 1, warnings: result.warnings || [] };
+          GF.state.sf10Students = result.students;
+          if (result.schoolLogo) GF.state.school.logo = result.schoolLogo;
+          GF.state.sf10Index = 0;
+        }
+      }
     } else {
       validFiles.forEach(function (file) {
         const duplicate = state.studentFiles.some(function (entry) {
@@ -564,8 +609,9 @@
     if (errors.length) {
       GF.showToast(errors.join(' '), 'error');
     } else {
-      const count = isClassFile ? 1 : validFiles.length;
-      GF.showToast(count + ' SF10 document' + (count === 1 ? '' : 's') + ' added.');
+      const count = isClassFile ? GF.state.sf10Students.length : validFiles.length;
+      GF.showToast(isClassFile ? count + ' SF10 record' + (count === 1 ? '' : 's') + ' read.'
+        : count + ' SF10 document' + (count === 1 ? '' : 's') + ' added.');
     }
   }
 
@@ -648,7 +694,7 @@
       }
       return {
         students: result.students,
-        classDetails: result.classDetails || {},
+        classDetails: Object.assign({}, result.classDetails || {}, result.schoolLogo ? { schoolLogo: result.schoolLogo } : {}),
         ai: { mapping: result.mapping || [], warnings: result.warnings || [], sheet: result.sheet || '' }
       };
     } catch (error) {
@@ -657,6 +703,18 @@
     } finally {
       window.clearTimeout(timer);
       setImportBusy('');
+    }
+  }
+
+  // School name, department, region, division, address and logo read from the file.
+  function applySchoolDetails(details) {
+    const school = GF.state.school;
+    if (details.schoolName) school.name = details.schoolName;
+    ['department', 'region', 'division'].forEach(function (key) { if (details[key]) school[key] = details[key]; });
+    if (details.schoolLogo) school.logo = details.schoolLogo;
+    if (details.department || details.region || details.division || details.schoolAddress) {
+      school.address = ['Republic of the Philippines', school.department, school.region, school.division, details.schoolAddress]
+        .filter(Boolean).join(' · ');
     }
   }
 
@@ -685,6 +743,7 @@
     if (importedClassDetails.graduationStatus) GF.state.graduationStatus = importedClassDetails.graduationStatus;
     if (importedClassDetails.teacher) GF.state.teacher = importedClassDetails.teacher;
     if (importedClassDetails.principal) GF.state.school.principal = importedClassDetails.principal;
+    applySchoolDetails(importedClassDetails);
     GF.state.className = importedClassDetails.className ||
       (importedClassDetails.section
         ? 'Grade ' + GF.state.gradeLevel + ' · ' + importedClassDetails.section
@@ -941,8 +1000,9 @@
 
   function validateCurrentFile() {
     const fileInput = document.getElementById('file-upload');
+    if (!GF.state.upload && hasSf10Records()) { setError(''); return true; }
     if (!GF.state.upload) {
-      setError('Upload a class gradebook before continuing.');
+      setError('Upload an SF9 or SF10 file before continuing.');
       GF.showToast('Upload a class gradebook first.', 'error');
       return false;
     }
@@ -1079,6 +1139,7 @@
         if (!event.target.closest('[data-remove-class-sf10]')) return;
         sf10State().classFile = null;
         sf10State().analysisRun = false;
+        GF.state.sf10Students = [];
         renderSf10UI();
       });
     }

@@ -13,9 +13,10 @@ from typing import Any, Callable
 from .extractor import Grid, preview_text
 
 DEFAULT_MODEL = "claude-sonnet-5-5"
-LEARNER_FIELDS = ["roll", "name", "age", "sex", "lrn", "birthdate"]
+LEARNER_FIELDS = ["roll", "name", "middleName", "age", "sex", "lrn", "birthdate"]
 CLASS_FIELDS = ["className", "strand", "gradeLevel", "year", "term", "section",
-                "studentStatus", "graduationStatus", "teacher", "principal"]
+                "studentStatus", "graduationStatus", "teacher", "principal",
+                "schoolName", "department", "region", "division", "schoolAddress", "track"]
 PERIODS = ["q1", "q2", "q3", "q4", "final"]
 ATT_FIELDS = ["schoolDays", "present", "absent"]
 OV_PERIODS = ["q1", "q2", "q3", "q4"]
@@ -103,7 +104,7 @@ Sheet "{grid.sheet}" (top rows):
 """
 
 
-def call_claude(prompt: str, tool: dict, client: Any | None = None) -> dict:
+def call_claude(prompt: str, tool: dict, client: Any | None = None, max_tokens: int = 4096) -> dict:
     if client is None:
         import anthropic
 
@@ -113,7 +114,7 @@ def call_claude(prompt: str, tool: dict, client: Any | None = None) -> dict:
     try:
         msg = client.messages.create(
             model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_MODEL),
-            max_tokens=4096,
+            max_tokens=max_tokens,
             tools=[tool],
             tool_choice={"type": "tool", "name": tool["name"]},
             messages=[{"role": "user", "content": prompt}],
@@ -205,7 +206,7 @@ def apply_mapping(grid: Grid, mapping: dict, schema: dict) -> tuple[list[dict], 
         if FOOTER_WORDS.match(name):
             break
         stu: dict[str, Any] = {
-            "id": len(students) + 1, "roll": "", "name": name[:80], "age": "", "sex": "", "lrn": "", "birthdate": "",
+            "id": len(students) + 1, "roll": "", "name": name[:80], "middleName": "", "age": "", "sex": "", "lrn": "", "birthdate": "",
             "grades": {s["key"]: {} for s in schema["subjects"]},
             "attendance": {"present": None, "total": None, "months": {}, "schoolDays": {}, "absent": {}},
             "transfer": {}, "observedValues": {v: {} for v in schema["coreValues"]},

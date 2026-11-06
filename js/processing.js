@@ -205,7 +205,7 @@
           GF.showToast('Processing is still running.', 'info');
           return;
         }
-        GF.navigateTo('verification');
+        GF.navigateTo(GF.state.upload ? 'report-card' : 'sf10');
       });
     }
     if (cancel) cancel.addEventListener('click', cancelProcessing);

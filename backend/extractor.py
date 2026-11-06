@@ -107,3 +107,66 @@ def preview_text(grid: Grid, limit: int = 15) -> str:
     for r, row in enumerate(grid.rows[:limit]):
         lines.append(f"{r}\t" + "\t".join(str(c).replace("\t", " ").replace("\n", " ")[:60] for c in row))
     return "\n".join(lines)
+
+
+def read_sheets(filename: str, data: bytes, limit: int = 40) -> list[Grid]:
+    """Every non-empty sheet as its own grid (an SF10 workbook is usually one learner per sheet)."""
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext == "csv":
+        return [read_grid(filename, data)]
+    if ext == "xlsx":
+        from openpyxl import load_workbook
+
+        try:
+            wb = load_workbook(io.BytesIO(data), data_only=True, read_only=True)
+        except Exception as exc:
+            raise ExtractError(f"Could not open the Excel file: {exc}") from exc
+        grids = [Grid(rows=_trim([list(r) for r in ws.iter_rows(values_only=True)]), sheet=ws.title) for ws in wb.worksheets]
+    elif ext == "xls":
+        import xlrd
+
+        try:
+            book = xlrd.open_workbook(file_contents=data)
+        except Exception as exc:
+            raise ExtractError(f"Could not open the Excel file: {exc}") from exc
+        grids = []
+        for sh in book.sheets():
+            raw = [[sh.cell(r, c).value for c in range(min(sh.ncols, MAX_COLS))] for r in range(min(sh.nrows, MAX_ROWS))]
+            grids.append(Grid(rows=_trim(raw), sheet=sh.name))
+    else:
+        raise ExtractError("Unsupported file type. Use .xlsx, .xls or .csv.")
+    grids = [g for g in grids if g.rows]
+    if not grids:
+        raise ExtractError("The file is empty.")
+    return grids[:limit]
+
+
+def full_text(grid: Grid) -> str:
+    """Whole sheet as compact text: one line per row with 'colLetter=value' for non-empty cells."""
+    lines = []
+    for r, row in enumerate(grid.rows):
+        cells = [f"{col_letter(i)}={str(c).replace(chr(10), ' ').strip()[:90]}" for i, c in enumerate(row) if str(c).strip() != ""]
+        if cells:
+            lines.append(f"{r + 1}: " + " | ".join(cells))
+    return "\n".join(lines)
+
+
+def extract_logo(filename: str, data: bytes, max_bytes: int = 400_000) -> str:
+    """First picture embedded in an .xlsx (usually the school logo) as a data URL, or ''."""
+    if not filename.lower().endswith(".xlsx"):
+        return ""
+    try:
+        import base64
+
+        from openpyxl import load_workbook
+
+        wb = load_workbook(io.BytesIO(data))
+        for ws in wb.worksheets:
+            for img in getattr(ws, "_images", []):
+                raw = img._data()
+                if raw and len(raw) <= max_bytes:
+                    fmt = (getattr(img, "format", "") or "png").lower()
+                    return f"data:image/{'jpeg' if fmt == 'jpg' else fmt};base64," + base64.b64encode(raw).decode()
+    except Exception:
+        return ""
+    return ""

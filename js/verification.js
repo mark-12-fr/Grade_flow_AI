@@ -70,6 +70,37 @@
     setText('changes-saved-pill', 'Changes saved');
   }
 
+  // Explain what the AI import did, so the teacher can spot a wrongly mapped column.
+  function fieldLabel(field) {
+    const parts = field.split(':');
+    if (parts[0] === 'grade') {
+      const subject = GF.SUBJECTS.find(function (entry) { return entry.key === parts[1]; });
+      return (subject ? subject.name : parts[1]) + ' · ' + (parts[2] === 'final' ? 'Semester final' : 'Quarter ' + parts[2].slice(1));
+    }
+    if (parts[0] === 'att') return 'Attendance · ' + parts[1].toUpperCase() + ' · ' + parts[2].replace(/([A-Z])/g, ' $1').toLowerCase();
+    if (parts[0] === 'ov') return 'Core value · ' + parts[1] + ' · Q' + parts[2].slice(1);
+    if (parts[0] === 'transfer') return 'Transfer · ' + parts[1];
+    return field.charAt(0).toUpperCase() + field.slice(1);
+  }
+
+  function renderAiNotes() {
+    const box = document.getElementById('ai-import-notes');
+    if (!box) return;
+    const ai = GF.state.upload && GF.state.upload.ai;
+    box.hidden = !ai;
+    if (!ai) return;
+    const warnings = ai.warnings || [];
+    document.getElementById('ai-import-summary').textContent =
+      '· ' + ai.mapping.length + ' columns mapped' + (warnings.length ? ' · ' + warnings.length + ' to check' : '');
+    document.getElementById('ai-import-warnings').innerHTML = warnings.map(function (warning) {
+      return '<li>' + GF.escape(warning) + '</li>';
+    }).join('');
+    document.getElementById('ai-import-mapping').innerHTML = ai.mapping.map(function (entry) {
+      return '<tr><td>' + GF.escape(entry.header || 'Column ' + (entry.col + 1)) + '</td><td>' + GF.escape(fieldLabel(entry.field)) + '</td></tr>';
+    }).join('');
+    box.open = warnings.length > 0;
+  }
+
   function renderTable() {
     const body = document.getElementById('grades-table-body');
     if (!body) return;
@@ -614,6 +645,7 @@
     setText('verification-term', GF.termLabel());
     setText('verification-scale', GF.gradeScaleDescription());
     selectedStudent();
+    renderAiNotes();
     renderStats();
     renderTable();
     renderGradeEditor();

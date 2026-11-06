@@ -91,6 +91,8 @@
     verification: { label: 'Grade Verification', breadcrumb: 'Grade Verification', nav: 'verification', fileTitle: 'Grade Verification' },
     'report-card': { label: 'Report Cards', breadcrumb: 'Report Cards', nav: 'report-card', fileTitle: 'Report Cards' },
     'generated-reports': { label: 'Generated Reports', breadcrumb: 'Report Cards', nav: 'report-card', fileTitle: 'Generated Reports' },
+    sf10: { label: 'SF10 Record', breadcrumb: 'SF10 Record', nav: 'sf10', fileTitle: 'SF10 Record' },
+    summary: { label: 'Summary & Rank', breadcrumb: 'Summary & Rank', nav: 'summary', fileTitle: 'Summary & Rank' },
     history: { label: 'Report History', breadcrumb: 'Report History', nav: 'history', fileTitle: 'Report History' },
     settings: { label: 'Workspace Settings', breadcrumb: 'Settings', nav: 'settings', fileTitle: 'Workspace Settings' },
     help: { label: 'Help', breadcrumb: 'Help', nav: 'help', fileTitle: 'Help' }
@@ -242,15 +244,70 @@
     return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
   }
 
+  const PASSING_GRADE = 75;
+
+  function isGradeValue(value) {
+    return value !== null && value !== undefined && value !== '' && !Number.isNaN(Number(value));
+  }
+
+  // Mean of semester finals for the given subjects, or null while any grade is missing.
+  function rawAverage(student, subjects) {
+    if (!student || !student.grades || !subjects.length) return null;
+    const values = subjects.map(function (subject) { return (student.grades[subject.key] || {}).final; });
+    if (!values.every(isGradeValue)) return null;
+    return values.reduce(function (sum, value) { return sum + Number(value); }, 0) / values.length;
+  }
+
+  function semesterSubjects(semesterKey) {
+    return SUBJECTS.filter(function (subject) { return subject.semester === semesterKey; });
+  }
+
+  // General average for one semester (rounded), or null.
+  function semesterAverage(student, semesterKey) {
+    const raw = rawAverage(student, semesterSubjects(semesterKey));
+    return raw === null ? null : Math.round(raw);
+  }
+
+  // General average for the whole school year (rounded), or null.
   function averageGrade(student) {
-    if (!student || !student.grades) return null;
-    const values = SUBJECTS.map(function (subject) {
-      const grades = student.grades[subject.key] || {};
-      return grades.final;
+    const raw = rawAverage(student, SUBJECTS);
+    return raw === null ? null : Math.round(raw);
+  }
+
+  function remarkFor(value) {
+    if (!isGradeValue(value)) return '';
+    return Number(value) >= PASSING_GRADE ? 'Passed' : 'Failed';
+  }
+
+  // Standard competition ranking (1,2,2,4). Learners with any missing or invalid grade
+  // (quarters included) are unranked until the teacher fixes them in Grade Verification.
+  function computeRanks(students) {
+    const scored = (students || state.students).map(function (student) {
+      return { student: student, raw: studentStatus(student) === 'approved' ? rawAverage(student, SUBJECTS) : null };
     });
-    if (values.some(function (value) { return value === null || value === '' || Number.isNaN(Number(value)); })) return null;
-    const total = values.reduce(function (sum, value) { return sum + Number(value); }, 0);
-    return Math.round(total / values.length);
+    const ranked = scored.filter(function (entry) { return entry.raw !== null; })
+      .sort(function (a, b) { return b.raw - a.raw; });
+    const result = new Map();
+    ranked.forEach(function (entry, index) {
+      const previous = ranked[index - 1];
+      const rank = previous && Math.round(previous.raw * 100) === Math.round(entry.raw * 100)
+        ? result.get(previous.student.id).rank : index + 1;
+      result.set(entry.student.id, { rank: rank, average: Math.round(entry.raw), raw: entry.raw });
+    });
+    scored.forEach(function (entry) {
+      if (!result.has(entry.student.id)) result.set(entry.student.id, { rank: null, average: null, raw: null });
+    });
+    return result;
+  }
+
+  // Age in whole years on a reference date (default: today) from an ISO birthdate.
+  function ageFromBirthdate(birthdate, onDate) {
+    const born = new Date(birthdate);
+    if (!birthdate || Number.isNaN(born.getTime())) return '';
+    const ref = onDate || new Date();
+    let age = ref.getFullYear() - born.getFullYear();
+    if (ref.getMonth() < born.getMonth() || (ref.getMonth() === born.getMonth() && ref.getDate() < born.getDate())) age -= 1;
+    return age >= 0 && age < 100 ? String(age) : '';
   }
 
   function averageLabel(student) {
@@ -890,6 +947,11 @@
     formatLongDate: formatLongDate,
     prettyYear: prettyYear,
     averageGrade: averageGrade,
+    semesterAverage: semesterAverage,
+    remarkFor: remarkFor,
+    computeRanks: computeRanks,
+    ageFromBirthdate: ageFromBirthdate,
+    PASSING_GRADE: PASSING_GRADE,
     averageLabel: averageLabel,
     letterFor: letterFor,
     performanceLabel: performanceLabel,

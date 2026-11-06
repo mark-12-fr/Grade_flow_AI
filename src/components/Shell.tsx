@@ -12,8 +12,7 @@ import type { PageId } from '@/lib/types';
 
 const NAV: { page: PageId; icon: IconName; label: string }[] = [
   { page: 'upload', icon: 'upload', label: 'Upload Grades' },
-  { page: 'history', icon: 'history', label: 'History' },
-  { page: 'settings', icon: 'settings', label: 'Settings' }
+  { page: 'history', icon: 'history', label: 'History' }
 ];
 
 const STEPS: { page: PageId; label: string }[] = [

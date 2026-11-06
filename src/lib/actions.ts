@@ -7,7 +7,7 @@ import { getState, setState } from './store';
 import type { AppState, Student, UploadInfo } from './types';
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
-const MAX_LEARNERS = 200;
+const MAX_LEARNERS = 2000; // sanity cap only; a whole-school workbook can list several hundred learners
 
 export const aiSchema = () => ({
   subjects: SUBJECTS.map((s) => ({ key: s.key, name: s.name, semester: s.semester })),

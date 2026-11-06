@@ -72,3 +72,11 @@ export function recordFor(student: Student, state: AppState): Sf10Rec {
 
 /** The learners shown on the SF10 page: the ones read from an uploaded SF10, otherwise the class roster. */
 export const sf10Source = (state: AppState): Student[] => (state.sf10Students.length ? state.sf10Students : state.students);
+
+/** Strand, section and grade levels of a learner, used to filter the SF10 list. */
+export function learnerMeta(student: Student, state: AppState): { strand: string; section: string; levels: string[] } {
+  const sems = student.sf10?.semesters ?? [];
+  if (!sems.length) return { strand: state.strand, section: state.section, levels: [state.gradeLevel] };
+  const last = [...sems].reverse().find((s) => s.section || s.track) ?? sems[sems.length - 1];
+  return { strand: last.track || '', section: last.section || '', levels: [...new Set(sems.map((x) => x.gradeLevel).filter(Boolean))] };
+}

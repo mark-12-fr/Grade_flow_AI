@@ -1806,3 +1806,24 @@ html { scroll-behavior: smooth; }
 .uploaded-file .pill-green { animation: popIn 0.5s var(--ease-out) 0.1s both; }
 .uploaded-file .pill-green .icon polyline { stroke-dasharray: 24; animation: drawCheck 0.45s var(--ease-soft) 0.35s both; }
 .uploaded-file .file-type-icon, .sf10-file-row .file-type-icon { animation: popIn 0.45s var(--ease-out) both; }
+
+/* SF10 browser: search, filters, selectable learner list */
+.sf10-browser { display: grid; gap: 12px; padding: 14px 16px; }
+.sf10-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sf10-search { flex: 1 1 240px; min-width: 200px; }
+.sf10-filters .select-wrap { flex: 0 1 190px; min-width: 130px; }
+.sf10-list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sf10-check { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.sf10-list { max-height: 252px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--white); scrollbar-width: thin; }
+.sf10-list-empty { padding: 22px; color: var(--muted-light); font-size: 12px; text-align: center; }
+.sf10-row { display: flex; align-items: center; gap: 10px; padding: 0 12px; border-bottom: 1px solid var(--border); transition: background-color 0.2s var(--ease-soft); }
+.sf10-row:last-child { border-bottom: 0; }
+.sf10-row:hover { background: rgba(59, 130, 246, 0.06); }
+.sf10-row.active { background: rgba(59, 130, 246, 0.12); box-shadow: inset 3px 0 0 var(--blue); }
+.sf10-row-main { display: grid; grid-template-columns: 140px minmax(0, 1fr) minmax(0, 220px); align-items: center; gap: 12px; flex: 1; min-width: 0; padding: 9px 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.sf10-row-main strong { color: var(--navy); font-size: 12px; font-variant-numeric: tabular-nums; }
+.sf10-row-main span { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sf10-row-main em { overflow: hidden; color: var(--muted-light); font-size: 10.5px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.sf10-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sf10-busy { color: var(--muted); font-size: 11.5px; animation: fadeIn 0.3s both; }
+@media (max-width: 700px) { .sf10-row-main { grid-template-columns: 1fr; gap: 2px; } }

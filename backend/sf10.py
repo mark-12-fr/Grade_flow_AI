@@ -150,10 +150,15 @@ def normalize(raw: dict, grid: Grid, index: int) -> tuple[dict, list[str]]:
     return student, warnings
 
 
-def run_import_sf10(grids: list[Grid], client: Any | None = None, caller: Callable[..., dict] = call_claude) -> dict:
+def run_import_sf10(grids: list[Grid], client: Any | None = None, caller: Callable[..., dict] = call_claude,
+                    spend: Callable[[], None] | None = None, max_chars: int = 0) -> dict:
     def one(item: tuple[int, Grid]) -> tuple[dict | None, list[str]]:
         i, grid = item
+        if max_chars and len(full_text(grid)) > max_chars:
+            return None, [f'Sheet "{grid.sheet}" is too large to be one learner\'s SF10; skipped (no AI call).']
         try:
+            if spend:
+                spend()
             raw = caller(build_prompt(grid), TOOL, client, max_tokens=8000)
             student, warns = normalize(raw, grid, i)
             return student, warns

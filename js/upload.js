@@ -551,7 +551,7 @@
       if (list) list.innerHTML = '<span class="sf10-empty">Reading ' + GF.escape(file.name) + ' with AI: learner, eligibility, scholastic records and completion details...</span>';
       const body = new FormData();
       body.append('file', file);
-      const response = await fetch('/api/import-sf10', { method: 'POST', body: body, signal: controller.signal });
+      const response = await aiFetch('/api/import-sf10', body, controller.signal);
       if (!response.ok) {
         let detail = 'HTTP ' + response.status;
         try { detail = (await response.json()).detail || detail; } catch (ignore) { /* not JSON */ }
@@ -670,6 +670,24 @@
     };
   }
 
+  // POST to an AI endpoint. If the server asks for an access code (401), ask once and retry.
+  async function aiFetch(url, body, signal) {
+    const send = function () {
+      const code = window.sessionStorage.getItem('gf-access-code');
+      return fetch(url, { method: 'POST', body: body, signal: signal, headers: code ? { 'X-Access-Code': code } : {} });
+    };
+    let response = await send();
+    if (response.status === 401) {
+      const entered = window.prompt('Enter the access code to use the AI import:');
+      if (entered) {
+        window.sessionStorage.setItem('gf-access-code', entered);
+        response = await send();
+        if (response.status === 401) window.sessionStorage.removeItem('gf-access-code');
+      }
+    }
+    return response;
+  }
+
   // Returns the parsed class, or null when the AI service is unavailable (caller falls back).
   async function importWithAI(file) {
     lastAiError = '';
@@ -680,7 +698,7 @@
       const body = new FormData();
       body.append('file', file);
       body.append('spec', JSON.stringify(aiSchema()));
-      const response = await fetch('/api/import', { method: 'POST', body: body, signal: controller.signal });
+      const response = await aiFetch('/api/import', body, controller.signal);
       if (!response.ok) {
         let detail = 'HTTP ' + response.status;
         try { detail = (await response.json()).detail || detail; } catch (ignore) { /* not JSON */ }

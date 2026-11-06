@@ -24,6 +24,15 @@ uvicorn backend.main:app --reload
 
 Open http://127.0.0.1:8000 and upload `samples/messy_class.xlsx` (fictional learners, non-template headers).
 
+## Keeping the API key and the bill safe
+
+- The key lives only in `.env` (git-ignored, mode 600) on the server. The browser never sees it and `/api/health` only says whether it is set.
+- Never put the key in `.env.example` (that file is committed). Do not paste it in chat, issues or screenshots.
+- Limits (see `.env.example`): per-visitor rate limit, a daily cap on AI calls for the whole server, a max number of sheets per SF10 upload and a max sheet size. Over the limit the API answers 429/422 with a clear message and **no AI call is made**.
+- Set `APP_ACCESS_CODE` when anyone else can reach the server; the app asks for the code once per browser session.
+- Run `uvicorn backend.main:app --host 127.0.0.1` (the default) unless you deliberately expose it.
+- Also set a monthly **spend limit** in the Anthropic Console (Settings → Limits) as the final safety net, and create keys with an expiry.
+
 ## Pages
 
 Upload → Processing → Verification (grades, attendance, observed values) → Report card preview (SF9 with Passed/Failed remarks) → Print/PDF, plus **SF10 Record** (per learner or whole class, PDF) and **Summary & Rank** (class stats, ranking with ties, CSV export).

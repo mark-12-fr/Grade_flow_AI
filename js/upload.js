@@ -222,7 +222,7 @@
     if (columns.name === -1) missingColumns.unshift('Student Name');
     if (missingColumns.length) {
       throw new Error('Missing required grade columns: ' + missingColumns.slice(0, 5).join(', ') +
-        (missingColumns.length > 5 ? ', and ' + (missingColumns.length - 5) + ' more' : '') + '. Download the report-card template for the full column list.');
+        (missingColumns.length > 5 ? ', and ' + (missingColumns.length - 5) + ' more' : '') + '.');
     }
 
     GF.ATTENDANCE_MONTHS.forEach(function (month) {
@@ -417,8 +417,10 @@
     if (emptyHint) emptyHint.textContent = upload.name;
     if (details) {
       const fileCount = upload.files.length;
-      details.textContent = upload.rows + ' learner' + (upload.rows === 1 ? '' : 's') +
-        ' · ' + fileCount + ' grade file' + (fileCount === 1 ? '' : 's');
+      details.textContent = upload.mode === 'demo'
+        ? upload.rows + ' learners · Demo data (fictional, not from a file)'
+        : upload.rows + ' learner' + (upload.rows === 1 ? '' : 's') +
+          ' · ' + fileCount + ' grade file' + (fileCount === 1 ? '' : 's');
     }
     if (continueBtn) continueBtn.disabled = false;
   }
@@ -595,94 +597,83 @@
     GF.refreshChrome();
   }
 
-  async function handleFiles(fileList) {
-    const files = Array.from(fileList || []);
-    if (!files.length) return;
+  /* ---------- AI import (server maps the columns, code copies the values) ---------- */
+  const AI_TIMEOUT_MS = 90000;
+  let lastAiError = '';
+  let fileHelpDefault = null;
+
+  function setImportBusy(message) {
+    const zone = document.getElementById('dropzone');
+    const help = document.getElementById('file-help');
+    if (help && fileHelpDefault === null) fileHelpDefault = help.textContent;
+    if (zone) {
+      zone.classList.toggle('is-busy', Boolean(message));
+      zone.setAttribute('aria-busy', message ? 'true' : 'false');
+    }
+    if (help) help.textContent = message || fileHelpDefault || '';
+  }
+
+  function aiSchema() {
+    return {
+      subjects: GF.SUBJECTS.map(function (subject) {
+        return { key: subject.key, name: subject.name, semester: subject.semester };
+      }),
+      months: GF.ATTENDANCE_MONTHS.map(function (month) { return month.key; }),
+      coreValues: CORE_VALUE_KEYS,
+      transferFields: TRANSFER_FIELDS
+    };
+  }
+
+  // Returns the parsed class, or null when the AI service is unavailable (caller falls back).
+  async function importWithAI(file) {
+    lastAiError = '';
+    const controller = new AbortController();
+    const timer = window.setTimeout(function () { controller.abort(); }, AI_TIMEOUT_MS);
+    try {
+      setImportBusy('Reading ' + file.name + ' with AI: finding learners, subjects and class details...');
+      const body = new FormData();
+      body.append('file', file);
+      body.append('spec', JSON.stringify(aiSchema()));
+      const response = await fetch('/api/import', { method: 'POST', body: body, signal: controller.signal });
+      if (!response.ok) {
+        let detail = 'HTTP ' + response.status;
+        try { detail = (await response.json()).detail || detail; } catch (ignore) { /* not JSON */ }
+        lastAiError = detail;
+        return null;
+      }
+      const result = await response.json();
+      if (!result || !Array.isArray(result.students) || !result.students.length) {
+        lastAiError = 'The AI import returned no learners.';
+        return null;
+      }
+      return {
+        students: result.students,
+        classDetails: result.classDetails || {},
+        ai: { mapping: result.mapping || [], warnings: result.warnings || [], sheet: result.sheet || '' }
+      };
+    } catch (error) {
+      lastAiError = error.name === 'AbortError' ? 'The AI import took too long.' : 'The AI import service is not reachable.';
+      return null;
+    } finally {
+      window.clearTimeout(timer);
+      setImportBusy('');
+    }
+  }
+
+  // Put an imported class (from the local parser or the AI import) into the app state.
+  function applyImport(students, importedClassDetails, info, errors) {
+    const addedFiles = info.files;
+    const totalSize = info.size;
     const input = document.getElementById('file-upload');
-    setError('');
-    if (files.length > 1) {
-      setError('Upload one complete class gradebook at a time.');
-      GF.showToast('Choose one class grade file.', 'error');
-      if (input) input.value = '';
-      return;
-    }
-
-    const students = [];
-    const addedFiles = [];
-    const errors = [];
-    const importedClassDetails = {};
-    let totalSize = 0;
-
-    for (const file of files) {
-      const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-      if (!['.csv', '.xlsx', '.xls'].includes(extension)) {
-        errors.push(file.name + ': unsupported file type. Use CSV or Excel.');
-        continue;
+    errors = errors || [];
+    students.forEach(function (student) {
+      if (student.birthdate && !student.age) student.age = GF.ageFromBirthdate(student.birthdate);
+      if (!student.comment) {
+        student.comment = GF.buildComment(student);
+        student.traits = GF.makeTraits(student);
+        student.nextSteps = GF.makeNextSteps(student);
       }
-      if (file.size === 0) {
-        errors.push(file.name + ': file is empty.');
-        continue;
-      }
-      if (file.size > MAX_FILE_BYTES) {
-        errors.push(file.name + ': file is larger than 10 MB.');
-        continue;
-      }
-      if (students.length >= 200) {
-        errors.push(file.name + ': the class limit of 200 students has been reached.');
-        continue;
-      }
-
-      try {
-        const rows = await readWorkbook(file);
-        if (!rows || rows.length === 0) throw new Error('file is empty. Add a header row and at least one learner row.');
-        const headerIndex = findHeaderRow(rows);
-        if (headerIndex === -1) {
-          throw new Error('header row not found. Include Student Name and one column per subject.');
-        }
-        const parsed = buildStudentsFromRows(rows, headerIndex);
-        if (students.length + parsed.students.length > 200) {
-          throw new Error('the class limit of 200 learners would be exceeded.');
-        }
-
-        const nextClassDetails = Object.assign({}, importedClassDetails);
-        Object.keys(parsed.classDetails).forEach(function (key) {
-          const value = parsed.classDetails[key];
-          if (nextClassDetails[key] && nextClassDetails[key] !== value) {
-            throw new Error('class detail "' + key + '" does not match the other uploaded files.');
-          }
-          nextClassDetails[key] = value;
-        });
-
-        const seenRolls = new Set(students.map(function (student) {
-          return String(student.roll || '').toLowerCase();
-        }).filter(Boolean));
-        parsed.students.forEach(function (student, index) {
-          const id = students.length + index + 1;
-          student.id = id;
-          student.roll = student.roll || String(id).padStart(2, '0');
-          const normalizedRoll = student.roll.toLowerCase();
-          if (seenRolls.has(normalizedRoll)) {
-            throw new Error('student ID "' + student.roll + '" is duplicated in the class.');
-          }
-          seenRolls.add(normalizedRoll);
-        });
-
-        students.push.apply(students, parsed.students);
-        Object.assign(importedClassDetails, nextClassDetails);
-        addedFiles.push(file.name);
-        totalSize += file.size;
-      } catch (error) {
-        errors.push(file.name + ': ' + (error.message || 'could not be read.'));
-      }
-    }
-
-    if (!addedFiles.length) {
-      setError(errors.join('\n') || 'Choose a class grade file before continuing.');
-      GF.showToast('No class grade files were added.', 'error');
-      if (input) input.value = '';
-      return;
-    }
-
+    });
     if (importedClassDetails.strand) GF.state.strand = importedClassDetails.strand;
     if (importedClassDetails.gradeLevel) {
       GF.state.gradeLevel = importedClassDetails.gradeLevel.replace(/^grade\s*/i, '');
@@ -726,9 +717,10 @@
       rows: students.length,
       type: 'class',
       parsedAt: new Date(),
-      mode: 'class-workbook',
+      mode: info.mode,
       files: addedFiles,
-      classDetails: Object.assign({}, importedClassDetails)
+      classDetails: Object.assign({}, importedClassDetails),
+      ai: info.ai || null
     };
 
     manualClassDetailsConfirmed = false;
@@ -740,10 +732,113 @@
     if (input) input.value = '';
     GF.refreshChrome();
     if (errors.length) setError(errors.slice(0, 4).join('\n'));
-    GF.showToast(addedFiles.length + ' class file' + (addedFiles.length === 1 ? '' : 's') + ' read. ' +
+    const aiNote = info.ai && info.ai.demo ? ' Demo class loaded (sample data, no AI call).'
+      : info.ai ? ' AI mapped ' + info.ai.mapping.length + ' columns' +
+      (info.ai.warnings.length ? ' (' + info.ai.warnings.length + ' note' + (info.ai.warnings.length === 1 ? '' : 's') + ' to check).' : '.')
+      : (lastAiError ? ' AI import unavailable, used the standard template reader.' : '');
+    const isDemo = Boolean(info.ai && info.ai.demo);
+    GF.showToast((isDemo ? '' : addedFiles.length + ' class file' + (addedFiles.length === 1 ? '' : 's') + ' read.') + aiNote + ' ' +
       students.length + ' learner' + (students.length === 1 ? '' : 's') + ' found. ' +
       (missing ? missing + ' grade' + (missing === 1 ? '' : 's') + ' need review.' : 'All grades are complete.'),
     errors.length ? 'info' : missing ? 'info' : 'success');
+  }
+
+  async function handleFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    const input = document.getElementById('file-upload');
+    setError('');
+    if (files.length > 1) {
+      setError('Upload one complete class gradebook at a time.');
+      GF.showToast('Choose one class grade file.', 'error');
+      if (input) input.value = '';
+      return;
+    }
+
+    const students = [];
+    const addedFiles = [];
+    const errors = [];
+    const importedClassDetails = {};
+    let aiInfo = null;
+    let totalSize = 0;
+
+    for (const file of files) {
+      const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      if (!['.csv', '.xlsx', '.xls'].includes(extension)) {
+        errors.push(file.name + ': unsupported file type. Use CSV or Excel.');
+        continue;
+      }
+      if (file.size === 0) {
+        errors.push(file.name + ': file is empty.');
+        continue;
+      }
+      if (file.size > MAX_FILE_BYTES) {
+        errors.push(file.name + ': file is larger than 10 MB.');
+        continue;
+      }
+      if (students.length >= 200) {
+        errors.push(file.name + ': the class limit of 200 students has been reached.');
+        continue;
+      }
+
+      try {
+        let parsed = await importWithAI(file);
+        if (parsed) {
+          aiInfo = parsed.ai;
+        } else {
+          const rows = await readWorkbook(file);
+          if (!rows || rows.length === 0) throw new Error('file is empty. Add a header row and at least one learner row.');
+          const headerIndex = findHeaderRow(rows);
+          if (headerIndex === -1) {
+            throw new Error('header row not found. Include Student Name and one column per subject.');
+          }
+          parsed = buildStudentsFromRows(rows, headerIndex);
+        }
+        if (students.length + parsed.students.length > 200) {
+          throw new Error('the class limit of 200 learners would be exceeded.');
+        }
+
+        const nextClassDetails = Object.assign({}, importedClassDetails);
+        Object.keys(parsed.classDetails).forEach(function (key) {
+          const value = parsed.classDetails[key];
+          if (nextClassDetails[key] && nextClassDetails[key] !== value) {
+            throw new Error('class detail "' + key + '" does not match the other uploaded files.');
+          }
+          nextClassDetails[key] = value;
+        });
+
+        const seenRolls = new Set(students.map(function (student) {
+          return String(student.roll || '').toLowerCase();
+        }).filter(Boolean));
+        parsed.students.forEach(function (student, index) {
+          const id = students.length + index + 1;
+          student.id = id;
+          student.roll = student.roll || String(id).padStart(2, '0');
+          const normalizedRoll = student.roll.toLowerCase();
+          if (seenRolls.has(normalizedRoll)) {
+            throw new Error('student ID "' + student.roll + '" is duplicated in the class.');
+          }
+          seenRolls.add(normalizedRoll);
+        });
+
+        students.push.apply(students, parsed.students);
+        Object.assign(importedClassDetails, nextClassDetails);
+        addedFiles.push(file.name);
+        totalSize += file.size;
+      } catch (error) {
+        errors.push(file.name + ': ' + (error.message || 'could not be read.') +
+          (lastAiError ? ' (AI import: ' + lastAiError + ')' : ''));
+      }
+    }
+
+    if (!addedFiles.length) {
+      setError(errors.join('\n') || 'Choose a class grade file before continuing.');
+      GF.showToast('No class grade files were added.', 'error');
+      if (input) input.value = '';
+      return;
+    }
+
+    applyImport(students, importedClassDetails, { files: addedFiles, size: totalSize, mode: aiInfo ? 'ai-import' : 'class-workbook', ai: aiInfo }, errors);
   }
 
   function downloadFile(filename, blob) {
@@ -854,7 +949,7 @@
     const manualConfirmation = document.getElementById('confirm-manual-class-details');
     const manualConfirmed = manualClassDetailsConfirmed && manualConfirmation && manualConfirmation.checked;
     if (!hasCompleteImportedClassDetails(GF.state.upload.classDetails) && !manualConfirmed) {
-      setError('Class details are missing from the workbook. Use the template or open the manual details and confirm them.');
+      setError('Class details are missing from the workbook. Open the manual details and confirm them.');
       GF.showToast('Add or confirm the class details before continuing.', 'error');
       return false;
     }
@@ -885,6 +980,31 @@
     return true;
   }
 
+  // UI/UX test mode: load a pre-mapped fictional class. No server, no API key, no AI call.
+  async function loadDemoClass() {
+    const button = document.getElementById('demo-class-btn');
+    if (button) button.disabled = true;
+    setError('');
+    lastAiError = '';
+    try {
+      const response = await fetch('assets/demo_import.json', { cache: 'no-cache' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const demo = await response.json();
+      if (!demo || !Array.isArray(demo.students) || !demo.students.length) throw new Error('empty demo file');
+      applyImport(demo.students, demo.classDetails || {}, {
+        files: ['demo-class.xlsx'],
+        size: 0,
+        mode: 'demo',
+        ai: { demo: true, mapping: demo.mapping || [], warnings: demo.warnings || [], sheet: demo.sheet || '' }
+      }, []);
+    } catch (error) {
+      setError('The demo class could not be loaded (' + error.message + '). Open the app through a web server, not as a file.');
+      GF.showToast('Demo class could not be loaded.', 'error');
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
   function bindEvents() {
     const input = document.getElementById('file-upload');
     const browse = document.getElementById('browse-btn');
@@ -903,6 +1023,9 @@
     const principalInput = document.getElementById('principal-name');
     const termInput = document.getElementById('term-name');
     const manualConfirmation = document.getElementById('confirm-manual-class-details');
+
+    const demoButton = document.getElementById('demo-class-btn');
+    if (demoButton) demoButton.addEventListener('click', loadDemoClass);
 
     if (analyzeSf10Button) {
       analyzeSf10Button.addEventListener('click', function () {
@@ -994,16 +1117,6 @@
       });
     }
     if (dropzone && input) {
-      dropzone.addEventListener('click', function (event) {
-        if (event.target.closest('button')) return;
-        input.click();
-      });
-      dropzone.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          input.click();
-        }
-      });
       ['dragenter', 'dragover'].forEach(function (type) {
         dropzone.addEventListener(type, function (event) {
           event.preventDefault();

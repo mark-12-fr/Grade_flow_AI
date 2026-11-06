@@ -1,6 +1,7 @@
 /* ==========================================================================
-   Local report preparation
-   The timeline is a demo. No external AI service is used.
+   Report preparation
+   Runs the final completeness checks on the imported class. The AI import itself
+   happens when the file is uploaded (see upload.js).
    ========================================================================== */
 (function () {
   'use strict';
@@ -85,7 +86,7 @@
       headline: 'Your reports are taking shape',
       subtitle: 'Checking the uploaded workbook and organizing grade data...',
       count: 'Organizing the class workbook',
-      eta: 'This local demo takes a few seconds. Nothing is sent anywhere.'
+      eta: 'Final checks take a few seconds.'
     };
   }
 
@@ -213,7 +214,6 @@
   GF.registerPage('processing', function () {
     renderPage();
     if (!GF.state.processing && !GF.state.processed) {
-      // Opening this screen directly still gives the demo something useful to show.
       window.setTimeout(function () {
         if (GF.state.currentPage === 'processing' && !GF.state.processing && !GF.state.processed) {
           startProcessing();

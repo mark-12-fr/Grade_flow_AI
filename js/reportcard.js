@@ -36,18 +36,8 @@
     }
 
     function semesterAverage(semester) {
-      const subjects = semester.groups.reduce(function (all, group) {
-        return all.concat(group.subjects.map(function (entry) {
-          return GF.SUBJECTS.find(function (subject) { return subject.key === entry[0]; });
-        }));
-      }, []);
-      const values = subjects.map(function (subject) {
-        return (student.grades[subject.key] || {}).final;
-      });
-      if (values.some(function (value) { return value === null || value === undefined || value === '' || Number.isNaN(Number(value)); })) {
-        return '—';
-      }
-      return String(Math.round(values.reduce(function (sum, value) { return sum + Number(value); }, 0) / values.length));
+      const average = GF.semesterAverage(student, semester.key);
+      return average === null ? '—' : String(average);
     }
 
     const semestersHTML = GF.SEMESTERS.map(function (semester) {
@@ -58,24 +48,26 @@
           return '<tr><td>' + esc(subject.name) + '</td>' +
             '<td class="rc-score">' + gradeValue(grades[semester.quarters[0]]) + '</td>' +
             '<td class="rc-score">' + gradeValue(grades[semester.quarters[1]]) + '</td>' +
-            '<td class="rc-score rc-semester-final">' + gradeValue(grades.final) + '</td></tr>';
+            '<td class="rc-score rc-semester-final">' + gradeValue(grades.final) + '</td>' +
+            '<td class="rc-remarks rc-remarks-' + GF.remarkFor(grades.final).toLowerCase() + '">' + esc(GF.remarkFor(grades.final)) + '</td></tr>';
         }).join('');
-        return '<tr class="rc-subject-group"><th colspan="4">' + esc(group.name) + '</th></tr>' + subjectsHTML +
-          '<tr class="rc-grade-spacer"><td colspan="4"></td></tr>';
+        return '<tr class="rc-subject-group"><th colspan="5">' + esc(group.name) + '</th></tr>' + subjectsHTML +
+          '<tr class="rc-grade-spacer"><td colspan="5"></td></tr>';
       }).join('');
       return '<section class="rc-semester">' +
         '<h4>' + esc(semester.label) + '</h4>' +
         '<table class="rc-table rc-official-grade-table">' +
           '<caption class="sr-only">' + esc(semester.label) + ' subjects and grades</caption>' +
           '<colgroup><col class="rc-col-subject"><col class="rc-col-score">' +
-            '<col class="rc-col-score"><col class="rc-col-final"></colgroup>' +
+            '<col class="rc-col-score"><col class="rc-col-final"><col class="rc-col-remarks"></colgroup>' +
           '<thead><tr><th rowspan="2" scope="col">Subjects</th><th colspan="2" scope="colgroup">Quarter</th>' +
-            '<th rowspan="2" scope="col">Semester<br>Final Grade</th></tr>' +
+            '<th rowspan="2" scope="col">Semester<br>Final Grade</th><th rowspan="2" scope="col">Remarks</th></tr>' +
             '<tr><th scope="col">' + semester.quarterLabels[0] + '</th><th scope="col">' +
               semester.quarterLabels[1] + '</th></tr></thead>' +
           '<tbody>' + groupHTML +
             '<tr class="rc-semester-average"><th colspan="3" scope="row">General Average for the Semester</th>' +
-              '<td>' + semesterAverage(semester) + '</td></tr></tbody>' +
+              '<td>' + semesterAverage(semester) + '</td>' +
+              '<td class="rc-remarks">' + esc(GF.remarkFor(semesterAverage(semester))) + '</td></tr></tbody>' +
         '</table>' +
       '</section>';
     }).join('');
@@ -251,7 +243,7 @@
     const select = document.getElementById('preview-student-select');
     if (!select) return;
     select.innerHTML = GF.state.students.map(function (student, index) {
-      return '<option value="' + index + '">' + esc(student.name) + ' · Roll ' + esc(student.roll) + '</option>';
+      return '<option value="' + index + '">' + (student.lrn ? esc(student.lrn) + ' — ' : '') + esc(student.name) + ' · Roll ' + esc(student.roll) + '</option>';
     }).join('');
     select.value = String(currentIndex());
   }
@@ -263,7 +255,8 @@
       .map(function (student, index) { return { student: student, index: index }; })
       .filter(function (entry) {
         return entry.student.name.toLowerCase().includes(normalized) ||
-          String(entry.student.roll).toLowerCase().includes(normalized);
+          String(entry.student.roll).toLowerCase().includes(normalized) ||
+          String(entry.student.lrn || '').toLowerCase().includes(normalized);
       });
   }
 
@@ -290,17 +283,17 @@
     results.innerHTML = matches.map(function (entry, matchIndex) {
       return '<button type="button" class="student-search-result" role="option" tabindex="-1" id="preview-student-option-' + entry.index +
         '" aria-selected="' + String(matchIndex === activeSearchResult) + '" data-preview-index="' + entry.index + '">' +
-        '<strong>' + esc(entry.student.name) + '</strong><span>ID ' + esc(entry.student.roll) + '</span></button>';
+        '<strong>' + esc(entry.student.name) + '</strong><span>' + (entry.student.lrn ? 'LRN ' + esc(entry.student.lrn) : 'ID ' + esc(entry.student.roll)) + '</span></button>';
     }).join('');
     if (status) {
       status.textContent = !isOpen
         ? ''
         : matches.length
           ? matches.length + ' student' + (matches.length === 1 ? '' : 's') + ' found.'
-          : 'No students found. Search by name or ID number.';
+          : 'No students found. Search by name, LRN or ID number.';
     }
     if (isOpen && matches.length === 0) {
-      results.innerHTML = '<div class="student-search-empty">No students found. Try a name or ID number.</div>';
+      results.innerHTML = '<div class="student-search-empty">No students found. Try a name, LRN or ID number.</div>';
     }
   }
 

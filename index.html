@@ -86,6 +86,12 @@
         <button type="button" class="nav-link nav-action" data-workspace="upload" data-page="upload">
           <svg class="icon" aria-hidden="true"><use href="#i-upload"></use></svg><span>Upload Grades</span>
         </button>
+        <button type="button" class="nav-link nav-action" data-workspace="sf10" data-page="sf10">
+          <svg class="icon" aria-hidden="true"><use href="#i-file-text"></use></svg><span>SF10 Record</span>
+        </button>
+        <button type="button" class="nav-link nav-action" data-workspace="summary" data-page="summary">
+          <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg><span>Summary &amp; Rank</span>
+        </button>
         <button type="button" class="nav-link nav-action" data-workspace="history" data-page="history">
           <svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span>History</span>
         </button>
@@ -189,6 +195,32 @@
                 <div class="card-heading">
                   <h2>Class details</h2>
                   <p>These are filled from your workbook. Include strand, grade level, school year, term, section, student status, graduation status, adviser, and principal.</p>
+                </div>
+                <div class="upload-inline" id="dropzone" aria-describedby="file-help">
+                  <h3>Class workbook</h3>
+                  <p class="upload-inline-sub">Upload the Excel or CSV you already have, in any layout. AI finds the learners, subjects, grades and class details, and you review everything before anything is printed.</p>
+                  <div class="dropzone-actions">
+                    <button type="button" class="btn btn-primary btn-sm" id="browse-btn">
+                      <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose class file
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="demo-class-btn">
+                      <svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg> Try demo class
+                    </button>
+                    <input type="file" class="input-file" id="file-upload" accept=".csv,.xlsx,.xls">
+                  </div>
+                  <p class="file-help" id="file-help">One class workbook · Any column layout · CSV or Excel up to 10 MB · Maximum 200 learners</p>
+                </div>
+                <div class="form-error" id="file-error" role="alert" hidden></div>
+                <div class="uploaded-file" id="file-info" hidden>
+                  <span class="file-type-icon"><svg class="icon" aria-hidden="true"><use href="#i-file-sheet"></use></svg></span>
+                  <div class="uploaded-file-text">
+                    <strong id="selected-filename">No file selected</strong>
+                    <span id="file-details">—</span>
+                  </div>
+                  <span class="pill pill-green"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Ready</span>
+                  <button type="button" class="icon-btn" id="remove-file-btn" aria-label="Remove the uploaded class files">
+                    <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                  </button>
                 </div>
                 <details>
                   <summary>Enter class details manually (optional fallback)</summary>
@@ -325,44 +357,10 @@
                     <span class="sf10-demo-label">Simulated demo · no OCR or AI service is connected</span>
                     <div class="sf10-analysis-result" id="sf10-analysis-result" role="status" hidden></div>
                   </div>
-                  <p class="sf10-help">SF10 files are kept in this browser session but are not read or processed. Upload your class spreadsheet below to import learner details and grades.</p>
+                  <p class="sf10-help">SF10 files are kept in this browser session but are not read or processed. Upload your class spreadsheet above to import learner details and grades.</p>
                 </section>
               </article>
 
-              <article class="card">
-                <div class="card-heading">
-                  <h2>Upload one class gradebook</h2>
-                  <p>Use one Excel or CSV with one learner per row. Include class details, names, and subject grades; the template shows every required column.</p>
-                  <button type="button" class="btn btn-secondary btn-sm" id="template-btn">
-                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Download class template
-                  </button>
-                </div>
-
-                <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-describedby="file-help">
-                  <span class="dropzone-icon"><svg class="icon" aria-hidden="true"><use href="#i-cloud-upload"></use></svg></span>
-                  <h3>Drop your class workbook here</h3>
-                  <p>or choose a class grade file from your computer</p>
-                  <button type="button" class="btn btn-secondary btn-sm" id="browse-btn">
-                    <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose class file
-                  </button>
-                  <input type="file" class="input-file" id="file-upload" accept=".csv,.xlsx,.xls">
-                  <p class="file-help" id="file-help">One complete workbook · One learner per row · CSV or Excel up to 10 MB · Maximum 200 learners</p>
-                </div>
-
-                <div class="form-error" id="file-error" role="alert" hidden></div>
-
-                <div class="uploaded-file" id="file-info" hidden>
-                  <span class="file-type-icon"><svg class="icon" aria-hidden="true"><use href="#i-file-sheet"></use></svg></span>
-                  <div class="uploaded-file-text">
-                    <strong id="selected-filename">No file selected</strong>
-                    <span id="file-details">—</span>
-                  </div>
-                  <span class="pill pill-green"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Ready</span>
-                  <button type="button" class="icon-btn" id="remove-file-btn" aria-label="Remove the uploaded class files">
-                    <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
-                  </button>
-                </div>
-              </article>
 
               <div class="page-actions">
                 <div class="action-end">
@@ -380,7 +378,7 @@
           <div class="page-heading">
             <div>
               <h1 id="processing-title">Your class reports are being prepared.</h1>
-              <p>Your uploaded workbook is checked locally. Review all grades before generating reports.</p>
+              <p>Your imported class is being checked for missing or invalid grades. Review all grades before generating reports.</p>
             </div>
             <span class="pill pill-blue"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg> Processing securely</span>
           </div>
@@ -402,7 +400,7 @@
               <div class="progress-track" id="processing-progress" role="progressbar" aria-label="Report preparation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <div class="progress-fill" id="progress-bar"></div>
               </div>
-              <p class="processing-eta" id="processing-eta">This demo takes a few seconds. Nothing is sent anywhere.</p>
+              <p class="processing-eta" id="processing-eta">Final checks take a few seconds.</p>
 
               <div class="timeline" id="timeline">
                 <div class="timeline-item" data-stage="0">
@@ -434,7 +432,7 @@
 
               <div class="simulation-note">
                 <svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg>
-                <span><strong>Demo simulation.</strong> SF10 files are not read by OCR or an AI service. Class details and grade sheets are handled locally in your browser, and no missing grade is invented.</span>
+                <span><strong>Good to know.</strong> Class workbooks are read by an AI import service that only maps the columns; every grade is copied from your file and no missing grade is invented. Uploaded SF10 files are not read yet.</span>
               </div>
 
               <div class="processing-actions">
@@ -455,6 +453,18 @@
             </div>
             <span class="pill pill-green" id="changes-saved-pill"><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg> Changes saved</span>
           </div>
+
+          <details class="card ai-notes" id="ai-import-notes" hidden>
+            <summary><strong>How AI read your file</strong> <span id="ai-import-summary"></span></summary>
+            <div class="ai-notes-body">
+              <p class="muted">Check that each source column landed in the right field. Grades are copied from your file, never generated.</p>
+              <ul id="ai-import-warnings" class="ai-warnings"></ul>
+              <div class="table-scroll"><table class="data-table ai-mapping-table">
+                <thead><tr><th scope="col">Your column</th><th scope="col">Mapped to</th></tr></thead>
+                <tbody id="ai-import-mapping"></tbody>
+              </table></div>
+            </div>
+          </details>
 
           <div class="stat-grid verify-stats">
             <article class="card stat-card compact">
@@ -555,7 +565,7 @@
             <div class="student-search">
               <div class="search-field">
                 <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
-                <input type="search" id="preview-student-search" placeholder="Search name or ID number..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="preview-student-results">
+                <input type="search" id="preview-student-search" placeholder="Search name, LRN or ID number..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="preview-student-results">
               </div>
               <div class="student-search-results" id="preview-student-results" role="listbox" aria-label="Matching students" hidden></div>
               <span class="sr-only" id="preview-student-search-status" aria-live="polite"></span>
@@ -740,6 +750,57 @@
         </section>
 
         <!-- WORKSPACE: REPORT HISTORY -->
+        <!-- SF10 PERMANENT RECORD -->
+        <section id="sf10" class="page" aria-labelledby="sf10-page-title">
+          <div class="page-heading">
+            <div>
+              <h1 id="sf10-page-title">SF10 permanent record</h1>
+              <p>Built from the verified grades, attendance and observed values. Pick a learner by LRN or name.</p>
+            </div>
+          </div>
+          <div class="card student-picker">
+            <label for="sf10-student-select">Learner</label>
+            <div class="student-select">
+              <div class="select-wrap">
+                <select id="sf10-student-select"></select>
+                <svg class="icon select-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+              </div>
+            </div>
+            <div class="student-pager">
+              <button type="button" class="icon-btn" id="sf10-prev" aria-label="Previous learner"><svg class="icon" aria-hidden="true"><use href="#i-chevron-left"></use></svg></button>
+              <span id="sf10-position">1 of 1</span>
+              <button type="button" class="icon-btn" id="sf10-next" aria-label="Next learner"><svg class="icon" aria-hidden="true"><use href="#i-chevron-right"></use></svg></button>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="sf10-download-one"><svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> This learner (PDF)</button>
+            <button type="button" class="btn btn-primary btn-sm" id="sf10-download-all"><svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Whole class (PDF)</button>
+          </div>
+          <article class="card sf10-sheet" id="sf10-sheet" aria-label="SF10 record"></article>
+        </section>
+
+        <!-- SUMMARY & RANK -->
+        <section id="summary" class="page" aria-labelledby="summary-title">
+          <div class="page-heading">
+            <div>
+              <h1 id="summary-title">Summary &amp; rank</h1>
+              <p>Ranked by general average. Learners with a missing grade are listed but not ranked.</p>
+            </div>
+            <button type="button" class="btn btn-secondary" id="summary-export"><svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg> Export CSV</button>
+          </div>
+          <div class="stat-grid verify-stats">
+            <article class="card stat-card compact"><div class="stat-label"><span>Learners</span></div><strong id="summary-learners">0</strong></article>
+            <article class="card stat-card compact"><div class="stat-label"><span>Class average</span></div><strong id="summary-average">—</strong></article>
+            <article class="card stat-card compact"><div class="stat-label"><span>Passed</span></div><strong id="summary-passed">0</strong></article>
+            <article class="card stat-card compact"><div class="stat-label"><span>Failed</span></div><strong id="summary-failed">0</strong></article>
+            <article class="card stat-card compact"><div class="stat-label"><span>Incomplete</span></div><strong id="summary-incomplete">0</strong></article>
+          </div>
+          <article class="card">
+            <div class="table-scroll"><table class="summary-table">
+              <thead><tr><th scope="col">Rank</th><th scope="col">Learner</th><th scope="col">General average</th><th scope="col">Remarks</th><th scope="col">LRN</th><th scope="col">Sem 1</th><th scope="col">Sem 2</th><th scope="col">Failed subjects</th></tr></thead>
+              <tbody id="summary-rows"></tbody>
+            </table></div>
+          </article>
+        </section>
+
         <section id="history" class="page" aria-labelledby="history-title">
           <div class="page-heading">
             <div>
@@ -867,7 +928,7 @@
             </div>
             <ol class="help-steps">
               <li><span>1</span><div><strong>Upload your grade sheet</strong><p>Choose a CSV or Excel file with each student and all six subject columns.</p></div></li>
-              <li><span>2</span><div><strong>Process your class</strong><p>The local demo checks the data and prepares draft comments in your browser.</p></div></li>
+              <li><span>2</span><div><strong>Process your class</strong><p>AI maps your spreadsheet columns, then the app checks the data and prepares draft comments.</p></div></li>
               <li><span>3</span><div><strong>Verify every grade</strong><p>Review the table and correct missing or invalid grades before continuing.</p></div></li>
               <li><span>4</span><div><strong>Preview the report cards</strong><p>Review each student's report card before creating the final report set.</p></div></li>
               <li><span>5</span><div><strong>Generate and print</strong><p>Download a PDF or print the completed reports. Only report pages are sent to the printer.</p></div></li>
@@ -878,7 +939,7 @@
             <svg class="icon info-card-icon" aria-hidden="true"><use href="#i-shield-check"></use></svg>
             <div>
               <h3>Your student data stays in your browser</h3>
-              <p>This is a local demo. No external AI service is connected, and missing grades are never invented.</p>
+              <p>This is a demo. The class workbook is sent to an AI import service to map its columns (use fictional data only), and missing grades are never invented.</p>
             </div>
           </div>
 
@@ -926,5 +987,7 @@
   <script src="js/verification.js"></script>
   <script src="js/reportcard.js"></script>
   <script src="js/printing.js"></script>
+  <script src="js/sf10.js"></script>
+  <script src="js/summary.js"></script>
 </body>
 </html>

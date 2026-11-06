@@ -678,18 +678,8 @@
 
     /* ---------- Semester grade tables ---------- */
     function semesterAverage(semester) {
-      const subjectKeys = semester.groups.reduce(function (all, group) {
-        return all.concat(group.subjects.map(function (item) { return item[0]; }));
-      }, []);
-      const scores = subjectKeys.map(function (key) {
-        return (student.grades[key] || {}).final;
-      });
-      if (scores.some(function (score) {
-        return score === null || score === undefined || score === '' || Number.isNaN(Number(score));
-      })) return '-';
-      return String(Math.round(scores.reduce(function (sum, score) {
-        return sum + Number(score);
-      }, 0) / scores.length));
+      const average = GF.semesterAverage(student, semester.key);
+      return average === null ? '-' : String(average);
     }
 
     function gradeValue(value) {
@@ -715,11 +705,13 @@
       const subjectHeight = (tableHeight - headerOne - headerTwo -
         semester.groups.length * groupHeight - averageHeight) /
         semester.groups.reduce(function (sum, group) { return sum + group.subjects.length; }, 0);
-      const subjectWidth = rightWidth * 0.47;
-      const scoreWidth = rightWidth * 0.175;
-      const finalWidth = rightWidth - subjectWidth - scoreWidth * 2;
+      const subjectWidth = rightWidth * 0.38;
+      const scoreWidth = rightWidth * 0.14;
+      const finalWidth = rightWidth * 0.16;
+      const remarksWidth = rightWidth - subjectWidth - scoreWidth * 2 - finalWidth;
       const scoresX = rightX + subjectWidth;
       const finalX = scoresX + scoreWidth * 2;
+      const remarksX = finalX + finalWidth;
 
       cell(rightX, tableTop, rightWidth, tableHeight, { stroke: [55, 52, 46], lineWidth: 0.4 });
       // Header: Subjects, Quarter (two columns), Semester Final Grade.
@@ -728,6 +720,8 @@
       cell(scoresX, tableTop, scoreWidth * 2, headerOne,
         { fill: tan, stroke: line, lineWidth: 0.3 });
       cell(finalX, tableTop, finalWidth, headerOne + headerTwo,
+        { fill: tan, stroke: line, lineWidth: 0.3 });
+      cell(remarksX, tableTop, remarksWidth, headerOne + headerTwo,
         { fill: tan, stroke: line, lineWidth: 0.3 });
       cell(scoresX, tableTop + headerOne, scoreWidth, headerTwo,
         { fill: tan, stroke: line, lineWidth: 0.3 });
@@ -741,6 +735,7 @@
       centeredText('Semester', finalX, tableTop + headerOne / 2 + 0.4, finalWidth, { inset: 0.3 });
       centeredText('Final Grade', finalX, tableTop + headerOne / 2 + 2.1, finalWidth, { inset: 0.3 });
       setFont('bold', 4.8, ink);
+      centeredText('Remarks', remarksX, tableTop + (headerOne + headerTwo) / 2, remarksWidth, { inset: 0.3 });
       semester.quarterLabels.forEach(function (label, index) {
         centeredText(label, scoresX + index * scoreWidth, tableTop + headerOne + headerTwo / 2,
           scoreWidth, { inset: 0.2 });
@@ -759,6 +754,7 @@
           cell(scoresX, rowY, scoreWidth, subjectHeight, { stroke: line });
           cell(scoresX + scoreWidth, rowY, scoreWidth, subjectHeight, { stroke: line });
           cell(finalX, rowY, finalWidth, subjectHeight, { stroke: line });
+          cell(remarksX, rowY, remarksWidth, subjectHeight, { stroke: line });
           const subjectSize = fitFont(subject.name, 'normal', 4.6, subjectWidth - 2.2);
           setFont('normal', subjectSize, ink);
           leftText(subject.name, rightX, rowY + subjectHeight / 2, subjectWidth, { inset: 1.1 });
@@ -769,6 +765,9 @@
             centeredText(gradeValue(grades[period]), x, rowY + subjectHeight / 2, cellWidth,
               { inset: 0.3 });
           });
+          const remark = GF.remarkFor(grades.final);
+          setFont(remark === 'Failed' ? 'bold' : 'normal', 4.4, remark === 'Failed' ? [170, 20, 20] : ink);
+          centeredText(remark, remarksX, rowY + subjectHeight / 2, remarksWidth, { inset: 0.3 });
           rowY += subjectHeight;
         });
       });
@@ -777,11 +776,15 @@
         { fill: cream, stroke: line, lineWidth: 0.3 });
       cell(finalX, rowY, finalWidth, averageHeight,
         { fill: cream, stroke: line, lineWidth: 0.3 });
+      cell(remarksX, rowY, remarksWidth, averageHeight,
+        { fill: cream, stroke: line, lineWidth: 0.3 });
       setFont('bold', 4.8, ink);
       leftText('General Average for the Semester', rightX,
         rowY + averageHeight / 2, subjectWidth + scoreWidth * 2, { inset: 1.0 });
       centeredText(semesterAverage(semester), finalX, rowY + averageHeight / 2, finalWidth,
         { inset: 0.3 });
+      centeredText(GF.remarkFor(GF.semesterAverage(student, semester.key)), remarksX,
+        rowY + averageHeight / 2, remarksWidth, { inset: 0.3 });
     }
 
     drawSemester(GF.SEMESTERS[0], 27.0, 105.0);

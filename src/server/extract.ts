@@ -1,8 +1,8 @@
 import { unzipSync } from 'fflate';
 import XLSX from '@/vendor/xlsx.cjs';
 
-export const MAX_ROWS = 600;
-export const MAX_COLS = 120;
+export const MAX_ROWS = 20000; // safety cap only; a school workbook can list 1000+ learners
+export const MAX_COLS = 1000; // safety cap only; grade sheets can run past column IN
 
 export class ExtractError extends Error {}
 

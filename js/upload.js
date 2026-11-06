@@ -448,7 +448,7 @@
           '<span class="sf10-file-name">' + sf10FileLabel(state.classFile) + '</span>' +
           '<button type="button" class="icon-btn" data-remove-class-sf10 aria-label="Remove class SF10">' +
             '<svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg></button></div>'
-        : '<span class="sf10-empty">No class SF10 selected</span>';
+        : '';
     }
 
     if (!studentList) return;

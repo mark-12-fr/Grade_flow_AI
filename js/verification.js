@@ -80,7 +80,8 @@
     if (parts[0] === 'att') return 'Attendance · ' + parts[1].toUpperCase() + ' · ' + parts[2].replace(/([A-Z])/g, ' $1').toLowerCase();
     if (parts[0] === 'ov') return 'Core value · ' + parts[1] + ' · Q' + parts[2].slice(1);
     if (parts[0] === 'transfer') return 'Transfer · ' + parts[1];
-    return field.charAt(0).toUpperCase() + field.slice(1);
+    const names = { lrn: 'LRN', roll: 'Roll / ID number', name: 'Learner name', age: 'Age', sex: 'Sex', birthdate: 'Birthdate' };
+    return names[field] || field.charAt(0).toUpperCase() + field.slice(1);
   }
 
   function renderAiNotes() {
@@ -89,6 +90,14 @@
     const ai = GF.state.upload && GF.state.upload.ai;
     box.hidden = !ai;
     if (!ai) return;
+    const title = box.querySelector('summary strong');
+    if (title) title.textContent = ai.demo ? 'Demo class: pre-mapped sample, no AI call' : 'How AI read your file';
+    const intro = box.querySelector('.ai-notes-body .muted');
+    if (intro) {
+      intro.textContent = ai.demo
+        ? 'This is fictional sample data that shows what the AI mapping panel looks like. Nothing was sent to an AI service.'
+        : 'Check that each source column landed in the right field. Grades are copied from your file, never generated.';
+    }
     const warnings = ai.warnings || [];
     document.getElementById('ai-import-summary').textContent =
       '· ' + ai.mapping.length + ' columns mapped' + (warnings.length ? ' · ' + warnings.length + ' to check' : '');

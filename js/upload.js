@@ -222,7 +222,7 @@
     if (columns.name === -1) missingColumns.unshift('Student Name');
     if (missingColumns.length) {
       throw new Error('Missing required grade columns: ' + missingColumns.slice(0, 5).join(', ') +
-        (missingColumns.length > 5 ? ', and ' + (missingColumns.length - 5) + ' more' : '') + '. Download the report-card template for the full column list.');
+        (missingColumns.length > 5 ? ', and ' + (missingColumns.length - 5) + ' more' : '') + '.');
     }
 
     GF.ATTENDANCE_MONTHS.forEach(function (month) {
@@ -417,8 +417,10 @@
     if (emptyHint) emptyHint.textContent = upload.name;
     if (details) {
       const fileCount = upload.files.length;
-      details.textContent = upload.rows + ' learner' + (upload.rows === 1 ? '' : 's') +
-        ' · ' + fileCount + ' grade file' + (fileCount === 1 ? '' : 's');
+      details.textContent = upload.mode === 'demo'
+        ? upload.rows + ' learners · Demo data (fictional, not from a file)'
+        : upload.rows + ' learner' + (upload.rows === 1 ? '' : 's') +
+          ' · ' + fileCount + ' grade file' + (fileCount === 1 ? '' : 's');
     }
     if (continueBtn) continueBtn.disabled = false;
   }
@@ -730,10 +732,12 @@
     if (input) input.value = '';
     GF.refreshChrome();
     if (errors.length) setError(errors.slice(0, 4).join('\n'));
-    const aiNote = info.ai ? ' AI mapped ' + info.ai.mapping.length + ' columns' +
+    const aiNote = info.ai && info.ai.demo ? ' Demo class loaded (sample data, no AI call).'
+      : info.ai ? ' AI mapped ' + info.ai.mapping.length + ' columns' +
       (info.ai.warnings.length ? ' (' + info.ai.warnings.length + ' note' + (info.ai.warnings.length === 1 ? '' : 's') + ' to check).' : '.')
       : (lastAiError ? ' AI import unavailable, used the standard template reader.' : '');
-    GF.showToast(addedFiles.length + ' class file' + (addedFiles.length === 1 ? '' : 's') + ' read.' + aiNote + ' ' +
+    const isDemo = Boolean(info.ai && info.ai.demo);
+    GF.showToast((isDemo ? '' : addedFiles.length + ' class file' + (addedFiles.length === 1 ? '' : 's') + ' read.') + aiNote + ' ' +
       students.length + ' learner' + (students.length === 1 ? '' : 's') + ' found. ' +
       (missing ? missing + ' grade' + (missing === 1 ? '' : 's') + ' need review.' : 'All grades are complete.'),
     errors.length ? 'info' : missing ? 'info' : 'success');
@@ -945,7 +949,7 @@
     const manualConfirmation = document.getElementById('confirm-manual-class-details');
     const manualConfirmed = manualClassDetailsConfirmed && manualConfirmation && manualConfirmation.checked;
     if (!hasCompleteImportedClassDetails(GF.state.upload.classDetails) && !manualConfirmed) {
-      setError('Class details are missing from the workbook. Use the template or open the manual details and confirm them.');
+      setError('Class details are missing from the workbook. Open the manual details and confirm them.');
       GF.showToast('Add or confirm the class details before continuing.', 'error');
       return false;
     }
@@ -976,6 +980,31 @@
     return true;
   }
 
+  // UI/UX test mode: load a pre-mapped fictional class. No server, no API key, no AI call.
+  async function loadDemoClass() {
+    const button = document.getElementById('demo-class-btn');
+    if (button) button.disabled = true;
+    setError('');
+    lastAiError = '';
+    try {
+      const response = await fetch('assets/demo_import.json', { cache: 'no-cache' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const demo = await response.json();
+      if (!demo || !Array.isArray(demo.students) || !demo.students.length) throw new Error('empty demo file');
+      applyImport(demo.students, demo.classDetails || {}, {
+        files: ['demo-class.xlsx'],
+        size: 0,
+        mode: 'demo',
+        ai: { demo: true, mapping: demo.mapping || [], warnings: demo.warnings || [], sheet: demo.sheet || '' }
+      }, []);
+    } catch (error) {
+      setError('The demo class could not be loaded (' + error.message + '). Open the app through a web server, not as a file.');
+      GF.showToast('Demo class could not be loaded.', 'error');
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
   function bindEvents() {
     const input = document.getElementById('file-upload');
     const browse = document.getElementById('browse-btn');
@@ -994,6 +1023,9 @@
     const principalInput = document.getElementById('principal-name');
     const termInput = document.getElementById('term-name');
     const manualConfirmation = document.getElementById('confirm-manual-class-details');
+
+    const demoButton = document.getElementById('demo-class-btn');
+    if (demoButton) demoButton.addEventListener('click', loadDemoClass);
 
     if (analyzeSf10Button) {
       analyzeSf10Button.addEventListener('click', function () {
@@ -1085,16 +1117,6 @@
       });
     }
     if (dropzone && input) {
-      dropzone.addEventListener('click', function (event) {
-        if (event.target.closest('button')) return;
-        input.click();
-      });
-      dropzone.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          input.click();
-        }
-      });
       ['dragenter', 'dragover'].forEach(function (type) {
         dropzone.addEventListener(type, function (event) {
           event.preventDefault();

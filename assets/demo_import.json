@@ -1,0 +1,2795 @@
+{
+ "students": [
+  {
+   "id": 1,
+   "roll": "1",
+   "name": "Santos, Maria Clara",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136388831130",
+   "birthdate": "2008-09-15",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 89,
+     "q2": 93,
+     "final": 91
+    },
+    "philosophy": {
+     "q1": 87,
+     "q2": 92,
+     "final": 90
+    },
+    "contemporary_arts": {
+     "q1": 94,
+     "q2": 91,
+     "final": 92
+    },
+    "physical_science": {
+     "q1": 94,
+     "q2": 90,
+     "final": 92
+    },
+    "pe_health_first": {
+     "q1": 95,
+     "q2": 87,
+     "final": 91
+    },
+    "research_daily_life": {
+     "q1": 89,
+     "q2": 94,
+     "final": 92
+    },
+    "filipino_larang": {
+     "q1": 92,
+     "q2": 89,
+     "final": 90
+    },
+    "creative_writing": {
+     "q1": 92,
+     "q2": 90,
+     "final": 91
+    },
+    "applied_social_sciences": {
+     "q1": 87,
+     "q2": 90,
+     "final": 88
+    },
+    "pe_health_second": {
+     "q3": 88,
+     "q4": 95,
+     "final": 92
+    },
+    "entrepreneurship": {
+     "q3": 92,
+     "q4": 93,
+     "final": 92
+    },
+    "inquiries_immersion": {
+     "q3": 88,
+     "q4": 87,
+     "final": 88
+    },
+    "empowerment_technologies": {
+     "q3": 87,
+     "q4": 95,
+     "final": 91
+    },
+    "creative_nonfiction": {
+     "q3": 90,
+     "q4": 88,
+     "final": 89
+    },
+    "philippine_politics": {
+     "q3": 93,
+     "q4": 94,
+     "final": 94
+    },
+    "trends_networks": {
+     "q3": 88,
+     "q4": 93,
+     "final": 90
+    },
+    "community_engagement": {
+     "q3": 89,
+     "q4": 95,
+     "final": 92
+    },
+    "culminating_activity": {
+     "q3": 92,
+     "q4": 95,
+     "final": 94
+    }
+   },
+   "attendance": {
+    "present": 193,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 21,
+     "sep": 21,
+     "oct": 20,
+     "nov": 20,
+     "dec": 13,
+     "jan": 18,
+     "feb": 18,
+     "mar": 19,
+     "apr": 11
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makatao": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makakalikasan": {
+     "q1": "SO",
+     "q2": "SO",
+     "q3": "SO",
+     "q4": "SO"
+    },
+    "makabansa": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    }
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 2,
+   "roll": "2",
+   "name": "Reyes, Juan Miguel",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136754227027",
+   "birthdate": "2007-09-10",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 88,
+     "q2": 90,
+     "final": 89
+    },
+    "philosophy": {
+     "q1": 91,
+     "q2": 92,
+     "final": 92
+    },
+    "contemporary_arts": {
+     "q1": 92,
+     "q2": 93,
+     "final": 92
+    },
+    "physical_science": {
+     "q1": 91,
+     "q2": 88,
+     "final": 90
+    },
+    "pe_health_first": {
+     "q1": 91,
+     "q2": 90,
+     "final": 90
+    },
+    "research_daily_life": {
+     "q1": 92,
+     "q2": 92,
+     "final": 92
+    },
+    "filipino_larang": {
+     "q1": 92,
+     "q2": 95,
+     "final": 94
+    },
+    "creative_writing": {
+     "q1": 95,
+     "q2": 89,
+     "final": 92
+    },
+    "applied_social_sciences": {
+     "q1": 87,
+     "q2": 93,
+     "final": 90
+    },
+    "pe_health_second": {
+     "q3": 93,
+     "q4": 87,
+     "final": 90
+    },
+    "entrepreneurship": {
+     "q3": 95,
+     "q4": 87,
+     "final": 91
+    },
+    "inquiries_immersion": {
+     "q3": 90,
+     "q4": 93,
+     "final": 92
+    },
+    "empowerment_technologies": {
+     "q3": 87,
+     "q4": 93,
+     "final": 90
+    },
+    "creative_nonfiction": {
+     "q3": 90,
+     "q4": 88,
+     "final": 89
+    },
+    "philippine_politics": {
+     "q3": 95,
+     "q4": 90,
+     "final": 92
+    },
+    "trends_networks": {
+     "q3": 89,
+     "q4": 88,
+     "final": 88
+    },
+    "community_engagement": {
+     "q3": 91,
+     "q4": 87,
+     "final": 89
+    },
+    "culminating_activity": {
+     "q3": 93,
+     "q4": 91,
+     "final": 92
+    }
+   },
+   "attendance": {
+    "present": 197,
+    "total": 204,
+    "months": {
+     "jun": 9,
+     "jul": 22,
+     "aug": 21,
+     "sep": 21,
+     "oct": 20,
+     "nov": 19,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 11
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makatao": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makakalikasan": {
+     "q1": "SO",
+     "q2": "SO",
+     "q3": "RO",
+     "q4": "SO"
+    },
+    "makabansa": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    }
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 3,
+   "roll": "3",
+   "name": "Cruz, Angelica",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136848341964",
+   "birthdate": "2007-04-12",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 94,
+     "q2": 95,
+     "final": 94
+    },
+    "philosophy": {
+     "q1": null,
+     "q2": 89,
+     "final": 90
+    },
+    "contemporary_arts": {
+     "q1": 90,
+     "q2": 90,
+     "final": 90
+    },
+    "physical_science": {
+     "q1": 87,
+     "q2": 91,
+     "final": 89
+    },
+    "pe_health_first": {
+     "q1": 92,
+     "q2": 89,
+     "final": 90
+    },
+    "research_daily_life": {
+     "q1": 90,
+     "q2": 87,
+     "final": 88
+    },
+    "filipino_larang": {
+     "q1": 95,
+     "q2": 87,
+     "final": 91
+    },
+    "creative_writing": {
+     "q1": 90,
+     "q2": 88,
+     "final": 89
+    },
+    "applied_social_sciences": {
+     "q1": 92,
+     "q2": 95,
+     "final": 94
+    },
+    "pe_health_second": {
+     "q3": 95,
+     "q4": 89,
+     "final": 92
+    },
+    "entrepreneurship": {
+     "q3": 87,
+     "q4": 92,
+     "final": 90
+    },
+    "inquiries_immersion": {
+     "q3": 91,
+     "q4": 88,
+     "final": 90
+    },
+    "empowerment_technologies": {
+     "q3": 90,
+     "q4": 95,
+     "final": 92
+    },
+    "creative_nonfiction": {
+     "q3": 95,
+     "q4": 94,
+     "final": 94
+    },
+    "philippine_politics": {
+     "q3": 94,
+     "q4": 92,
+     "final": 93
+    },
+    "trends_networks": {
+     "q3": 91,
+     "q4": 94,
+     "final": 92
+    },
+    "community_engagement": {
+     "q3": 89,
+     "q4": 94,
+     "final": 92
+    },
+    "culminating_activity": {
+     "q3": 91,
+     "q4": 87,
+     "final": 89
+    }
+   },
+   "attendance": {
+    "present": 199,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 21,
+     "sep": 20,
+     "oct": 22,
+     "nov": 20,
+     "dec": 12,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makatao": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makakalikasan": {
+     "q1": "SO",
+     "q2": "SO",
+     "q3": "SO",
+     "q4": "SO"
+    },
+    "makabansa": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    }
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 4,
+   "roll": "4",
+   "name": "Garcia, Paolo",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136699170031",
+   "birthdate": "2007-07-12",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 79,
+     "q2": 79,
+     "final": 79
+    },
+    "philosophy": {
+     "q1": 82,
+     "q2": 83,
+     "final": 82
+    },
+    "contemporary_arts": {
+     "q1": 76,
+     "q2": 84,
+     "final": 80
+    },
+    "physical_science": {
+     "q1": 80,
+     "q2": 76,
+     "final": 78
+    },
+    "pe_health_first": {
+     "q1": 82,
+     "q2": 82,
+     "final": 82
+    },
+    "research_daily_life": {
+     "q1": 77,
+     "q2": 82,
+     "final": 80
+    },
+    "filipino_larang": {
+     "q1": 79,
+     "q2": 84,
+     "final": 82
+    },
+    "creative_writing": {
+     "q1": 81,
+     "q2": 81,
+     "final": 81
+    },
+    "applied_social_sciences": {
+     "q1": 82,
+     "q2": 78,
+     "final": 80
+    },
+    "pe_health_second": {
+     "q3": 76,
+     "q4": 78,
+     "final": 77
+    },
+    "entrepreneurship": {
+     "q3": 76,
+     "q4": 76,
+     "final": 76
+    },
+    "inquiries_immersion": {
+     "q3": 77,
+     "q4": 82,
+     "final": 80
+    },
+    "empowerment_technologies": {
+     "q3": 84,
+     "q4": 79,
+     "final": 82
+    },
+    "creative_nonfiction": {
+     "q3": 82,
+     "q4": 77,
+     "final": 80
+    },
+    "philippine_politics": {
+     "q3": 72,
+     "q4": 74,
+     "final": 73
+    },
+    "trends_networks": {
+     "q3": 80,
+     "q4": 80,
+     "final": 80
+    },
+    "community_engagement": {
+     "q3": 84,
+     "q4": 83,
+     "final": 84
+    },
+    "culminating_activity": {
+     "q3": 77,
+     "q4": 79,
+     "final": 78
+    }
+   },
+   "attendance": {
+    "present": 196,
+    "total": 204,
+    "months": {
+     "jun": 8,
+     "jul": 20,
+     "aug": 22,
+     "sep": 19,
+     "oct": 22,
+     "nov": 20,
+     "dec": 13,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 5,
+   "roll": "5",
+   "name": "Mendoza, Bea Louise",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136837157811",
+   "birthdate": "2006-05-14",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 78,
+     "q2": 82,
+     "final": 80
+    },
+    "philosophy": {
+     "q1": 81,
+     "q2": 78,
+     "final": 80
+    },
+    "contemporary_arts": {
+     "q1": 76,
+     "q2": 79,
+     "final": 78
+    },
+    "physical_science": {
+     "q1": 83,
+     "q2": 83,
+     "final": 83
+    },
+    "pe_health_first": {
+     "q1": 83,
+     "q2": 78,
+     "final": 80
+    },
+    "research_daily_life": {
+     "q1": 76,
+     "q2": 81,
+     "final": 78
+    },
+    "filipino_larang": {
+     "q1": 83,
+     "q2": 79,
+     "final": 81
+    },
+    "creative_writing": {
+     "q1": 81,
+     "q2": 77,
+     "final": 79
+    },
+    "applied_social_sciences": {
+     "q1": 79,
+     "q2": 76,
+     "final": 78
+    },
+    "pe_health_second": {
+     "q3": 81,
+     "q4": 81,
+     "final": 81
+    },
+    "entrepreneurship": {
+     "q3": 80,
+     "q4": 79,
+     "final": 80
+    },
+    "inquiries_immersion": {
+     "q3": 82,
+     "q4": 80,
+     "final": 81
+    },
+    "empowerment_technologies": {
+     "q3": 79,
+     "q4": 84,
+     "final": 82
+    },
+    "creative_nonfiction": {
+     "q3": 78,
+     "q4": 84,
+     "final": 81
+    },
+    "philippine_politics": {
+     "q3": 81,
+     "q4": 78,
+     "final": 80
+    },
+    "trends_networks": {
+     "q3": 84,
+     "q4": 83,
+     "final": 84
+    },
+    "community_engagement": {
+     "q3": 82,
+     "q4": 84,
+     "final": 83
+    },
+    "culminating_activity": {
+     "q3": 79,
+     "q4": 83,
+     "final": 81
+    }
+   },
+   "attendance": {
+    "present": 194,
+    "total": 204,
+    "months": {
+     "jun": 9,
+     "jul": 22,
+     "aug": 23,
+     "sep": 20,
+     "oct": 20,
+     "nov": 19,
+     "dec": 12,
+     "jan": 19,
+     "feb": 19,
+     "mar": 21,
+     "apr": 10
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 6,
+   "roll": "6",
+   "name": "Torres, Carlo",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136830985366",
+   "birthdate": "2007-06-10",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 95,
+     "q2": 97,
+     "final": 96
+    },
+    "philosophy": {
+     "q1": 95,
+     "q2": 94,
+     "final": 94
+    },
+    "contemporary_arts": {
+     "q1": 92,
+     "q2": 92,
+     "final": 92
+    },
+    "physical_science": {
+     "q1": 97,
+     "q2": 93,
+     "final": 95
+    },
+    "pe_health_first": {
+     "q1": 98,
+     "q2": 92,
+     "final": 95
+    },
+    "research_daily_life": {
+     "q1": 94,
+     "q2": 97,
+     "final": 96
+    },
+    "filipino_larang": {
+     "q1": 90,
+     "q2": 96,
+     "final": 93
+    },
+    "creative_writing": {
+     "q1": 95,
+     "q2": 94,
+     "final": 94
+    },
+    "applied_social_sciences": {
+     "q1": 96,
+     "q2": 94,
+     "final": 95
+    },
+    "pe_health_second": {
+     "q3": 96,
+     "q4": 95,
+     "final": 96
+    },
+    "entrepreneurship": {
+     "q3": 92,
+     "q4": 92,
+     "final": 92
+    },
+    "inquiries_immersion": {
+     "q3": 94,
+     "q4": 90,
+     "final": 92
+    },
+    "empowerment_technologies": {
+     "q3": 96,
+     "q4": 96,
+     "final": 96
+    },
+    "creative_nonfiction": {
+     "q3": 96,
+     "q4": 94,
+     "final": 95
+    },
+    "philippine_politics": {
+     "q3": 95,
+     "q4": 96,
+     "final": 96
+    },
+    "trends_networks": {
+     "q3": 96,
+     "q4": 97,
+     "final": 96
+    },
+    "community_engagement": {
+     "q3": 96,
+     "q4": 96,
+     "final": 96
+    },
+    "culminating_activity": {
+     "q3": 92,
+     "q4": 92,
+     "final": 92
+    }
+   },
+   "attendance": {
+    "present": 202,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 20,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 7,
+   "roll": "7",
+   "name": "Ramos, Kyla Mae",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136696581432",
+   "birthdate": "2007-01-10",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 74,
+     "q2": 75,
+     "final": 74
+    },
+    "philosophy": {
+     "q1": 74,
+     "q2": 75,
+     "final": 74
+    },
+    "contemporary_arts": {
+     "q1": 76,
+     "q2": 75,
+     "final": 76
+    },
+    "physical_science": {
+     "q1": 74,
+     "q2": 76,
+     "final": 75
+    },
+    "pe_health_first": {
+     "q1": 80,
+     "q2": 72,
+     "final": 76
+    },
+    "research_daily_life": {
+     "q1": 73,
+     "q2": 77,
+     "final": 75
+    },
+    "filipino_larang": {
+     "q1": 79,
+     "q2": 80,
+     "final": 80
+    },
+    "creative_writing": {
+     "q1": 75,
+     "q2": 79,
+     "final": 77
+    },
+    "applied_social_sciences": {
+     "q1": 73,
+     "q2": 80,
+     "final": 76
+    },
+    "pe_health_second": {
+     "q3": 72,
+     "q4": 74,
+     "final": 73
+    },
+    "entrepreneurship": {
+     "q3": 78,
+     "q4": 80,
+     "final": 79
+    },
+    "inquiries_immersion": {
+     "q3": 79,
+     "q4": 76,
+     "final": 78
+    },
+    "empowerment_technologies": {
+     "q3": 79,
+     "q4": 77,
+     "final": 78
+    },
+    "creative_nonfiction": {
+     "q3": 78,
+     "q4": 78,
+     "final": 78
+    },
+    "philippine_politics": {
+     "q3": 80,
+     "q4": 72,
+     "final": 76
+    },
+    "trends_networks": {
+     "q3": 76,
+     "q4": 72,
+     "final": 74
+    },
+    "community_engagement": {
+     "q3": 74,
+     "q4": 79,
+     "final": 76
+    },
+    "culminating_activity": {
+     "q3": 77,
+     "q4": 73,
+     "final": 75
+    }
+   },
+   "attendance": {
+    "present": 198,
+    "total": 204,
+    "months": {
+     "jun": 9,
+     "jul": 20,
+     "aug": 22,
+     "sep": 19,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 8,
+   "roll": "8",
+   "name": "Villanueva, Dennis",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136190457119",
+   "birthdate": "2006-01-13",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 85,
+     "q2": 86,
+     "final": 86
+    },
+    "philosophy": {
+     "q1": 85,
+     "q2": 88,
+     "final": 86
+    },
+    "contemporary_arts": {
+     "q1": 92,
+     "q2": 88,
+     "final": 90
+    },
+    "physical_science": {
+     "q1": 92,
+     "q2": 90,
+     "final": 91
+    },
+    "pe_health_first": {
+     "q1": 91,
+     "q2": 93,
+     "final": 92
+    },
+    "research_daily_life": {
+     "q1": 90,
+     "q2": 88,
+     "final": 89
+    },
+    "filipino_larang": {
+     "q1": 91,
+     "q2": 86,
+     "final": 88
+    },
+    "creative_writing": {
+     "q1": 90,
+     "q2": 85,
+     "final": 88
+    },
+    "applied_social_sciences": {
+     "q1": 90,
+     "q2": 87,
+     "final": 88
+    },
+    "pe_health_second": {
+     "q3": 89,
+     "q4": 86,
+     "final": 88
+    },
+    "entrepreneurship": {
+     "q3": 92,
+     "q4": 87,
+     "final": 90
+    },
+    "inquiries_immersion": {
+     "q3": 89,
+     "q4": 85,
+     "final": 87
+    },
+    "empowerment_technologies": {
+     "q3": 88,
+     "q4": 88,
+     "final": 88
+    },
+    "creative_nonfiction": {
+     "q3": 86,
+     "q4": 92,
+     "final": 89
+    },
+    "philippine_politics": {
+     "q3": 91,
+     "q4": 90,
+     "final": 90
+    },
+    "trends_networks": {
+     "q3": 91,
+     "q4": 90,
+     "final": 90
+    },
+    "community_engagement": {
+     "q3": 90,
+     "q4": 91,
+     "final": 90
+    },
+    "culminating_activity": {
+     "q3": 92,
+     "q4": 90,
+     "final": 91
+    }
+   },
+   "attendance": {
+    "present": 195,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 20,
+     "aug": 21,
+     "sep": 19,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 18,
+     "mar": 21,
+     "apr": 10
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 9,
+   "roll": "9",
+   "name": "Aquino, Shiela",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136236188986",
+   "birthdate": "2008-08-14",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 94,
+     "q2": 95,
+     "final": 94
+    },
+    "philosophy": {
+     "q1": 96,
+     "q2": 91,
+     "final": 94
+    },
+    "contemporary_arts": {
+     "q1": 91,
+     "q2": 97,
+     "final": 94
+    },
+    "physical_science": {
+     "q1": 92,
+     "q2": 95,
+     "final": 94
+    },
+    "pe_health_first": {
+     "q1": 98,
+     "q2": 92,
+     "final": 95
+    },
+    "research_daily_life": {
+     "q1": 94,
+     "q2": 96,
+     "final": 95
+    },
+    "filipino_larang": {
+     "q1": 95,
+     "q2": 94,
+     "final": 94
+    },
+    "creative_writing": {
+     "q1": 95,
+     "q2": 95,
+     "final": 95
+    },
+    "applied_social_sciences": {
+     "q1": 95,
+     "q2": 98,
+     "final": 96
+    },
+    "pe_health_second": {
+     "q3": 97,
+     "q4": 91,
+     "final": 94
+    },
+    "entrepreneurship": {
+     "q3": 92,
+     "q4": 96,
+     "final": 94
+    },
+    "inquiries_immersion": {
+     "q3": 93,
+     "q4": 95,
+     "final": 94
+    },
+    "empowerment_technologies": {
+     "q3": 95,
+     "q4": 95,
+     "final": 95
+    },
+    "creative_nonfiction": {
+     "q3": 92,
+     "q4": 94,
+     "final": 93
+    },
+    "philippine_politics": {
+     "q3": 95,
+     "q4": 95,
+     "final": 95
+    },
+    "trends_networks": {
+     "q3": 96,
+     "q4": 90,
+     "final": 93
+    },
+    "community_engagement": {
+     "q3": 98,
+     "q4": 95,
+     "final": 96
+    },
+    "culminating_activity": {
+     "q3": 98,
+     "q4": 91,
+     "final": 94
+    }
+   },
+   "attendance": {
+    "present": 200,
+    "total": 204,
+    "months": {
+     "jun": 8,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 21,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 18,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 10,
+   "roll": "10",
+   "name": "Bautista, Rafael",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136838534570",
+   "birthdate": "2006-04-13",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 78,
+     "q2": 75,
+     "final": 76
+    },
+    "philosophy": {
+     "q1": 77,
+     "q2": 76,
+     "final": 76
+    },
+    "contemporary_arts": {
+     "q1": 81,
+     "q2": 78,
+     "final": 80
+    },
+    "physical_science": {
+     "q1": 81,
+     "q2": 76,
+     "final": 78
+    },
+    "pe_health_first": {
+     "q1": 81,
+     "q2": 80,
+     "final": 80
+    },
+    "research_daily_life": {
+     "q1": 81,
+     "q2": 81,
+     "final": 81
+    },
+    "filipino_larang": {
+     "q1": 80,
+     "q2": 79,
+     "final": 80
+    },
+    "creative_writing": {
+     "q1": 78,
+     "q2": 77,
+     "final": 78
+    },
+    "applied_social_sciences": {
+     "q1": 77,
+     "q2": 82,
+     "final": 80
+    },
+    "pe_health_second": {
+     "q3": 70,
+     "q4": 72,
+     "final": 71
+    },
+    "entrepreneurship": {
+     "q3": 68,
+     "q4": 73,
+     "final": 71
+    },
+    "inquiries_immersion": {
+     "q3": 80,
+     "q4": 78,
+     "final": 79
+    },
+    "empowerment_technologies": {
+     "q3": 76,
+     "q4": 74,
+     "final": 75
+    },
+    "creative_nonfiction": {
+     "q3": 75,
+     "q4": 78,
+     "final": 76
+    },
+    "philippine_politics": {
+     "q3": 80,
+     "q4": 78,
+     "final": 79
+    },
+    "trends_networks": {
+     "q3": 81,
+     "q4": 76,
+     "final": 78
+    },
+    "community_engagement": {
+     "q3": 82,
+     "q4": 80,
+     "final": 81
+    },
+    "culminating_activity": {
+     "q3": 79,
+     "q4": 76,
+     "final": 78
+    }
+   },
+   "attendance": {
+    "present": 199,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 21,
+     "aug": 22,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 13,
+     "jan": 20,
+     "feb": 17,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 11,
+   "roll": "11",
+   "name": "Flores, Jasmine",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136326334072",
+   "birthdate": "2006-09-16",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 85,
+     "q2": 84,
+     "final": 84
+    },
+    "philosophy": {
+     "q1": 81,
+     "q2": 78,
+     "final": 80
+    },
+    "contemporary_arts": {
+     "q1": 80,
+     "q2": 79,
+     "final": 80
+    },
+    "physical_science": {
+     "q1": 80,
+     "q2": 83,
+     "final": 82
+    },
+    "pe_health_first": {
+     "q1": 85,
+     "q2": 81,
+     "final": 83
+    },
+    "research_daily_life": {
+     "q1": 85,
+     "q2": 82,
+     "final": 84
+    },
+    "filipino_larang": {
+     "q1": 80,
+     "q2": 79,
+     "final": 80
+    },
+    "creative_writing": {
+     "q1": 80,
+     "q2": 85,
+     "final": 82
+    },
+    "applied_social_sciences": {
+     "q1": 78,
+     "q2": 80,
+     "final": 79
+    },
+    "pe_health_second": {
+     "q3": 81,
+     "q4": 77,
+     "final": 79
+    },
+    "entrepreneurship": {
+     "q3": 85,
+     "q4": 85,
+     "final": 85
+    },
+    "inquiries_immersion": {
+     "q3": 84,
+     "q4": 78,
+     "final": 81
+    },
+    "empowerment_technologies": {
+     "q3": 84,
+     "q4": 85,
+     "final": 84
+    },
+    "creative_nonfiction": {
+     "q3": 79,
+     "q4": 77,
+     "final": 78
+    },
+    "philippine_politics": {
+     "q3": 83,
+     "q4": 81,
+     "final": 82
+    },
+    "trends_networks": {
+     "q3": 77,
+     "q4": 84,
+     "final": 80
+    },
+    "community_engagement": {
+     "q3": 83,
+     "q4": 82,
+     "final": 82
+    },
+    "culminating_activity": {
+     "q3": 83,
+     "q4": 78,
+     "final": 80
+    }
+   },
+   "attendance": {
+    "present": 190,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 20,
+     "aug": 21,
+     "sep": 20,
+     "oct": 20,
+     "nov": 18,
+     "dec": 13,
+     "jan": 18,
+     "feb": 19,
+     "mar": 19,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 12,
+   "roll": "12",
+   "name": "Castillo, Nathan",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136251741243",
+   "birthdate": "2006-06-11",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 93,
+     "q2": 89,
+     "final": 91
+    },
+    "philosophy": {
+     "q1": 89,
+     "q2": 88,
+     "final": 88
+    },
+    "contemporary_arts": {
+     "q1": 89,
+     "q2": 91,
+     "final": 90
+    },
+    "physical_science": {
+     "q1": 89,
+     "q2": 93,
+     "final": 91
+    },
+    "pe_health_first": {
+     "q1": 91,
+     "q2": 93,
+     "final": 92
+    },
+    "research_daily_life": {
+     "q1": 86,
+     "q2": 85,
+     "final": 86
+    },
+    "filipino_larang": {
+     "q1": 89,
+     "q2": 90,
+     "final": 90
+    },
+    "creative_writing": {
+     "q1": 89,
+     "q2": 90,
+     "final": 90
+    },
+    "applied_social_sciences": {
+     "q1": 86,
+     "q2": 86,
+     "final": 86
+    },
+    "pe_health_second": {
+     "q3": 85,
+     "q4": 86,
+     "final": 86
+    },
+    "entrepreneurship": {
+     "q3": 87,
+     "q4": 86,
+     "final": 86
+    },
+    "inquiries_immersion": {
+     "q3": 87,
+     "q4": 87,
+     "final": 87
+    },
+    "empowerment_technologies": {
+     "q3": 93,
+     "q4": 93,
+     "final": 93
+    },
+    "creative_nonfiction": {
+     "q3": 87,
+     "q4": 87,
+     "final": 87
+    },
+    "philippine_politics": {
+     "q3": 93,
+     "q4": 90,
+     "final": 92
+    },
+    "trends_networks": {
+     "q3": 88,
+     "q4": 91,
+     "final": 90
+    },
+    "community_engagement": {
+     "q3": 85,
+     "q4": 87,
+     "final": 86
+    },
+    "culminating_activity": {
+     "q3": 89,
+     "q4": 92,
+     "final": 90
+    }
+   },
+   "attendance": {
+    "present": 199,
+    "total": 204,
+    "months": {
+     "jun": 8,
+     "jul": 21,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 19,
+     "feb": 18,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 13,
+   "roll": "13",
+   "name": "Navarro, Isabel",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136768161625",
+   "birthdate": "2007-06-14",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 73,
+     "q2": 79,
+     "final": 76
+    },
+    "philosophy": {
+     "q1": 77,
+     "q2": 78,
+     "final": 78
+    },
+    "contemporary_arts": {
+     "q1": 77,
+     "q2": 77,
+     "final": 77
+    },
+    "physical_science": {
+     "q1": 72,
+     "q2": 76,
+     "final": 74
+    },
+    "pe_health_first": {
+     "q1": 80,
+     "q2": 80,
+     "final": 80
+    },
+    "research_daily_life": {
+     "q1": 80,
+     "q2": 72,
+     "final": 76
+    },
+    "filipino_larang": {
+     "q1": 76,
+     "q2": 80,
+     "final": 78
+    },
+    "creative_writing": {
+     "q1": 77,
+     "q2": 74,
+     "final": 76
+    },
+    "applied_social_sciences": {
+     "q1": 72,
+     "q2": 77,
+     "final": 74
+    },
+    "pe_health_second": {
+     "q3": 75,
+     "q4": 80,
+     "final": 78
+    },
+    "entrepreneurship": {
+     "q3": 75,
+     "q4": 73,
+     "final": 74
+    },
+    "inquiries_immersion": {
+     "q3": 73,
+     "q4": 73,
+     "final": 73
+    },
+    "empowerment_technologies": {
+     "q3": 74,
+     "q4": 78,
+     "final": 76
+    },
+    "creative_nonfiction": {
+     "q3": 77,
+     "q4": 76,
+     "final": 76
+    },
+    "philippine_politics": {
+     "q3": 72,
+     "q4": 78,
+     "final": 75
+    },
+    "trends_networks": {
+     "q3": 75,
+     "q4": 77,
+     "final": 76
+    },
+    "community_engagement": {
+     "q3": 77,
+     "q4": 77,
+     "final": 77
+    },
+    "culminating_activity": {
+     "q3": 72,
+     "q4": 77,
+     "final": 74
+    }
+   },
+   "attendance": {
+    "present": 197,
+    "total": 204,
+    "months": {
+     "jun": 9,
+     "jul": 22,
+     "aug": 23,
+     "sep": 19,
+     "oct": 22,
+     "nov": 20,
+     "dec": 13,
+     "jan": 19,
+     "feb": 19,
+     "mar": 19,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 14,
+   "roll": "14",
+   "name": "Domingo, Kenneth",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136673224641",
+   "birthdate": "2007-06-13",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 88,
+     "q2": 88,
+     "final": 88
+    },
+    "philosophy": {
+     "q1": 94,
+     "q2": 93,
+     "final": 94
+    },
+    "contemporary_arts": {
+     "q1": 93,
+     "q2": 88,
+     "final": 90
+    },
+    "physical_science": {
+     "q1": 87,
+     "q2": 89,
+     "final": 88
+    },
+    "pe_health_first": {
+     "q1": 92,
+     "q2": 89,
+     "final": 90
+    },
+    "research_daily_life": {
+     "q1": 88,
+     "q2": 90,
+     "final": 89
+    },
+    "filipino_larang": {
+     "q1": 87,
+     "q2": 91,
+     "final": 89
+    },
+    "creative_writing": {
+     "q1": 93,
+     "q2": 93,
+     "final": 93
+    },
+    "applied_social_sciences": {
+     "q1": 94,
+     "q2": 87,
+     "final": 90
+    },
+    "pe_health_second": {
+     "q3": 92,
+     "q4": 92,
+     "final": 92
+    },
+    "entrepreneurship": {
+     "q3": 89,
+     "q4": 88,
+     "final": 88
+    },
+    "inquiries_immersion": {
+     "q3": 88,
+     "q4": 88,
+     "final": 88
+    },
+    "empowerment_technologies": {
+     "q3": 87,
+     "q4": 94,
+     "final": 90
+    },
+    "creative_nonfiction": {
+     "q3": 88,
+     "q4": 91,
+     "final": 90
+    },
+    "philippine_politics": {
+     "q3": 88,
+     "q4": 86,
+     "final": 87
+    },
+    "trends_networks": {
+     "q3": 89,
+     "q4": 93,
+     "final": 91
+    },
+    "community_engagement": {
+     "q3": 93,
+     "q4": 88,
+     "final": 90
+    },
+    "culminating_activity": {
+     "q3": 88,
+     "q4": 87,
+     "final": 88
+    }
+   },
+   "attendance": {
+    "present": 192,
+    "total": 204,
+    "months": {
+     "jun": 9,
+     "jul": 20,
+     "aug": 21,
+     "sep": 19,
+     "oct": 22,
+     "nov": 20,
+     "dec": 13,
+     "jan": 20,
+     "feb": 19,
+     "mar": 19,
+     "apr": 10
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 15,
+   "roll": "15",
+   "name": "Salvador, Hazel",
+   "age": "",
+   "sex": "Female",
+   "lrn": "136365833745",
+   "birthdate": "2008-05-14",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 92,
+     "q2": 97,
+     "final": 94
+    },
+    "philosophy": {
+     "q1": 93,
+     "q2": 99,
+     "final": 96
+    },
+    "contemporary_arts": {
+     "q1": 95,
+     "q2": 99,
+     "final": 97
+    },
+    "physical_science": {
+     "q1": 91,
+     "q2": 97,
+     "final": 94
+    },
+    "pe_health_first": {
+     "q1": 91,
+     "q2": 98,
+     "final": 94
+    },
+    "research_daily_life": {
+     "q1": 99,
+     "q2": 93,
+     "final": 96
+    },
+    "filipino_larang": {
+     "q1": 94,
+     "q2": 97,
+     "final": 96
+    },
+    "creative_writing": {
+     "q1": 99,
+     "q2": 93,
+     "final": 96
+    },
+    "applied_social_sciences": {
+     "q1": 91,
+     "q2": 91,
+     "final": 91
+    },
+    "pe_health_second": {
+     "q3": 91,
+     "q4": 92,
+     "final": 92
+    },
+    "entrepreneurship": {
+     "q3": 99,
+     "q4": 93,
+     "final": 96
+    },
+    "inquiries_immersion": {
+     "q3": 97,
+     "q4": 95,
+     "final": 96
+    },
+    "empowerment_technologies": {
+     "q3": 99,
+     "q4": 94,
+     "final": 96
+    },
+    "creative_nonfiction": {
+     "q3": 92,
+     "q4": 98,
+     "final": 95
+    },
+    "philippine_politics": {
+     "q3": 99,
+     "q4": 92,
+     "final": 96
+    },
+    "trends_networks": {
+     "q3": 99,
+     "q4": 93,
+     "final": 96
+    },
+    "community_engagement": {
+     "q3": 95,
+     "q4": 92,
+     "final": 94
+    },
+    "culminating_activity": {
+     "q3": 93,
+     "q4": 97,
+     "final": 95
+    }
+   },
+   "attendance": {
+    "present": 204,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makatao": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    },
+    "makakalikasan": {
+     "q1": "SO",
+     "q2": "SO",
+     "q3": "SO",
+     "q4": "SO"
+    },
+    "makabansa": {
+     "q1": "AO",
+     "q2": "AO",
+     "q3": "AO",
+     "q4": "AO"
+    }
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  },
+  {
+   "id": 16,
+   "roll": "16",
+   "name": "Dela Cruz, Mark Anthony",
+   "age": "",
+   "sex": "Male",
+   "lrn": "136227640529",
+   "birthdate": "2008-03-17",
+   "grades": {
+    "media_information_literacy": {
+     "q1": 84,
+     "q2": 89,
+     "final": 86
+    },
+    "philosophy": {
+     "q1": 89,
+     "q2": 88,
+     "final": 88
+    },
+    "contemporary_arts": {
+     "q1": 87,
+     "q2": 88,
+     "final": 88
+    },
+    "physical_science": {
+     "q1": 84,
+     "q2": 84,
+     "final": 84
+    },
+    "pe_health_first": {
+     "q1": 88,
+     "q2": 87,
+     "final": 88
+    },
+    "research_daily_life": {
+     "q1": 86,
+     "q2": 88,
+     "final": 87
+    },
+    "filipino_larang": {
+     "q1": 87,
+     "q2": 90,
+     "final": 88
+    },
+    "creative_writing": {
+     "q1": 90,
+     "q2": 88,
+     "final": 89
+    },
+    "applied_social_sciences": {
+     "q1": 83,
+     "q2": 84,
+     "final": 84
+    },
+    "pe_health_second": {
+     "q3": 84,
+     "q4": 89,
+     "final": 86
+    },
+    "entrepreneurship": {
+     "q3": 83,
+     "q4": 85,
+     "final": 84
+    },
+    "inquiries_immersion": {
+     "q3": 86,
+     "q4": 90,
+     "final": 88
+    },
+    "empowerment_technologies": {
+     "q3": 90,
+     "q4": 91,
+     "final": 90
+    },
+    "creative_nonfiction": {
+     "q3": 89,
+     "q4": 89,
+     "final": 89
+    },
+    "philippine_politics": {
+     "q3": 84,
+     "q4": 84,
+     "final": 84
+    },
+    "trends_networks": {
+     "q3": 85,
+     "q4": 90,
+     "final": 88
+    },
+    "community_engagement": {
+     "q3": 85,
+     "q4": 90,
+     "final": 88
+    },
+    "culminating_activity": {
+     "q3": 87,
+     "q4": 91,
+     "final": 89
+    }
+   },
+   "attendance": {
+    "present": 200,
+    "total": 204,
+    "months": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 13,
+     "jan": 19,
+     "feb": 17,
+     "mar": 21,
+     "apr": 12
+    },
+    "schoolDays": {
+     "jun": 10,
+     "jul": 22,
+     "aug": 23,
+     "sep": 21,
+     "oct": 22,
+     "nov": 20,
+     "dec": 14,
+     "jan": 20,
+     "feb": 19,
+     "mar": 21,
+     "apr": 12
+    },
+    "absent": {}
+   },
+   "transfer": {},
+   "observedValues": {
+    "makaDiyos": {},
+    "makatao": {},
+    "makakalikasan": {},
+    "makabansa": {}
+   },
+   "comment": "",
+   "commentReviewed": true,
+   "traits": null,
+   "nextSteps": null
+  }
+ ],
+ "classDetails": {
+  "strand": "ABM",
+  "gradeLevel": "12",
+  "year": "2026-2027",
+  "term": "Annual Report",
+  "section": "ABM12-A",
+  "studentStatus": "Regular",
+  "graduationStatus": "Recommended",
+  "teacher": "Ms. Rosa D. Lim",
+  "principal": "Dr. Elena Navarro"
+ },
+ "mapping": [
+  {
+   "col": 0,
+   "header": "No.",
+   "field": "roll"
+  },
+  {
+   "col": 1,
+   "header": "Learner's Name",
+   "field": "name"
+  },
+  {
+   "col": 2,
+   "header": "LRN",
+   "field": "lrn"
+  },
+  {
+   "col": 3,
+   "header": "Sex",
+   "field": "sex"
+  },
+  {
+   "col": 4,
+   "header": "Birthdate",
+   "field": "birthdate"
+  },
+  {
+   "col": 5,
+   "header": "MIL · Q1",
+   "field": "grade:media_information_literacy:q1"
+  },
+  {
+   "col": 6,
+   "header": "MIL · Q2",
+   "field": "grade:media_information_literacy:q2"
+  },
+  {
+   "col": 7,
+   "header": "MIL · Sem 1 Final",
+   "field": "grade:media_information_literacy:final"
+  },
+  {
+   "col": 8,
+   "header": "Intro to Philo · Q1",
+   "field": "grade:philosophy:q1"
+  },
+  {
+   "col": 9,
+   "header": "Intro to Philo · Q2",
+   "field": "grade:philosophy:q2"
+  },
+  {
+   "col": 10,
+   "header": "Intro to Philo · Sem 1 Final",
+   "field": "grade:philosophy:final"
+  },
+  {
+   "col": 11,
+   "header": "CPAR · Q1",
+   "field": "grade:contemporary_arts:q1"
+  },
+  {
+   "col": 12,
+   "header": "CPAR · Q2",
+   "field": "grade:contemporary_arts:q2"
+  },
+  {
+   "col": 13,
+   "header": "CPAR · Sem 1 Final",
+   "field": "grade:contemporary_arts:final"
+  },
+  {
+   "col": 14,
+   "header": "Phys Sci · Q1",
+   "field": "grade:physical_science:q1"
+  },
+  {
+   "col": 15,
+   "header": "Phys Sci · Q2",
+   "field": "grade:physical_science:q2"
+  },
+  {
+   "col": 16,
+   "header": "Phys Sci · Sem 1 Final",
+   "field": "grade:physical_science:final"
+  },
+  {
+   "col": 17,
+   "header": "PE & Health 1 · Q1",
+   "field": "grade:pe_health_first:q1"
+  },
+  {
+   "col": 18,
+   "header": "PE & Health 1 · Q2",
+   "field": "grade:pe_health_first:q2"
+  },
+  {
+   "col": 19,
+   "header": "PE & Health 1 · Sem 1 Final",
+   "field": "grade:pe_health_first:final"
+  },
+  {
+   "col": 20,
+   "header": "Research 2 · Q1",
+   "field": "grade:research_daily_life:q1"
+  },
+  {
+   "col": 21,
+   "header": "Research 2 · Q2",
+   "field": "grade:research_daily_life:q2"
+  },
+  {
+   "col": 22,
+   "header": "Research 2 · Sem 1 Final",
+   "field": "grade:research_daily_life:final"
+  },
+  {
+   "col": 23,
+   "header": "Pagsulat sa Filipino · Q1",
+   "field": "grade:filipino_larang:q1"
+  },
+  {
+   "col": 24,
+   "header": "Pagsulat sa Filipino · Q2",
+   "field": "grade:filipino_larang:q2"
+  },
+  {
+   "col": 25,
+   "header": "Pagsulat sa Filipino · Sem 1 Final",
+   "field": "grade:filipino_larang:final"
+  },
+  {
+   "col": 26,
+   "header": "Creative Writing · Q1",
+   "field": "grade:creative_writing:q1"
+  },
+  {
+   "col": 27,
+   "header": "Creative Writing · Q2",
+   "field": "grade:creative_writing:q2"
+  },
+  {
+   "col": 28,
+   "header": "Creative Writing · Sem 1 Final",
+   "field": "grade:creative_writing:final"
+  },
+  {
+   "col": 29,
+   "header": "DIASS · Q1",
+   "field": "grade:applied_social_sciences:q1"
+  },
+  {
+   "col": 30,
+   "header": "DIASS · Q2",
+   "field": "grade:applied_social_sciences:q2"
+  },
+  {
+   "col": 31,
+   "header": "DIASS · Sem 1 Final",
+   "field": "grade:applied_social_sciences:final"
+  },
+  {
+   "col": 32,
+   "header": "PE & Health 2 · Q3",
+   "field": "grade:pe_health_second:q3"
+  },
+  {
+   "col": 33,
+   "header": "PE & Health 2 · Q4",
+   "field": "grade:pe_health_second:q4"
+  },
+  {
+   "col": 34,
+   "header": "PE & Health 2 · Sem 2 Final",
+   "field": "grade:pe_health_second:final"
+  },
+  {
+   "col": 35,
+   "header": "Entrep · Q3",
+   "field": "grade:entrepreneurship:q3"
+  },
+  {
+   "col": 36,
+   "header": "Entrep · Q4",
+   "field": "grade:entrepreneurship:q4"
+  },
+  {
+   "col": 37,
+   "header": "Entrep · Sem 2 Final",
+   "field": "grade:entrepreneurship:final"
+  },
+  {
+   "col": 38,
+   "header": "III · Q3",
+   "field": "grade:inquiries_immersion:q3"
+  },
+  {
+   "col": 39,
+   "header": "III · Q4",
+   "field": "grade:inquiries_immersion:q4"
+  },
+  {
+   "col": 40,
+   "header": "III · Sem 2 Final",
+   "field": "grade:inquiries_immersion:final"
+  },
+  {
+   "col": 41,
+   "header": "Empowerment Tech · Q3",
+   "field": "grade:empowerment_technologies:q3"
+  },
+  {
+   "col": 42,
+   "header": "Empowerment Tech · Q4",
+   "field": "grade:empowerment_technologies:q4"
+  },
+  {
+   "col": 43,
+   "header": "Empowerment Tech · Sem 2 Final",
+   "field": "grade:empowerment_technologies:final"
+  },
+  {
+   "col": 44,
+   "header": "Creative Nonfiction · Q3",
+   "field": "grade:creative_nonfiction:q3"
+  },
+  {
+   "col": 45,
+   "header": "Creative Nonfiction · Q4",
+   "field": "grade:creative_nonfiction:q4"
+  },
+  {
+   "col": 46,
+   "header": "Creative Nonfiction · Sem 2 Final",
+   "field": "grade:creative_nonfiction:final"
+  },
+  {
+   "col": 47,
+   "header": "PPG · Q3",
+   "field": "grade:philippine_politics:q3"
+  },
+  {
+   "col": 48,
+   "header": "PPG · Q4",
+   "field": "grade:philippine_politics:q4"
+  },
+  {
+   "col": 49,
+   "header": "PPG · Sem 2 Final",
+   "field": "grade:philippine_politics:final"
+  },
+  {
+   "col": 50,
+   "header": "Trends · Q3",
+   "field": "grade:trends_networks:q3"
+  },
+  {
+   "col": 51,
+   "header": "Trends · Q4",
+   "field": "grade:trends_networks:q4"
+  },
+  {
+   "col": 52,
+   "header": "Trends · Sem 2 Final",
+   "field": "grade:trends_networks:final"
+  },
+  {
+   "col": 53,
+   "header": "CSC · Q3",
+   "field": "grade:community_engagement:q3"
+  },
+  {
+   "col": 54,
+   "header": "CSC · Q4",
+   "field": "grade:community_engagement:q4"
+  },
+  {
+   "col": 55,
+   "header": "CSC · Sem 2 Final",
+   "field": "grade:community_engagement:final"
+  },
+  {
+   "col": 56,
+   "header": "Culminating Activity · Q3",
+   "field": "grade:culminating_activity:q3"
+  },
+  {
+   "col": 57,
+   "header": "Culminating Activity · Q4",
+   "field": "grade:culminating_activity:q4"
+  },
+  {
+   "col": 58,
+   "header": "Culminating Activity · Sem 2 Final",
+   "field": "grade:culminating_activity:final"
+  },
+  {
+   "col": 59,
+   "header": "Jun · School Days",
+   "field": "att:jun:schoolDays"
+  },
+  {
+   "col": 60,
+   "header": "Jun · Days Present",
+   "field": "att:jun:present"
+  },
+  {
+   "col": 61,
+   "header": "Jul · School Days",
+   "field": "att:jul:schoolDays"
+  },
+  {
+   "col": 62,
+   "header": "Jul · Days Present",
+   "field": "att:jul:present"
+  },
+  {
+   "col": 63,
+   "header": "Aug · School Days",
+   "field": "att:aug:schoolDays"
+  },
+  {
+   "col": 64,
+   "header": "Aug · Days Present",
+   "field": "att:aug:present"
+  },
+  {
+   "col": 65,
+   "header": "Sep · School Days",
+   "field": "att:sep:schoolDays"
+  },
+  {
+   "col": 66,
+   "header": "Sep · Days Present",
+   "field": "att:sep:present"
+  },
+  {
+   "col": 67,
+   "header": "Oct · School Days",
+   "field": "att:oct:schoolDays"
+  },
+  {
+   "col": 68,
+   "header": "Oct · Days Present",
+   "field": "att:oct:present"
+  },
+  {
+   "col": 69,
+   "header": "Nov · School Days",
+   "field": "att:nov:schoolDays"
+  },
+  {
+   "col": 70,
+   "header": "Nov · Days Present",
+   "field": "att:nov:present"
+  },
+  {
+   "col": 71,
+   "header": "Dec · School Days",
+   "field": "att:dec:schoolDays"
+  },
+  {
+   "col": 72,
+   "header": "Dec · Days Present",
+   "field": "att:dec:present"
+  },
+  {
+   "col": 73,
+   "header": "Jan · School Days",
+   "field": "att:jan:schoolDays"
+  },
+  {
+   "col": 74,
+   "header": "Jan · Days Present",
+   "field": "att:jan:present"
+  },
+  {
+   "col": 75,
+   "header": "Feb · School Days",
+   "field": "att:feb:schoolDays"
+  },
+  {
+   "col": 76,
+   "header": "Feb · Days Present",
+   "field": "att:feb:present"
+  },
+  {
+   "col": 77,
+   "header": "Mar · School Days",
+   "field": "att:mar:schoolDays"
+  },
+  {
+   "col": 78,
+   "header": "Mar · Days Present",
+   "field": "att:mar:present"
+  },
+  {
+   "col": 79,
+   "header": "Apr · School Days",
+   "field": "att:apr:schoolDays"
+  },
+  {
+   "col": 80,
+   "header": "Apr · Days Present",
+   "field": "att:apr:present"
+  }
+ ],
+ "warnings": [
+  "Demo: one grade cell is blank in the source file and was left blank (see Cruz, Angelica).",
+  "Demo: the 'Class Average' footer row was recognised and not imported as a learner."
+ ],
+ "sheet": "Grade 12 ABM"
+}

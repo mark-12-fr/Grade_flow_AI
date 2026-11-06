@@ -253,21 +253,47 @@ def apply_mapping(grid: Grid, mapping: dict, schema: dict) -> tuple[list[dict], 
     return students, warnings
 
 
+def header_labels(grid: Grid, first_data_row: int, columns: dict[int, str]) -> dict[int, str]:
+    """Human label per mapped column: the up-to-2 header rows above the data, joined.
+
+    Spreadsheet headers are often two rows (subject over Q1/Q2) with the top cell merged, so an
+    empty top cell borrows from the nearest non-empty cell up to 2 columns to its left.
+    Title rows are ignored so they cannot leak into neighbouring columns.
+    """
+    # A header row has text above several mapped columns; a title row ("School, SY 2026") has
+    # text in only one place, so it must not lend its words to the columns beside it.
+    need = min(2, len(columns))
+    rows = [r for r in range(max(0, first_data_row - 2), first_data_row)
+            if sum(1 for c in columns if c < len(grid.rows[r]) and str(grid.rows[r][c]).strip()) >= need]
+    out: dict[int, str] = {}
+    for c in columns:
+        parts: list[str] = []
+        for r in rows:
+            row = grid.rows[r]
+            cell = ""
+            for k in range(c, max(-1, c - 3), -1):
+                if k < len(row) and str(row[k]).strip():
+                    cell = str(row[k]).strip()
+                    break
+            if cell and cell not in parts:
+                parts.append(cell)
+        out[c] = " · ".join(parts)
+    return out
+
+
 def run_import(grid: Grid, schema: dict, client: Any | None = None,
                caller: Callable[..., dict] = call_claude) -> dict:
     tool = build_tool(schema)
     raw = caller(build_prompt(schema, grid), tool, client)
     mapping, warnings = validate_mapping(raw, schema, len(grid.rows[0]), len(grid.rows))
     students, apply_warnings = apply_mapping(grid, mapping, schema)
-    header_row = raw.get("header_row")
-    header_cells = grid.rows[header_row] if isinstance(header_row, int) and 0 <= header_row < len(grid.rows) else []
+    labels = header_labels(grid, mapping["first"], mapping["columns"])
     if grid.skipped_sheets:
         warnings.append("Other sheets were not read: " + ", ".join(grid.skipped_sheets) + ".")
     return {
         "students": students,
         "classDetails": mapping["details"],
-        "mapping": [{"col": c, "header": str(header_cells[c]) if c < len(header_cells) else "", "field": f}
-                    for c, f in sorted(mapping["columns"].items())],
+        "mapping": [{"col": c, "header": labels.get(c, ""), "field": f} for c, f in sorted(mapping["columns"].items())],
         "warnings": warnings + apply_warnings[:50],
         "sheet": grid.sheet,
     }

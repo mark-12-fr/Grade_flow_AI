@@ -87,3 +87,21 @@ def test_sample_workbook_reads(tmp_path):
     grid = read_grid(path.name, path.read_bytes())
     assert grid.rows[0][0].startswith("Sample National")
     assert any(r[1] == "Class Average" for r in grid.rows)
+
+
+def test_header_labels_join_two_header_rows_and_fill_merged_cells():
+    grid = Grid(rows=[
+        ["Title", "", "", ""],
+        ["No.", "Name", "Math", ""],
+        ["", "", "Q1", "Q2"],
+        [1, "Ana", 90, 91],
+    ])
+    from backend.mapper import header_labels
+    labels = header_labels(grid, 3, {0: "roll", 1: "name", 2: "grade:math:q1", 3: "grade:math:q2"})
+    assert labels == {0: "No.", 1: "Name", 2: "Math · Q1", 3: "Math · Q2"}
+
+
+def test_title_row_does_not_leak_into_header_labels():
+    grid = Grid(rows=[["Sample School", "", "", ""], ["No.", "Name", "Math", "Sci"], [1, "Ana", 90, 91]], sheet="t")
+    from backend.mapper import header_labels
+    assert header_labels(grid, 2, {1: "name"}) == {1: "Name"}

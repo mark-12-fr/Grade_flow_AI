@@ -80,10 +80,12 @@
     const fmt = function (value) { return value === null ? '—' : String(value); };
     body.innerHTML = rows.map(function (row) {
       return '<tr><td>' + (row.rank === null ? '—' : row.rank) + '</td>' +
-        '<td>' + esc(row.student.lrn || '') + '</td><th scope="row">' + esc(row.student.name) + '</th>' +
-        '<td>' + fmt(row.first) + '</td><td>' + fmt(row.second) + '</td><td><strong>' + fmt(row.general) + '</strong></td>' +
-        '<td>' + (row.failed || '') + '</td>' +
-        '<td><span class="pill ' + (row.status === 'Passed' ? 'pill-green' : row.status === 'Failed' ? 'pill-red' : 'pill-amber') + '">' + row.status + '</span></td></tr>';
+        '<th scope="row">' + esc(row.student.name) + '</th>' +
+        '<td><strong>' + fmt(row.general) + '</strong></td>' +
+        '<td><span class="pill ' + (row.status === 'Passed' ? 'pill-green' : row.status === 'Failed' ? 'pill-red' : 'pill-amber') + '">' + row.status + '</span></td>' +
+        '<td>' + esc(row.student.lrn || '') + '</td>' +
+        '<td>' + fmt(row.first) + '</td><td>' + fmt(row.second) + '</td>' +
+        '<td>' + (row.failed || '') + '</td></tr>';
     }).join('') || '<tr><td colspan="8">Upload a class first.</td></tr>';
   }
 

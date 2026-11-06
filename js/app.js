@@ -100,34 +100,6 @@
 
   const STEP_ORDER = ['upload', 'processing', 'report-card', 'sf10', 'generated-reports'];
 
-  // Fictional demo roster. No real student information is used.
-  const ROSTER = [
-    ['Ava Thompson', [88, 92, 90, 86, 94, 96], 93],
-    ['Ethan Brooks', [82, 85, 87, 80, 89, 93], 91],
-    ['Mia Patel', [94, 86, 93, 91, 95, 92], 95],
-    ['Noah Williams', [80, null, 84, 82, 88, 90], 91],
-    ['Olivia Chen', [91, 94, 92, 89, 94, 90], 95],
-    ['Liam Johnson', [85, 83, 86, 81, 90, 95], 90],
-    ['Sofia Reyes', [89, 88, 91, 87, 92, 94], 94],
-    ['Lucas Nguyen', [78, 81, 83, 79, 88, 91], 89],
-    ['Isabella Cruz', [93, 95, 94, 92, 96, 93], 96],
-    ['Mateo Santos', [84, 86, 88, 85, 90, 92], 92],
-    ['Chloe Garcia', [87, 84, 86, 88, 93, 95], 93],
-    ['Daniel Kim', [90, 92, 89, 91, 94, 96], 95],
-    ['Grace Lim', [86, 80, 85, 84, 91, 90], 90],
-    ['Gabriel Silva', [79, 83, 81, 80, 87, 92], 88],
-    ['Hannah Park', [95, 93, 92, 94, 96, 94], 96],
-    ['Julian Rivera', [83, 85, 84, 86, 89, 91], 92],
-    ['Layla Hassan', [88, 87, 90, 89, 92, 93], 94],
-    ['Owen Mitchell', [76, 74, 79, 78, 86, 89], 87],
-    ['Priya Sharma', [92, 90, 91, 93, 95, 94], 95],
-    ['Ryan Okafor', [81, 79, 83, 82, 88, 90], 89],
-    ['Stella Marino', [90, 89, 90, 92, 94, 92], 93],
-    ['Tomas Alvarez', [85, 88, 86, 84, 90, 94], 92],
-    ['Yuna Sato', [94, 92, 93, 91, 95, 96], 96],
-    ['Zoe Bennett', [87, 86, 89, 88, 91, 93], 93]
-  ];
-
   const SUBJECT_ACTIONS = {
     english: 'read for 15 minutes each day and add detail to written answers',
     mathematics: 'practise problem-solving strategies and explain the thinking behind each step',
@@ -424,26 +396,13 @@
     return student;
   }
 
+  // No dummy learners: the class starts empty until the teacher uploads a file.
   function createCurrentStudents() {
-    return ROSTER.map(function (row, index) {
-      return makeStudent(row, index, { reviewed: true });
-    });
-  }
-
-  function createArchive() {
-    return {
-      label: 'Term 1',
-      year: '2025-26',
-      className: 'Grade 5 · Section A',
-      generatedAt: new Date(2025, 11, 12, 10, 42),
-      students: ROSTER.map(function (row, index) {
-        return makeStudent(row, index, { fillMissing: true, reviewed: true });
-      })
-    };
+    return [];
   }
 
   state.students = createCurrentStudents();
-  state.archive = createArchive();
+  state.archive = null;
 
   function getStudent(studentId) {
     return state.students.find(function (student) { return student.id === Number(studentId); }) || null;
@@ -807,10 +766,14 @@
       currentAction.textContent = state.generated ? 'Open current reports' : 'Continue workflow';
       currentAction.setAttribute('data-history-mode', 'current');
     }
-    if (archiveTitle) archiveTitle.textContent = state.archive.label + ' reports';
-    if (archiveDetails) {
-      archiveDetails.textContent = state.archive.className + ' · ' + state.archive.students.length +
-        ' reports · ' + formatDate(state.archive.generatedAt);
+    const archiveRow = archiveTitle ? archiveTitle.closest('.history-row') : null;
+    if (archiveRow) archiveRow.hidden = !state.archive;
+    if (state.archive) {
+      if (archiveTitle) archiveTitle.textContent = state.archive.label + ' reports';
+      if (archiveDetails) {
+        archiveDetails.textContent = state.archive.className + ' · ' + state.archive.students.length +
+          ' reports · ' + formatDate(state.archive.generatedAt);
+      }
     }
   }
 

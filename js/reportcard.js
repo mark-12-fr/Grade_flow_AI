@@ -354,7 +354,9 @@
 
     renderStudentOptions();
     renderStudentSearch();
-    if (front) front.innerHTML = student ? buildFrontHTML(student, context) : '';
+    if (front) front.innerHTML = student ? buildFrontHTML(student, context) : '<p class="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>';
+    const title = document.getElementById('report-preview-title');
+    if (title) title.textContent = total ? 'Looking good, ready to share.' : 'No report cards yet';
     if (info) info.textContent = total ? (currentIndex() + 1) + ' of ' + total : '0 of 0';
     if (previous) previous.disabled = currentIndex() <= 0;
     if (next) next.disabled = currentIndex() >= total - 1;

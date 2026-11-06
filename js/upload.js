@@ -618,7 +618,7 @@
   function resetFile() {
     GF.state.upload = null;
     GF.state.students = GF.resetCurrentStudents();
-    GF.state.selectedStudentId = GF.state.students[0].id;
+    GF.state.selectedStudentId = GF.state.students.length ? GF.state.students[0].id : null;
     GF.state.previewIndex = 0;
     GF.state.verificationPage = 1;
     GF.state.verificationSearch = '';

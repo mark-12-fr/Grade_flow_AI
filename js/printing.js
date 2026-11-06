@@ -22,7 +22,7 @@
         context: GF.reportContext({ generatedAt: state.generatedAt || new Date() })
       };
     }
-    const archive = state.archive;
+    const archive = state.archive || { students: [], label: '', year: state.year, className: state.className, generatedAt: new Date() };
     return {
       mode: 'archive',
       reports: archive.students,

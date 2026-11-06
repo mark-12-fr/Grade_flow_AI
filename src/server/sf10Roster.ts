@@ -52,7 +52,7 @@ export function buildRosterPrompt(grid: Grid): string {
 usually for Grade 11 and Grade 12. Map its columns so an SF10 permanent record can be built for every learner. Call submit_roster_mapping exactly once.
 
 Row and column indexes are 0-based and shown in the table header. You only see the top rows.
-- learner: column index of name (full name), lastName, firstName, middleName, lrn, sex, birthdate, section, adviser, strand; use -1 when missing.
+- learner: column index of name (full name), lastName, firstName, middleName, lrn, sex, birthdate, section, adviser, strand. Use the plain INTEGER index (for example 7, not "H" and not "7(H)"); use -1 when missing.
 - subjects: one entry per subject. Read the subject name from the header (drop codes like "COR 001 -" but keep the real name),
   its category (COR = Core, APP = Applied, anything else such as ABM/STM/SSP/SOC = Specialized), the grade level
   (a "GRADE 11" / "GRADE 12" header above or beside it), and the semester (1 or 2).
@@ -68,7 +68,20 @@ ${previewText(grid, 12)}
 
 type Raw = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const col = (v: unknown, width: number): number => (Number.isInteger(v) && (v as number) >= 0 && (v as number) < width ? (v as number) : -1);
+/** Column index from what the model wrote: 7, "7", "7(H)", or a spreadsheet letter like "H" / "AB". -1 when unusable. */
+export function toCol(v: unknown, width: number): number {
+  let n = -1;
+  if (typeof v === 'number' && Number.isInteger(v)) n = v;
+  else if (typeof v === 'string') {
+    const t = v.trim();
+    const num = /^(\d+)\s*(\(.*\))?$/.exec(t);
+    const letters = /^([A-Za-z]{1,3})$/.exec(t) ?? /\(([A-Za-z]{1,3})\)/.exec(t);
+    if (num) n = Number(num[1]);
+    else if (letters) n = [...letters[1].toUpperCase()].reduce((acc, ch) => acc * 26 + ch.charCodeAt(0) - 64, 0) - 1;
+  }
+  return n >= 0 && n < width ? n : -1;
+}
+const col = toCol;
 const cell = (row: unknown[], c: number) => (c >= 0 && c < row.length ? String(row[c] ?? '').trim() : '');
 const grade = (row: unknown[], c: number): string => {
   const t = cell(row, c).replace(/%$/, '');
@@ -102,8 +115,9 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
     lrn: col(L.lrn, width), sex: col(L.sex, width), birth: col(L.birthdate, width), section: col(L.section, width),
     adviser: col(L.adviser, width), strand: col(L.strand, width)
   };
+  if (cols.name < 0 && cols.last < 0 && cols.lrn < 0) console.warn('[sf10 roster] unusable learner mapping from the AI:', JSON.stringify(raw.learner)?.slice(0, 400));
   if (cols.name < 0 && cols.last < 0 && cols.lrn < 0) throw new MappingError(`Sheet "${grid.sheet}": could not find the learner name or LRN column.`, 'file');
-  const first = raw.first_data_row;
+  const first = typeof raw.first_data_row === 'string' && /^\d+$/.test(raw.first_data_row.trim()) ? Number(raw.first_data_row) : raw.first_data_row;
   if (!Number.isInteger(first) || first < 0 || first >= grid.rows.length) throw new MappingError(`Sheet "${grid.sheet}": could not tell where the learner rows start.`, 'file');
 
   const subjects = ((raw.subjects as Raw[]) ?? []).map((s) => ({

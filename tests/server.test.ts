@@ -175,3 +175,11 @@ describe('sf10 roster mode', () => {
     expect(looksLikeForm(grid)).toBe(true);
   });
 });
+
+describe('toCol', () => {
+  it('accepts numbers, numeric strings, "7(H)" and letters', async () => {
+    const { toCol } = await import('@/server/sf10Roster');
+    expect([toCol(7, 50), toCol('7', 50), toCol('7(H)', 50), toCol('H', 50), toCol('AB', 50), toCol('b', 50)]).toEqual([7, 7, 7, 7, 27, 1]);
+    expect([toCol(-1, 50), toCol(99, 50), toCol('zzz', 50), toCol(null, 50), toCol('x1', 50)]).toEqual([-1, -1, -1, -1, -1]);
+  });
+});

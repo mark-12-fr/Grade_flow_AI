@@ -561,7 +561,7 @@
       if (!result || !Array.isArray(result.students) || !result.students.length) return { error: 'No SF10 record was found in this file.' };
       return result;
     } catch (error) {
-      return { error: error.name === 'AbortError' ? 'The AI import took too long.' : 'The AI import service is not reachable.' };
+      return { error: error.name === 'AbortError' ? 'The AI import took too long.' : error.name === 'BackendDown' ? error.message : 'The AI import service is not reachable.' };
     } finally {
       window.clearTimeout(timer);
     }
@@ -671,17 +671,45 @@
   }
 
   // POST to an AI endpoint. If the server asks for an access code (401), ask once and retry.
+  const BACKEND_URL = 'http://127.0.0.1:8000';
+  const BACKEND_HELP = 'The AI server is not running. Start it with "uvicorn backend.main:app --port 8000" and open http://localhost:8000.';
+
   async function aiFetch(url, body, signal) {
-    const send = function () {
+    const send = function (base) {
       const code = window.sessionStorage.getItem('gf-access-code');
-      return fetch(url, { method: 'POST', body: body, signal: signal, headers: code ? { 'X-Access-Code': code } : {} });
+      return fetch(base + url, { method: 'POST', body: body, signal: signal, headers: code ? { 'X-Access-Code': code } : {} });
     };
-    let response = await send();
+    // The page may be served by a plain file server (Live Server, http.server...), which cannot take uploads.
+    // Then 404/405 comes back, so try the AI server on its usual local address.
+    let base = '';
+    let response;
+    try {
+      response = await send(base);
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+      response = null;
+    }
+    if ((!response || response.status === 404 || response.status === 405) && window.location.origin !== BACKEND_URL) {
+      try {
+        base = BACKEND_URL;
+        response = await send(base);
+      } catch (error) {
+        if (error.name === 'AbortError') throw error;
+        const failure = new Error(BACKEND_HELP);
+        failure.name = 'BackendDown';
+        throw failure;
+      }
+    }
+    if (!response) {
+      const failure = new Error(BACKEND_HELP);
+      failure.name = 'BackendDown';
+      throw failure;
+    }
     if (response.status === 401) {
       const entered = window.prompt('Enter the access code to use the AI import:');
       if (entered) {
         window.sessionStorage.setItem('gf-access-code', entered);
-        response = await send();
+        response = await send(base);
         if (response.status === 401) window.sessionStorage.removeItem('gf-access-code');
       }
     }
@@ -716,7 +744,7 @@
         ai: { mapping: result.mapping || [], warnings: result.warnings || [], sheet: result.sheet || '' }
       };
     } catch (error) {
-      lastAiError = error.name === 'AbortError' ? 'The AI import took too long.' : 'The AI import service is not reachable.';
+      lastAiError = error.name === 'AbortError' ? 'The AI import took too long.' : error.name === 'BackendDown' ? error.message : 'The AI import service is not reachable.';
       return null;
     } finally {
       window.clearTimeout(timer);

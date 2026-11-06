@@ -6,6 +6,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -38,6 +39,10 @@ load_env_file(ROOT / ".env")
 MAX_BYTES = 10 * 1024 * 1024
 
 app = FastAPI(title="GradeFlow AI", docs_url=None, redoc_url=None)
+# Lets the page work when it is opened from another local server (e.g. VS Code Live Server on :5500).
+# Only localhost origins are allowed; nothing else can call the AI endpoints from a browser.
+app.add_middleware(CORSMiddleware, allow_origin_regex=r"^http://(localhost|127\.0\.0\.1)(:\d+)?$",
+                   allow_methods=["GET", "POST"], allow_headers=["X-Access-Code"])
 
 
 @app.get("/api/health")

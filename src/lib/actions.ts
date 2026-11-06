@@ -92,7 +92,7 @@ export async function importSf9(file: File): Promise<ImportOutcome> {
   const problem = checkFile(file, ['.csv', '.xlsx', '.xls']);
   if (problem) return { ok: false, error: problem, message: 'No class grade files were added.', type: 'error' };
   const { data, error } = await callApi<Sf9Response>('/api/import', file, { spec: JSON.stringify(aiSchema()) });
-  if (error || !data) return { ok: false, error: `${file.name}: ${error}`, message: 'No class grade files were added.', type: 'error' };
+  if (error || !data) return { ok: false, error: error, message: "No class grade files were added.", type: "error" };
   if (!data.students.length) return { ok: false, error: `${file.name}: no learners were found.`, message: 'No class grade files were added.', type: 'error' };
   if (data.students.length > MAX_LEARNERS) {
     return { ok: false, error: `${file.name}: the class limit of ${MAX_LEARNERS} learners would be exceeded.`, message: 'No class grade files were added.', type: 'error' };

@@ -36,10 +36,11 @@ pytest backend
 
 The Claude call is mocked in tests; they cover column mapping, value copying, footer rows, validation and the API.
 
-## Deploy (demo)
+## Hosting
 
-One Render web service serves both the API and the static frontend (`render.yaml`).
-Set `ANTHROPIC_API_KEY` in the Render dashboard. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`).
+No hosting is configured in this repo. The frontend is plain static files (`index.html`, `css/`, `js/`, `assets/`), so it can be hosted anywhere, e.g. Vercel. **"Try demo class"** works on a static host with no backend.
+
+The AI import needs the FastAPI app (`uvicorn backend.main:app`) running somewhere with `ANTHROPIC_API_KEY` set (optional `ANTHROPIC_MODEL`, default `claude-sonnet-5-5`). On a static-only host, uploads fall back to the built-in template reader.
 
 ## Notes
 

@@ -98,7 +98,7 @@
     help: { label: 'Help', breadcrumb: 'Help', nav: 'help', fileTitle: 'Help' }
   };
 
-  const PAGE_ORDER = ['upload', 'processing', 'verification', 'report-card', 'generated-reports'];
+  const STEP_ORDER = ['upload', 'processing', 'report-card', 'sf10', 'generated-reports'];
 
   // Fictional demo roster. No real student information is used.
   const ROSTER = [
@@ -611,12 +611,13 @@
 
   function updateStepper(pageId) {
     const stepper = document.getElementById('stepper');
-    const currentIndex = PAGE_ORDER.indexOf(pageId);
+    if (pageId === 'verification') pageId = 'processing';
+    const currentIndex = STEP_ORDER.indexOf(pageId);
     if (stepper) stepper.hidden = currentIndex < 0;
     if (currentIndex < 0) return;
     document.querySelectorAll('.step-link').forEach(function (link) {
       const stepPage = link.getAttribute('data-step-page');
-      const stepIndex = PAGE_ORDER.indexOf(stepPage);
+      const stepIndex = STEP_ORDER.indexOf(stepPage);
       link.classList.toggle('active', stepPage === pageId);
       link.classList.toggle('completed', stepIndex < currentIndex);
       if (stepPage === pageId) link.setAttribute('aria-current', 'step');

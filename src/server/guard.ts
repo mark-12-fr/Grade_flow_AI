@@ -11,12 +11,13 @@ const int = (name: string, fallback: number) => {
   return Number.isFinite(n) && n >= 0 ? n : fallback;
 };
 
+// 0 means "no limit". All limits are off by default; set them in .env to protect your quota or bill.
 export const limits = () => ({
-  rateLimit: int('AI_RATE_LIMIT', 6),
+  rateLimit: int('AI_RATE_LIMIT', 0),
   rateWindow: int('AI_RATE_WINDOW', 600),
-  dailyCap: int('AI_DAILY_CAP', 60),
-  maxSheets: int('AI_MAX_SHEETS', 8),
-  maxSheetChars: int('AI_MAX_SHEET_CHARS', 60000)
+  dailyCap: int('AI_DAILY_CAP', 0),
+  maxSheets: int('AI_MAX_SHEETS', 0),
+  maxSheetChars: int('AI_MAX_SHEET_CHARS', 0)
 });
 
 export class HttpError extends Error {

@@ -98,12 +98,18 @@ describe('guard', () => {
     limiter.takeCall();
     expect(() => limiter.takeCall()).toThrow();
   });
+  it('has no limits unless configured', () => {
+    const cfg = limits();
+    expect([cfg.rateLimit, cfg.dailyCap, cfg.maxSheets, cfg.maxSheetChars]).toEqual([0, 0, 0, 0]);
+    for (let i = 0; i < 50; i += 1) guard(req());
+    for (let i = 0; i < 50; i += 1) limiter.takeCall();
+  });
   it('requires the access code when set', () => {
     process.env.APP_ACCESS_CODE = 'secret';
     expect(() => guard(req())).toThrow(HttpError);
     expect(() => guard(req({ 'x-access-code': 'wrong' }))).toThrow(HttpError);
     expect(() => guard(req({ 'x-access-code': 'secret' }))).not.toThrow();
-    expect(limits().maxSheets).toBe(8);
+    expect(limits().maxSheets).toBe(0);
   });
 });
 

@@ -26,7 +26,7 @@ Free AI keys (pick one provider in `.env`): Gemini https://aistudio.google.com/a
 
 - The key lives only in `.env` (git-ignored) on the server. The browser never sees it and `/api/health` only says whether it is set.
 - Never put the key in `.env.example` (that file is committed). Do not paste it in chat, issues or screenshots.
-- Limits (see `.env.example`): per-visitor rate limit, a daily cap on AI calls for the whole server, a max number of sheets per SF10 upload and a max sheet size. Over the limit the API answers 429/422 with a clear message and **no AI call is made**.
+- Optional limits (all **off** by default, see `.env.example`): per-visitor rate limit, a daily cap on AI calls for the whole server, a max number of sheets per SF10 upload and a max sheet size. Over a limit the API answers 429/422 with a clear message and **no AI call is made**. Turn them on before sharing the server or when using a paid key.
 - Set `APP_ACCESS_CODE` when anyone else can reach the server; the app asks for the code once per browser session.
 - Free tiers may use submitted data to improve their models. Use **fictional data only** for demos; for real learner data use Ollama or a paid plan with data use disabled.
 

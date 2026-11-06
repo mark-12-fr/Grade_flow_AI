@@ -1614,9 +1614,10 @@ img { max-width: 100%; display: block; }
 .sf10-incomplete { padding: 0.5rem 0.75rem; background: var(--error-soft); color: var(--error); border-radius: 6px; text-align: center; font-family: inherit; }
 .sf10-info, .sf10-table { width: 100%; border-collapse: collapse; margin-bottom: 0.7rem; font-size: 0.82rem; }
 .sf10-info th, .sf10-info td, .sf10-table th, .sf10-table td { border: 1px solid #777; padding: 0.22rem 0.4rem; text-align: left; }
-.sf10-table thead th, .sf10-group th { background: #e2dcc4; color: #222; }
+.sf10-table thead th, .sf10-group th { background: #bebebe; color: #111; }
 .sf10-table td:not(:first-child) { text-align: center; }
-.sf10-average th, .sf10-average td { background: #f0eddf; color: #222; font-weight: 700; }
+.sf10-average th, .sf10-average td { background: #fff; color: #111; font-weight: 700; }
+.sf10-average th { background: #bebebe; }
 .sf10-failed { color: var(--error); font-weight: 700; }
 .sf10-semester h4 { margin: 0.3rem 0; }
 .sf10-bottom { display: grid; grid-template-columns: 1fr 1.6fr; gap: 1rem; }

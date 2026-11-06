@@ -196,8 +196,8 @@
 
     doc.setLineWidth(0.2); doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(6); text('SF10-SHS', 200, y, { align: 'right' });
-    if (logos.seal) doc.addImage(logos.seal, 'PNG', 32, y - 1, 16, 16);
-    if (logos.deped) doc.addImage(logos.deped, 'PNG', 138, y + 1, 30, 15.4);
+    if (logos.seal) doc.addImage(logos.seal, 'PNG', 14, y - 1, 17, 17);
+    if (logos.deped) doc.addImage(logos.deped, 'PNG', 168, y + 1, 30, 15.4);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7); text('REPUBLIC OF THE PHILIPPINES', 105, y + 1, { align: 'center' });
     text('DEPARTMENT OF EDUCATION', 105, y + 4.5, { align: 'center' });
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9); text('SENIOR HIGH SCHOOL STUDENT PERMANENT RECORD', 105, y + 10, { align: 'center' }); y += 17;
@@ -223,7 +223,10 @@
       row(['SCHOOL: ' + context.schoolName, 'GRADE LEVEL: ' + GF.state.gradeLevel + '    SY: ' + GF.prettyYear(GF.state.year) + '    SEM: ' + (semester.key === 'first' ? '1ST' : '2ND')], [122, 68], 4.2);
       row(['TRACK/STRAND: ' + GF.state.strand, 'SECTION: ' + GF.state.section], [122, 68], 4.2);
       // two-level header
-      cell('Indicate if Subject is CORE, APPLIED, or SPECIALIZED', left, widths[0], 9, { bold: true, fill: GREY, align: 'center' });
+      cell('', left, widths[0], 9, { fill: GREY });
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(5.5);
+      ['Indicate if Subject is', 'CORE, APPLIED, or', 'SPECIALIZED'].forEach(function (line, k) { text(line, left + widths[0] / 2, y + 3 + k * 2.2, { align: 'center' }); });
+      doc.setFontSize(6.5);
       cell('SUBJECTS', left + widths[0], widths[1], 9, { bold: true, fill: GREY, align: 'center' });
       cell('Quarter', left + 122, 34, 4.5, { bold: true, fill: GREY, align: 'center' });
       cell('SEM FINAL GRADE', left + 156, widths[4] , 9, { bold: true, fill: GREY, align: 'center' });
@@ -234,7 +237,11 @@
       y += 4.5;
       const rows = semesterRows(student, semester);
       rows.forEach(function (r) {
-        row([r.category, r.subject, r.q1, r.q2, r.final, r.action], widths, 4.6);
+        let x = left;
+        [r.category, r.subject, r.q1, r.q2, r.final, r.action].forEach(function (v, k) {
+          cell(v, x, widths[k], 4.6, { align: k > 1 ? 'center' : 'left' }); x += widths[k];
+        });
+        y += 4.6;
       });
       for (let i = 0; i < 3; i += 1) row(['', '', '', '', '', ''], widths, 4.6);
       const avg = GF.semesterAverage(student, semester.key);

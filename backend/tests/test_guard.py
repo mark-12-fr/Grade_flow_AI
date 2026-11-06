@@ -53,9 +53,9 @@ def test_access_code_required(monkeypatch):
 
 
 def test_health_never_exposes_the_key(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-123")
+    monkeypatch.setenv("AI_API_KEY", "test-key-123")
     body = TestClient(app).get("/api/health").text
-    assert "sk-ant" not in body and "true" in body
+    assert "test-key-123" not in body and "true" in body
 
 
 def test_sf10_sheet_cap(monkeypatch):

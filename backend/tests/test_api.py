@@ -68,9 +68,10 @@ def test_rejects_bad_input():
 
 
 def test_missing_api_key_is_a_clear_503(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("AI_PROVIDER", "gemini")
+    monkeypatch.delenv("AI_API_KEY", raising=False)
     r = post(TestClient(app), "a.csv", b"Name,Math Q1\nAna,90\n")
-    assert r.status_code == 503 and "ANTHROPIC_API_KEY" in r.json()["detail"]
+    assert r.status_code == 503 and "AI_API_KEY" in r.json()["detail"]
 
 
 def test_health_and_static_do_not_leak_source():

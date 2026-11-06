@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .extractor import ExtractError, extract_logo, read_grid, read_sheets
+from .llm import is_configured
 from .guard import LimitExceeded, guard, limiter, settings
 from .mapper import MappingError, parse_schema, run_import
 from .sf10 import run_import_sf10
@@ -40,7 +41,7 @@ app = FastAPI(title="GradeFlow AI", docs_url=None, redoc_url=None)
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"ok": True, "ai_configured": bool(os.environ.get("ANTHROPIC_API_KEY"))}
+    return {"ok": True, "ai_configured": is_configured()}
 
 
 @app.post("/api/import", dependencies=[Depends(guard)])

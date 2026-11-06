@@ -11,7 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 
 from .extractor import Grid, full_text
-from .mapper import MappingError, call_claude
+from .llm import AiError, call_ai
+from .mapper import MappingError
 
 TEXT = {"type": "string"}
 
@@ -150,7 +151,7 @@ def normalize(raw: dict, grid: Grid, index: int) -> tuple[dict, list[str]]:
     return student, warnings
 
 
-def run_import_sf10(grids: list[Grid], client: Any | None = None, caller: Callable[..., dict] = call_claude,
+def run_import_sf10(grids: list[Grid], client: Any | None = None, caller: Callable[..., dict] = call_ai,
                     spend: Callable[[], None] | None = None, max_chars: int = 0) -> dict:
     def one(item: tuple[int, Grid]) -> tuple[dict | None, list[str]]:
         i, grid = item
@@ -159,7 +160,10 @@ def run_import_sf10(grids: list[Grid], client: Any | None = None, caller: Callab
         try:
             if spend:
                 spend()
-            raw = caller(build_prompt(grid), TOOL, client, max_tokens=8000)
+            try:
+                raw = caller(build_prompt(grid), TOOL, client, max_tokens=8000)
+            except AiError as exc:
+                raise MappingError(str(exc), exc.kind) from exc
             student, warns = normalize(raw, grid, i)
             return student, warns
         except MappingError as exc:

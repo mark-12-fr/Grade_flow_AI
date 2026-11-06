@@ -1607,7 +1607,7 @@ img { max-width: 100%; display: block; }
 .summary-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .summary-table th, .summary-table td { padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--border, #e5e7eb); text-align: left; }
 .summary-table thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
-.sf10-sheet { max-width: 820px; margin: 1rem auto 0; font-family: "Times New Roman", "Liberation Serif", serif; }
+.sf10-sheet { max-width: 900px; font-size: 0.78rem; background: #fff; color: #111; padding: 1rem; margin: 1rem auto 0; font-family: "Times New Roman", "Liberation Serif", serif; }
 .sf10-head { text-align: center; margin-bottom: 0.6rem; }
 .sf10-head p, .sf10-head h2, .sf10-head h3 { margin: 0.1rem 0; }
 .sf10-head h2 { font-size: 1.05rem; }
@@ -1660,3 +1660,25 @@ img { max-width: 100%; display: block; }
 @container (max-width: 640px) {
   .docs-list { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* SF10-SHS official layout */
+.sf10-sheet { font-family: Arial, "Liberation Sans", sans-serif; }
+.sf10-head { position: relative; }
+.sf10-formno { position: absolute; right: 0; top: 0; font-size: 0.65rem; font-weight: 700; }
+.sf10-band { background: #bebebe; text-align: center; font-weight: 700; font-size: 0.68rem; padding: 0.12rem; border: 1px solid #777; min-height: 0.9rem; }
+.sf10-info td { font-size: 0.72rem; }
+.sf10-info { margin-bottom: 0; }
+.sf10-school { margin-top: 0.7rem; }
+.sf10-grades thead th { text-align: center; font-size: 0.68rem; }
+.sf10-grades td:first-child, .sf10-grades .sf10-subject { text-align: left; }
+.sf10-grades td { font-size: 0.72rem; }
+.sf10-blank td { height: 1.1rem; }
+.sf10-remarks { margin: 0.3rem 0; font-size: 0.72rem; }
+.sf10-line { display: block; border-bottom: 1px solid #444; height: 1.1rem; }
+.sf10-sign small { display: block; color: #555; font-size: 0.6rem; text-align: center; }
+.sf10-left { text-align: left !important; }
+.sf10-note { font-size: 0.62rem; line-height: 1.35; }
+.sf10-grades td.sf10-subject { text-align: left; }
+.sf10-info.sf10-sign { width: 100%; margin-bottom: 0.5rem; }
+.sf10-info.sf10-sign td { vertical-align: top; }
+.sf10-remedial thead th { font-size: 0.66rem; }

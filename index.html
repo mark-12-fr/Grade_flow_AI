@@ -199,58 +199,72 @@
                       <p>The SF9 class grade sheet is required. SF10 records are optional.</p>
                     </div>
                   </div>
-                  <div class="docs-row-label"><strong>SF9 · Class grade sheet</strong><span class="pill pill-blue">Required</span></div>
-                  <div class="upload-inline" id="dropzone" aria-describedby="file-help">
-                    <p class="upload-inline-sub">Upload the Excel or CSV you already have, in any layout. AI finds the learners, subjects, grades and class details, and you review everything before anything is printed.</p>
-                    <div class="dropzone-actions">
-                      <button type="button" class="btn btn-primary btn-sm" id="browse-btn">
-                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose class file
-                      </button>
-                      <button type="button" class="btn btn-secondary btn-sm" id="demo-class-btn">
-                        <svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg> Try demo class
-                      </button>
-                      <input type="file" class="input-file" id="file-upload" accept=".csv,.xlsx,.xls">
-                    </div>
-                    <p class="file-help" id="file-help">One class workbook · Any column layout · CSV or Excel up to 10 MB · Maximum 200 learners</p>
-                  </div>
-                  <div class="form-error" id="file-error" role="alert" hidden></div>
-                  <div class="uploaded-file" id="file-info" hidden>
-                    <span class="file-type-icon"><svg class="icon" aria-hidden="true"><use href="#i-file-sheet"></use></svg></span>
-                    <div class="uploaded-file-text">
-                      <strong id="selected-filename">No file selected</strong>
-                      <span id="file-details">—</span>
-                    </div>
-                    <span class="pill pill-green"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Ready</span>
-                    <button type="button" class="icon-btn" id="remove-file-btn" aria-label="Remove the uploaded class files">
-                      <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
-                    </button>
-                  </div>
-                  <div class="docs-row-label"><strong>SF10 · Learner records</strong><span class="pill pill-blue">Optional</span></div>
-                  <p class="docs-row-sub">Attach one class document or upload learner SF10s and assign each to a student.</p>
-                  <div class="sf10-options">
-                    <div class="sf10-option">
-                      <div>
-                        <strong>Class SF10</strong>
-                        <span>One document for this class</span>
+
+                  <div class="docs-list">
+                    <div class="docs-item">
+                      <div class="docs-row upload-inline" id="dropzone" aria-describedby="file-help">
+                        <div class="docs-text">
+                          <div class="docs-title"><strong>SF9 · Class grade sheet</strong><span class="pill pill-blue">Required</span></div>
+                          <p class="docs-sub">Upload the Excel or CSV you already have, in any layout. AI finds the learners, subjects, grades and class details, and you review everything before anything is printed.</p>
+                          <p class="file-help" id="file-help">One class workbook · Any column layout · CSV or Excel up to 10 MB · Maximum 200 learners</p>
+                        </div>
+                        <div class="dropzone-actions">
+                          <button type="button" class="btn btn-primary btn-sm" id="browse-btn">
+                            <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose class file
+                          </button>
+                          <button type="button" class="btn btn-secondary btn-sm" id="demo-class-btn">
+                            <svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg> Try demo class
+                          </button>
+                          <input type="file" class="input-file" id="file-upload" accept=".csv,.xlsx,.xls">
+                        </div>
                       </div>
-                      <button type="button" class="btn btn-secondary btn-sm" id="browse-class-sf10">
-                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose file
-                      </button>
-                      <input type="file" class="input-file" id="class-sf10-upload">
+                      <div class="form-error" id="file-error" role="alert" hidden></div>
+                      <div class="uploaded-file" id="file-info" hidden>
+                        <span class="file-type-icon"><svg class="icon" aria-hidden="true"><use href="#i-file-sheet"></use></svg></span>
+                        <div class="uploaded-file-text">
+                          <strong id="selected-filename">No file selected</strong>
+                          <span id="file-details">—</span>
+                        </div>
+                        <span class="pill pill-green"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Ready</span>
+                        <button type="button" class="icon-btn" id="remove-file-btn" aria-label="Remove the uploaded class files">
+                          <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="docs-item">
+                      <div class="docs-row">
+                        <div class="docs-text">
+                          <div class="docs-title"><strong>SF10 · Class document</strong><span class="pill pill-blue">Optional</span></div>
+                          <p class="docs-sub">One document for this class</p>
+                        </div>
+                        <div class="dropzone-actions">
+                          <button type="button" class="btn btn-secondary btn-sm" id="browse-class-sf10">
+                            <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose file
+                          </button>
+                          <input type="file" class="input-file" id="class-sf10-upload">
+                        </div>
+                      </div>
                       <div class="sf10-file-list" id="class-sf10-file-list" aria-live="polite"></div>
                     </div>
-                    <div class="sf10-option">
-                      <div>
-                        <strong>Student SF10s</strong>
-                        <span>Upload multiple documents, then match each to a student</span>
+
+                    <div class="docs-item">
+                      <div class="docs-row">
+                        <div class="docs-text">
+                          <div class="docs-title"><strong>SF10 · Student records</strong><span class="pill pill-blue">Optional</span></div>
+                          <p class="docs-sub">Upload multiple documents, then match each to a student</p>
+                        </div>
+                        <div class="dropzone-actions">
+                          <button type="button" class="btn btn-secondary btn-sm" id="browse-student-sf10">
+                            <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose files
+                          </button>
+                          <input type="file" class="input-file" id="student-sf10-upload" multiple>
+                        </div>
                       </div>
-                      <button type="button" class="btn btn-secondary btn-sm" id="browse-student-sf10">
-                        <svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg> Choose files
-                      </button>
-                      <input type="file" class="input-file" id="student-sf10-upload" multiple>
                       <div class="sf10-file-list" id="student-sf10-file-list" aria-live="polite"></div>
                     </div>
                   </div>
+
                   <div class="sf10-analysis">
                     <button type="button" class="btn btn-primary btn-sm" id="analyze-sf10-btn" disabled>Run demo analysis</button>
                     <span class="sf10-demo-label">Simulated demo · no OCR or AI service is connected</span>

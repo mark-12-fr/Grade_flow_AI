@@ -1777,3 +1777,32 @@ html { scroll-behavior: smooth; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* Reading a file: a clear "the AI is working" state, then a small success pop. */
+.reading { display: grid; gap: 12px; margin-top: 4px; padding: 14px 16px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; animation: swapIn 0.35s var(--ease-out) both; }
+.reading-head { display: flex; align-items: center; gap: 12px; }
+.reading-spinner { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid rgba(37, 99, 235, 0.18); border-top-color: var(--blue); animation: spin 0.8s linear infinite; }
+.reading-text { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.reading-step { color: var(--navy); font-size: 12.5px; font-weight: 600; animation: fadeIn 0.4s var(--ease-soft) both; }
+.reading-file { overflow: hidden; color: var(--muted-light); font-size: 10.5px; text-overflow: ellipsis; white-space: nowrap; }
+.reading-time { color: var(--muted-light); font-size: 11px; font-variant-numeric: tabular-nums; }
+.reading-dots::after { content: ''; animation: dots 1.4s steps(4, end) infinite; }
+.reading-bar { position: relative; height: 5px; overflow: hidden; background: rgba(37, 99, 235, 0.12); border-radius: 99px; }
+.reading-bar span { position: absolute; inset: 0 auto 0 0; width: 40%; background: linear-gradient(90deg, transparent, var(--blue), transparent); border-radius: inherit; animation: slide 1.4s var(--ease-soft) infinite; }
+.reading-steps { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.reading-steps li { position: relative; padding-left: 20px; color: var(--muted-light); font-size: 11px; transition: color 0.3s var(--ease-soft); }
+.reading-steps li::before { content: ''; position: absolute; left: 3px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; border: 1.5px solid currentColor; transition: background-color 0.3s, border-color 0.3s; }
+.reading-steps li.current { color: var(--navy); font-weight: 600; }
+.reading-steps li.current::before { border-color: var(--blue); background: var(--blue); animation: softPulse 1.2s ease-in-out infinite; }
+.reading-steps li.done { color: #1f9d55; }
+.reading-steps li.done::before { border-color: #1f9d55; background: #1f9d55; }
+.upload-inline.is-busy { opacity: 0.85; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75%, 100% { content: '...'; } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.6); } 60% { opacity: 1; transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes drawCheck { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+/* Success: the green "Ready" pill pops and its check draws itself. */
+.uploaded-file .pill-green { animation: popIn 0.5s var(--ease-out) 0.1s both; }
+.uploaded-file .pill-green .icon polyline { stroke-dasharray: 24; animation: drawCheck 0.45s var(--ease-soft) 0.35s both; }
+.uploaded-file .file-type-icon, .sf10-file-row .file-type-icon { animation: popIn 0.45s var(--ease-out) both; }

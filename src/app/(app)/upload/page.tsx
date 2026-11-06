@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
+import { Reading } from '@/components/Reading';
 import { useUi } from '@/components/Providers';
 import { importSf10, importSf9, removeSf10, removeSf9, validateBeforeProcessing } from '@/lib/actions';
 import { formatFileSize } from '@/lib/format';
@@ -19,7 +20,7 @@ export default function UploadPage() {
   const sf9Input = useRef<HTMLInputElement>(null);
   const sf10Input = useRef<HTMLInputElement>(null);
   const [sf9Busy, setSf9Busy] = useState('');
-  const [sf10Busy, setSf10Busy] = useState('');
+  const [sf10Busy, setSf10Busy] = useState<{ file: string; kind: 'sf10' | 'sheet' } | null>(null);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
   const [pick, setPick] = useState<{ file: File; sheets: { name: string; rows: number; cols: number; label?: string }[]; selected: string } | null>(null);
@@ -32,7 +33,7 @@ export default function UploadPage() {
     if (!file) return;
     if ((files?.length ?? 0) > 1) { setError('Upload one complete class gradebook at a time.'); toast('Choose one class grade file.', 'error'); return; }
     setError('');
-    setSf9Busy(`Reading ${file.name} with AI: finding learners, subjects and class details...`);
+    setSf9Busy(file.name);
     const result = await importSf9(file);
     setSf9Busy('');
     if (sf9Input.current) sf9Input.current.value = '';
@@ -45,9 +46,9 @@ export default function UploadPage() {
     if (!file) return;
     if ((files?.length ?? 0) > 1) { toast('Choose one file for the SF10.', 'error'); return; }
     setPick(null);
-    setSf10Busy(`Reading ${file.name} with AI: learner, eligibility, scholastic records and completion details...`);
+    setSf10Busy({ file: file.name, kind: 'sf10' });
     const result = await importSf10(file);
-    setSf10Busy('');
+    setSf10Busy(null);
     if (sf10Input.current) sf10Input.current.value = '';
     if (result.pick) setPick({ file, sheets: result.pick, selected: guessSheet(result.pick) });
     toast(result.message ?? '', result.type);
@@ -56,9 +57,9 @@ export default function UploadPage() {
   async function readPickedSheet() {
     if (!pick) return;
     const { file, selected } = pick;
-    setSf10Busy(`Reading the "${selected}" sheet with AI: mapping learners and subject grades...`);
+    setSf10Busy({ file: `${file.name} · ${selected}`, kind: 'sheet' });
     const result = await importSf10(file, selected);
-    setSf10Busy('');
+    setSf10Busy(null);
     if (result.ok && !result.pick) setPick(null);
     toast(result.message ?? '', result.type);
   }
@@ -101,12 +102,12 @@ export default function UploadPage() {
                     </div>
                     <p className="docs-desc">Quarterly grades for every learner in the class, used to build the report cards.</p>
                     <div className="dropzone-actions">
-                      <button type="button" className="btn btn-secondary btn-sm" aria-labelledby="browse-sf9 sf9-label" id="browse-sf9" onClick={() => sf9Input.current?.click()}>
+                      <button type="button" className="btn btn-secondary btn-sm" aria-labelledby="browse-sf9 sf9-label" id="browse-sf9" disabled={Boolean(sf9Busy)} onClick={() => sf9Input.current?.click()}>
                         <Icon name="folder" /> Choose file
                       </button>
                       <input ref={sf9Input} type="file" className="input-file" id="file-upload" accept=".csv,.xlsx,.xls" onChange={(e) => void onSf9(e.target.files)} />
                     </div>
-                    <p className="file-help" id="file-help" aria-live="polite">{sf9Busy}</p>
+                    {sf9Busy && <Reading fileName={sf9Busy} kind="sf9" />}
                   </div>
                   {error && <div className="form-error" role="alert" style={{ whiteSpace: 'pre-line' }}>{error}</div>}
                   {upload && (
@@ -135,14 +136,14 @@ export default function UploadPage() {
                     </div>
                     <p className="docs-desc">Cumulative record of past semesters, used to prepare the permanent record.</p>
                     <div className="dropzone-actions">
-                      <button type="button" className="btn btn-secondary btn-sm" aria-labelledby="browse-sf10 sf10-label" id="browse-sf10" onClick={() => sf10Input.current?.click()}>
+                      <button type="button" className="btn btn-secondary btn-sm" aria-labelledby="browse-sf10 sf10-label" id="browse-sf10" disabled={Boolean(sf10Busy)} onClick={() => sf10Input.current?.click()}>
                         <Icon name="folder" /> Choose file
                       </button>
                       <input ref={sf10Input} type="file" className="input-file" id="class-sf10-upload" accept=".csv,.xlsx,.xls" onChange={(e) => void onSf10(e.target.files)} />
                     </div>
                   </div>
                   <div className="sf10-file-list" aria-live="polite">
-                    {sf10Busy && <span className="sf10-empty">{sf10Busy}</span>}
+                    {sf10Busy && <Reading fileName={sf10Busy.file} kind={sf10Busy.kind} />}
                     {!sf10Busy && pick && (
                       <div className="sf10-file-row sf10-pick">
                         <span className="file-type-icon"><Icon name="file-sheet" /></span>
@@ -164,6 +165,7 @@ export default function UploadPage() {
                           {state.sf10File.name} · {formatFileSize(state.sf10File.size)} · {state.sf10Students.length} learner{state.sf10Students.length === 1 ? '' : 's'} read
                           {state.sf10File.warnings.length ? ` · ${state.sf10File.warnings.length} note(s)` : ''}
                         </span>
+                        <span className="pill pill-green"><Icon name="check" /> Ready</span>
                         <button type="button" className="icon-btn" aria-label="Remove the SF10 file" onClick={removeSf10}><Icon name="x" /></button>
                       </div>
                     )}
@@ -176,7 +178,7 @@ export default function UploadPage() {
           <div className="page-actions">
             <div className="action-end">
               <span className="action-note">Your original file won&apos;t be changed.</span>
-              <button type="button" className="btn btn-primary" disabled={!hasFiles} onClick={prepare}>
+              <button type="button" className="btn btn-primary" disabled={!hasFiles || Boolean(sf9Busy) || Boolean(sf10Busy)} onClick={prepare}>
                 Prepare reports <Icon name="chevron-right" />
               </button>
             </div>

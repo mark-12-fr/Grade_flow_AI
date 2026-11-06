@@ -144,13 +144,13 @@ describe('sf10 roster mode', () => {
     ['', '', '', '', '', '', '', '', '', '']
   ];
   const mapping = async () => ({
-    first_data_row: 3,
-    learner: { lrn: 0, lastName: 1, firstName: 2, adviser: 3 },
+    first_data_row: 4,
+    learner: { lrn: 'A', lastName: 'B', firstName: 'C', adviser: 'D' },
     subjects: [
-      { name: 'Oral Communication in Context', category: 'Core', gradeLevel: '11', sem: '1', q1: 4, q2: 5, final: 6 },
-      { name: 'Reading and Writing Skills', category: 'Core', gradeLevel: '11', sem: '2', q1: 7, q2: 8, final: 9 }
+      { name: 'Oral Communication in Context', category: 'Core', gradeLevel: '11', sem: '1', q1: 'E', q2: 'F', final: 'G' },
+      { name: 'Reading and Writing Skills', category: 'Core', gradeLevel: '11', sem: '2', q1: 'H', q2: 'I', final: 'J' }
     ],
-    class_details: { year: '2024-2025' }
+    class_details: { year: '2024-2025', schoolName: null, track: 'null' }
   });
 
   it('is not mistaken for a form, and builds one SF10 per learner', async () => {
@@ -165,8 +165,18 @@ describe('sf10 roster mode', () => {
     expect(a.sf10!.semesters[0].rows[0]).toMatchObject({ subject: 'Oral Communication in Context', q1: '84', q2: '86', final: '85', action: 'PASSED' });
     expect(a.sf10!.semesters[0].average).toBe('85');
     expect(a.sf10!.semesters[0].adviser).toBe('MS. GALLO');
+    expect(a.sf10!.semesters[0].school).toBe(''); // a missing school stays blank, never the text "null"
+    expect(a.sf10!.semesters[0].sy).toBe('2024-2025');
     // second learner has no second-semester grades, so that semester is left out (nothing invented)
     expect(out.students[1].sf10!.semesters).toHaveLength(1);
+    expect(out.warnings.some((w) => w.includes('LRN'))).toBe(false);
+  });
+
+  it('warns when the LRN column does not hold LRNs', async () => {
+    const { runRosterImport } = await import('@/server/sf10Roster');
+    const grid = readSheets('x.xlsx', workbook(rows))[0];
+    const out = await runRosterImport(grid, async () => ({ ...(await mapping()), learner: { lrn: 'D', lastName: 'B', firstName: 'C' } }));
+    expect(out.warnings.some((w) => w.includes('LRN'))).toBe(true);
   });
 
   it('recognises a real SF10 form', async () => {
@@ -181,5 +191,20 @@ describe('toCol', () => {
     const { toCol } = await import('@/server/sf10Roster');
     expect([toCol(7, 50), toCol('7', 50), toCol('7(H)', 50), toCol('H', 50), toCol('AB', 50), toCol('b', 50)]).toEqual([7, 7, 7, 7, 27, 1]);
     expect([toCol(-1, 50), toCol(99, 50), toCol('zzz', 50), toCol(null, 50), toCol('x1', 50)]).toEqual([-1, -1, -1, -1, -1]);
+  });
+});
+
+describe('splitSemesters', () => {
+  it('starts semester 2 where the COR code restarts', async () => {
+    const { splitSemesters } = await import('@/server/sf10Roster');
+    const codes = ['APP 001', 'COR 001', 'COR 003', 'COR 005', 'COR 007', 'COR 008', 'COR 011', 'COR 012', 'COR 017', 'ABM 001', 'COR 002', 'COR 004', 'COR 006', 'COR 009', 'APP 005', 'ABM 002'];
+    const subjects = codes.map((code) => ({ code, gradeLevel: '11', sem: '1' }));
+    const warnings: string[] = [];
+    splitSemesters(subjects, warnings);
+    expect(subjects.map((s) => s.sem).join('')).toBe('1111111111222222'.slice(0, 0) + '1111111111' + '222222');
+    expect(warnings).toHaveLength(1);
+    const few = [{ code: 'COR 005', gradeLevel: '12', sem: '2' }, { code: 'COR 001', gradeLevel: '12', sem: '2' }];
+    splitSemesters(few);
+    expect(few.map((s) => s.sem)).toEqual(['2', '2']);
   });
 });

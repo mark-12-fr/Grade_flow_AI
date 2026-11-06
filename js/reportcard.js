@@ -243,7 +243,7 @@
     const select = document.getElementById('preview-student-select');
     if (!select) return;
     select.innerHTML = GF.state.students.map(function (student, index) {
-      return '<option value="' + index + '">' + (student.lrn ? esc(student.lrn) + ' — ' : '') + esc(student.name) + ' · Roll ' + esc(student.roll) + '</option>';
+      return '<option value="' + index + '">' + esc(student.lrn || student.name) + '</option>';
     }).join('');
     select.value = String(currentIndex());
   }

@@ -355,7 +355,7 @@
     if (!select || !sheet) return;
     const student = current();
     select.innerHTML = sourceList().map(function (entry, i) {
-      return '<option value="' + i + '">' + (entry.lrn ? esc(entry.lrn) + ' — ' : '') + esc(entry.name) + '</option>';
+      return '<option value="' + i + '">' + esc(entry.lrn || entry.name) + '</option>';
     }).join('');
     select.value = String(index);
     document.getElementById('sf10-position').textContent = student ? (index + 1) + ' of ' + sourceList().length : '0 of 0';

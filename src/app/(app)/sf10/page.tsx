@@ -6,6 +6,7 @@ import { useUi } from '@/components/Providers';
 import { Sf10Sheet } from '@/components/Sf10Sheet';
 import { downloadSf10 } from '@/lib/pdf/sf10';
 import { learnerMeta, sf10Source } from '@/lib/sf10Record';
+import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10Quality';
 import { setState, useAppState } from '@/lib/store';
 import type { Student } from '@/lib/types';
 
@@ -21,6 +22,11 @@ export default function Sf10Page() {
   const [level, setLevel] = useState('');
   const [picked, setPicked] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
+  const [quality, setQuality] = useState<'all' | 'check' | 'complete'>('all');
+  const [details, setDetails] = useState<DetailValues>(emptyDetails);
+  const [scope, setScope] = useState<'one' | 'shown' | 'all'>('shown');
+  const [overwrite, setOverwrite] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const selectAll = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -31,14 +37,20 @@ export default function Sf10Page() {
     return { strands: uniq(all.map((m) => m.strand)), sections: uniq(all.filter((m) => !strand || m.strand === strand).map((m) => m.section)), levels: uniq(all.flatMap((m) => m.levels)) };
   }, [metas, strand]);
 
+  const expected = useMemo(() => expectedSemesters(source), [source]);
+  const issues = useMemo(() => new Map(source.map((s) => [s.id, learnerIssues(s, state, expected)])), [source, state, expected]);
+  const needCheck = source.filter((s) => (issues.get(s.id) ?? []).length > 0).length;
   const q = query.trim().toLowerCase();
   const filtered = useMemo(() => source.filter((s) => {
     const m = metas.get(s.id)!;
     if (strand && m.strand !== strand) return false;
     if (section && m.section !== section) return false;
     if (level && !m.levels.includes(level)) return false;
+    const count = (issues.get(s.id) ?? []).length;
+    if (quality === 'check' && !count) return false;
+    if (quality === 'complete' && count) return false;
     return !q || s.name.toLowerCase().includes(q) || s.lrn.toLowerCase().includes(q);
-  }), [source, metas, strand, section, level, q]);
+  }), [source, metas, strand, section, level, q, quality, issues]);
 
   const current = source[Math.min(Math.max(0, state.sf10Index), Math.max(0, source.length - 1))] ?? null;
   const visibleIndex = current ? filtered.findIndex((s) => s.id === current.id) : -1;
@@ -60,7 +72,9 @@ export default function Sf10Page() {
     listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [current?.id]);
 
-  const filtersOn = Boolean(q || strand || section || level);
+  const filtersOn = Boolean(q || strand || section || level || quality !== 'all');
+  const currentIssues = current ? issues.get(current.id) ?? [] : [];
+  const hasSf10 = state.sf10Students.length > 0;
   const toggle = (id: number, on: boolean) => setPicked((p) => (on ? [...new Set([...p, id])] : p.filter((x) => x !== id)));
 
   async function download(students: Student[], name: string) {
@@ -80,7 +94,7 @@ export default function Sf10Page() {
           <h1 id="sf10-page-title">SF10 permanent record</h1>
           <p>Read from the uploaded SF10 (or built from the class grades). Search by LRN or name, filter, and download one, several or a whole section.</p>
         </div>
-        <span className="pill pill-blue">{source.length} learner{source.length === 1 ? '' : 's'}</span>
+        <span className="pill pill-blue">{source.length} learner{source.length === 1 ? '' : 's'}{needCheck ? ` · ${needCheck} to check` : ' · all complete'}</span>
       </div>
 
       <div className="card sf10-browser">
@@ -104,7 +118,15 @@ export default function Sf10Page() {
               <Icon name="chevron-down" className="select-chevron" />
             </div>
           ))}
-          {filtersOn && <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setQuery(''); setStrand(''); setSection(''); setLevel(''); }}>Clear</button>}
+          <div className="select-wrap select-wrap-sm">
+            <select aria-label="Filter by record check" value={quality} onChange={(e) => setQuality(e.target.value as 'all' | 'check' | 'complete')}>
+              <option value="all">All records</option>
+              <option value="check">Needs checking ({needCheck})</option>
+              <option value="complete">Complete ({source.length - needCheck})</option>
+            </select>
+            <Icon name="chevron-down" className="select-chevron" />
+          </div>
+          {filtersOn && <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setQuery(''); setStrand(''); setSection(''); setLevel(''); setQuality('all'); }}>Clear</button>}
         </div>
 
         <div className="sf10-list-head">
@@ -126,6 +148,7 @@ export default function Sf10Page() {
             : filtered.map((s) => {
               const m = metas.get(s.id)!;
               const active = current?.id === s.id;
+              const list = issues.get(s.id) ?? [];
               return (
                 <div key={s.id} className={`sf10-row${active ? ' active' : ''}${pickedSet.has(s.id) ? ' picked' : ''}`} role="option" aria-selected={active} aria-current={active ? 'true' : undefined}>
                   <input type="checkbox" checked={pickedSet.has(s.id)} aria-label={`Select ${s.name}`} onChange={(e) => toggle(s.id, e.target.checked)} />
@@ -134,6 +157,9 @@ export default function Sf10Page() {
                     <span>{s.name}</span>
                     <em>{[m.strand, m.section].filter(Boolean).join(' · ')}</em>
                   </button>
+                  <span className={`sf10-quality ${list.length ? 'check' : 'ok'}`} title={list.length ? list.map((i) => i.text).join('\n') : 'Complete'}>
+                    <i aria-hidden="true" />{list.length ? `${list.length} to check` : 'Complete'}
+                  </span>
                 </div>
               );
             })}
@@ -152,6 +178,61 @@ export default function Sf10Page() {
           {busy && <span className="sf10-busy" role="status">Preparing the PDF...</span>}
         </div>
       </div>
+
+      <details className="card sf10-edit" open={editOpen} onToggle={(e) => setEditOpen((e.target as HTMLDetailsElement).open)}>
+        <summary><strong>Fill in missing details</strong> <span>School, school year, principal and more, for one learner or many at once</span></summary>
+        {!hasSf10 ? <p className="muted">This is available after you upload an SF10 file.</p> : (
+          <div className="sf10-edit-body">
+            <div className="sf10-edit-grid">
+              {([
+                ['schoolName', 'School name'], ['schoolId', 'School ID'], ['sy', 'School year (e.g. 2024-2025)'], ['principal', 'Principal / certified by'],
+                ['adviser', 'Adviser'], ['track', 'Track / strand'], ['jhsSchool', 'Junior high school (eligibility)'], ['awards', 'Awards / honors'],
+                ['graduationDate', 'Date of SHS graduation'], ['dateIssued', 'Date issued']
+              ] as [keyof DetailValues, string][]).map(([key, label]) => (
+                <label key={key} className="sf10-field">
+                  <span>{label}</span>
+                  <input type="text" value={details[key]} onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+                </label>
+              ))}
+              <label className="sf10-field">
+                <span>School year applies to</span>
+                <div className="select-wrap select-wrap-sm">
+                  <select value={details.syLevel} onChange={(e) => setDetails({ ...details, syLevel: e.target.value })}>
+                    <option value="">All grade levels</option>
+                    {options.levels.map((l) => <option key={l} value={l}>Grade {l} only</option>)}
+                  </select>
+                  <Icon name="chevron-down" className="select-chevron" />
+                </div>
+              </label>
+            </div>
+            <div className="sf10-edit-actions">
+              <div className="select-wrap select-wrap-sm">
+                <select aria-label="Apply to" value={scope} onChange={(e) => setScope(e.target.value as 'one' | 'shown' | 'all')}>
+                  <option value="one">This learner</option>
+                  <option value="shown">All shown ({filtered.length})</option>
+                  <option value="all">Everyone ({source.length})</option>
+                </select>
+                <Icon name="chevron-down" className="select-chevron" />
+              </div>
+              <label className="sf10-check"><input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} /><span>Replace values already filled in</span></label>
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => {
+                const ids = new Set((scope === 'one' ? (current ? [current] : []) : scope === 'shown' ? filtered : source).map((x) => x.id));
+                const result = applyDetails(state.sf10Students, ids, details, overwrite);
+                setState({ sf10Students: result.students });
+                toast(result.changed ? `Updated ${result.changed} record${result.changed === 1 ? '' : 's'}.` : 'Nothing to change. The fields were empty, or already filled in (turn on "Replace values already filled in").', result.changed ? 'success' : 'info');
+              }}>Apply</button>
+            </div>
+          </div>
+        )}
+      </details>
+
+      {current && currentIssues.length > 0 && (
+        <div className="sf10-issues" role="status">
+          <Icon name="alert-triangle" />
+          <div><strong>Needs checking</strong><ul>{currentIssues.map((i) => <li key={i.text}>{i.text}</li>)}</ul></div>
+          {currentIssues.some((i) => i.kind === 'details') && hasSf10 && <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditOpen(true)}>Fill in details</button>}
+        </div>
+      )}
 
       <article className="card sf10-sheet" aria-label="SF10 record">
         {current && visibleIndex !== -1

@@ -208,3 +208,43 @@ describe('splitSemesters', () => {
     expect(few.map((s) => s.sem)).toEqual(['2', '2']);
   });
 });
+
+describe('sf10 quality and bulk details', () => {
+  const mk = (id: number, lrn: string, finals: string[], school = '', sy = ''): import('@/lib/types').Student => ({
+    id, roll: '', name: `L${id}`, age: '', sex: '', lrn, grades: {}, attendance: { present: null, total: null, months: {}, schoolDays: {}, absent: {} },
+    transfer: {}, observedValues: {}, comment: '', commentReviewed: true, traits: null, nextSteps: null,
+    sf10: {
+      eligibility: {}, completion: {},
+      semesters: [{ school, schoolId: '', gradeLevel: '11', sy, sem: '1', track: '', section: '', average: '', averageAction: '', remarks: '', adviser: '', principal: '', dateChecked: '',
+        rows: finals.map((f, i) => ({ category: 'Core', subject: `S${i}`, q1: '', q2: '', final: f, action: '' })),
+        remedial: { from: '', to: '', school: '', schoolId: '', teacher: '', rows: [] } }]
+    }
+  });
+
+  it('flags missing LRN, missing finals and missing details', async () => {
+    const { learnerIssues, expectedSemesters } = await import('@/lib/sf10Quality');
+    const { initialState } = await import('@/lib/store');
+    const good = mk(1, '115675140180', ['80', '81'], 'PUI', '2024-2025');
+    const bad = mk(2, '', ['80', ''], '', '');
+    const all = [good, bad];
+    expect(learnerIssues(good, initialState, expectedSemesters(all))).toEqual([]);
+    const kinds = learnerIssues(bad, initialState, expectedSemesters(all)).map((i) => i.kind).sort();
+    expect(kinds).toEqual(['details', 'grade', 'lrn']);
+  });
+
+  it('applies details only to blanks unless told to overwrite, and only to the chosen learners', async () => {
+    const { applyDetails, emptyDetails } = await import('@/lib/sf10Quality');
+    const a = mk(1, '1', ['80'], 'KEEP ME', ''), b = mk(2, '2', ['80'], '', '');
+    const v = { ...emptyDetails, schoolName: 'PHINMA', sy: '2024-2025', principal: 'DR. LIM' };
+    const r1 = applyDetails([a, b], new Set([1, 2]), v, false);
+    expect(r1.changed).toBe(2);
+    expect(r1.students[0].sf10!.semesters[0].school).toBe('KEEP ME');
+    expect(r1.students[1].sf10!.semesters[0].school).toBe('PHINMA');
+    expect(r1.students[1].sf10!.completion.certifiedBy).toBe('DR. LIM');
+    const r2 = applyDetails([a, b], new Set([1]), v, true);
+    expect(r2.students[0].sf10!.semesters[0].school).toBe('PHINMA');
+    expect(r2.students[1].sf10!.semesters[0].school).toBe(''); // learner 2 was not chosen
+    const r3 = applyDetails([a], new Set([1]), { ...emptyDetails, sy: '2025-2026', syLevel: '12' }, true);
+    expect(r3.changed).toBe(0); // the school year is only for grade 12
+  });
+});

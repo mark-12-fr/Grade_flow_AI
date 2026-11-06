@@ -1827,3 +1827,29 @@ html { scroll-behavior: smooth; }
 .sf10-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .sf10-busy { color: var(--muted); font-size: 11.5px; animation: fadeIn 0.3s both; }
 @media (max-width: 700px) { .sf10-row-main { grid-template-columns: 1fr; gap: 2px; } }
+
+/* SF10 record checks and the "fill in missing details" panel */
+.sf10-quality { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 99px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+.sf10-quality i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.sf10-quality.ok { color: #15803d; background: rgba(34, 197, 94, 0.14); }
+.sf10-quality.check { color: #b45309; background: rgba(245, 158, 11, 0.18); }
+.sf10-quality.check i { animation: softPulse 1.8s ease-in-out infinite; }
+.sf10-issues { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; padding: 12px 16px; color: #92400e; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; animation: swapIn 0.35s var(--ease-out) both; }
+.sf10-issues .icon { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 1px; }
+.sf10-issues div { flex: 1; font-size: 12px; }
+.sf10-issues ul { margin: 4px 0 0; padding-left: 18px; }
+[data-theme="dark"] .sf10-issues { color: #fcd34d; }
+[data-theme="dark"] .sf10-quality.ok { color: #4ade80; }
+[data-theme="dark"] .sf10-quality.check { color: #fbbf24; }
+.sf10-edit { margin-bottom: 14px; padding: 0; }
+.sf10-edit summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding: 14px 16px; cursor: pointer; list-style: none; }
+.sf10-edit summary::-webkit-details-marker { display: none; }
+.sf10-edit summary span, .sf10-edit .muted { color: var(--muted-light); font-size: 11.5px; }
+.sf10-edit .muted { margin: 0; padding: 0 16px 14px; }
+.sf10-edit-body { display: grid; gap: 14px; padding: 0 16px 16px; animation: fadeIn 0.3s var(--ease-soft) both; }
+.sf10-edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.sf10-field { display: grid; gap: 5px; font-size: 11px; color: var(--muted); }
+.sf10-field input { height: 36px; padding: 0 10px; color: var(--navy); background: var(--white); border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: 12.5px; }
+.sf10-field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18); }
+.sf10-edit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.sf10-edit-actions .select-wrap { flex: 0 1 200px; }

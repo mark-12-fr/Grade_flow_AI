@@ -20,7 +20,7 @@ const ROSTER_TOOL: Tool = {
       learner: {
         type: 'object',
         description: 'Column LETTER of each learner field, or empty string when the sheet has no such column',
-        properties: { name: COL, lastName: COL, firstName: COL, middleName: COL, lrn: COL, sex: COL, birthdate: COL, section: COL, adviser: COL, strand: COL }
+        properties: { name: COL, lastName: COL, firstName: COL, middleName: COL, lrn: COL, sex: COL, birthdate: COL, section: COL, adviser: COL, strand: COL, jhsSchool: COL, jhsAverage: COL }
       },
       subjects: {
         type: 'array',
@@ -59,7 +59,7 @@ export function buildRosterPrompt(grid: Grid): string {
 usually for Grade 11 and Grade 12. Map its columns so an SF10 permanent record can be built for every learner. Call submit_roster_mapping exactly once.
 
 Below are the top rows. Each cell is written as COLUMNLETTER=value, so copy the column letter exactly as printed (for example H or AB).
-- learner: the column LETTER of name (full name), lastName, firstName, middleName, lrn, sex, birthdate, section, adviser, strand; use an empty string when missing.
+- learner: the column LETTER of name (full name), lastName, firstName, middleName, lrn, sex, birthdate, section, adviser, strand, jhsSchool (the junior high school the learner came from) and jhsAverage (junior high general average); use an empty string when missing.
 - first_data_row: the printed Row number of the first learner row (the first row with a real learner, after all header rows).
 - subjects: one entry per subject. Read the subject name from the header (drop codes like "COR 001 -" from the name but copy the code into the "code" field),
   its category (COR = Core, APP = Applied, anything else such as ABM/STM/SSP/SOC = Specialized), the grade level
@@ -138,6 +138,12 @@ export function splitSemesters(subjects: { code: string; gradeLevel: string; sem
   });
 }
 
+function jhsEligibility(row: unknown[], cols: { jhsSchool: number; jhsAverage: number }): Record<string, string | boolean> {
+  const school = cell(row, cols.jhsSchool);
+  const ave = grade(row, cols.jhsAverage);
+  return school || ave ? { jhsCompleter: true, jhsGenAve: ave, schoolName: school } : {};
+}
+
 export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnings: string[] } {
   const width = grid.rows[0]?.length ?? 0;
   const warnings: string[] = ((raw.warnings as unknown[]) ?? []).map(String).filter((w) => w.trim());
@@ -145,7 +151,7 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
   const cols = {
     name: col(L.name, width), last: col(L.lastName, width), first: col(L.firstName, width), middle: col(L.middleName, width),
     lrn: col(L.lrn, width), sex: col(L.sex, width), birth: col(L.birthdate, width), section: col(L.section, width),
-    adviser: col(L.adviser, width), strand: col(L.strand, width)
+    adviser: col(L.adviser, width), strand: col(L.strand, width), jhsSchool: col(L.jhsSchool, width), jhsAverage: col(L.jhsAverage, width)
   };
   if (cols.name < 0 && cols.last < 0 && cols.lrn < 0) console.warn('[sf10 roster] unusable learner mapping from the AI:', JSON.stringify(raw.learner)?.slice(0, 400));
   if (cols.name < 0 && cols.last < 0 && cols.lrn < 0) throw new MappingError(`Sheet "${grid.sheet}": could not find the learner name or LRN column.`, 'file');
@@ -212,7 +218,7 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
       grades: {}, attendance: { present: null, total: null, months: {}, schoolDays: {}, absent: {} }, transfer: {}, observedValues: {},
       comment: '', commentReviewed: true, traits: null, nextSteps: null,
       sf10: {
-        eligibility: {}, semesters,
+        eligibility: jhsEligibility(row, cols), semesters,
         completion: { trackAccomplished: cell(row, cols.strand) || details.track || details.strand || '', shsAverage: total === null ? '' : String(total), certifiedBy: '' }
       }
     });

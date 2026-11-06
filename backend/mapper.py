@@ -106,10 +106,12 @@ Sheet "{grid.sheet}" (top rows):
 
 def call_claude(prompt: str, tool: dict, client: Any | None = None, max_tokens: int = 4096) -> dict:
     if client is None:
-        import anthropic
-
         if not os.environ.get("ANTHROPIC_API_KEY"):
             raise MappingError("ANTHROPIC_API_KEY is not configured on the server.", "config")
+        try:
+            import anthropic
+        except ImportError as exc:
+            raise MappingError("The 'anthropic' package is not installed on the server (pip install -r requirements.txt).", "config") from exc
         client = anthropic.Anthropic()
     try:
         msg = client.messages.create(

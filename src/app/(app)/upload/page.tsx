@@ -8,6 +8,10 @@ import { importSf10, importSf9, removeSf10, removeSf9, validateBeforeProcessing 
 import { formatFileSize } from '@/lib/format';
 import { setState, useAppState } from '@/lib/store';
 
+// Preselect the sheet that most likely lists the learners: the biggest one with many columns.
+const guessSheet = (sheets: { name: string; rows: number; cols: number; label?: string }[]) =>
+  [...sheets].filter((x) => x.rows > 5 && x.name !== '__forms__').sort((a, b) => b.rows * b.cols - a.rows * a.cols)[0]?.name ?? sheets[0]?.name ?? '';
+
 export default function UploadPage() {
   const router = useRouter();
   const { toast } = useUi();
@@ -18,6 +22,7 @@ export default function UploadPage() {
   const [sf10Busy, setSf10Busy] = useState('');
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
+  const [pick, setPick] = useState<{ file: File; sheets: { name: string; rows: number; cols: number; label?: string }[]; selected: string } | null>(null);
 
   const hasFiles = Boolean(state.upload) || state.sf10Students.length > 0;
   const upload = state.upload;
@@ -39,10 +44,22 @@ export default function UploadPage() {
     const file = files?.[0];
     if (!file) return;
     if ((files?.length ?? 0) > 1) { toast('Choose one file for the SF10.', 'error'); return; }
+    setPick(null);
     setSf10Busy(`Reading ${file.name} with AI: learner, eligibility, scholastic records and completion details...`);
     const result = await importSf10(file);
     setSf10Busy('');
     if (sf10Input.current) sf10Input.current.value = '';
+    if (result.pick) setPick({ file, sheets: result.pick, selected: guessSheet(result.pick) });
+    toast(result.message ?? '', result.type);
+  }
+
+  async function readPickedSheet() {
+    if (!pick) return;
+    const { file, selected } = pick;
+    setSf10Busy(`Reading the "${selected}" sheet with AI: mapping learners and subject grades...`);
+    const result = await importSf10(file, selected);
+    setSf10Busy('');
+    if (result.ok && !result.pick) setPick(null);
     toast(result.message ?? '', result.type);
   }
 
@@ -126,6 +143,20 @@ export default function UploadPage() {
                   </div>
                   <div className="sf10-file-list" aria-live="polite">
                     {sf10Busy && <span className="sf10-empty">{sf10Busy}</span>}
+                    {!sf10Busy && pick && (
+                      <div className="sf10-file-row sf10-pick">
+                        <span className="file-type-icon"><Icon name="file-sheet" /></span>
+                        <span className="sf10-file-name">{pick.file.name}: choose the sheet with your learners</span>
+                        <div className="select-wrap">
+                          <select aria-label="Sheet to read" value={pick.selected} onChange={(e) => setPick({ ...pick, selected: e.target.value })}>
+                            {pick.sheets.map((x) => <option key={x.name} value={x.name}>{x.label ?? `${x.name} (${x.rows} rows)`}</option>)}
+                          </select>
+                          <Icon name="chevron-down" className="select-chevron" />
+                        </div>
+                        <button type="button" className="btn btn-primary btn-sm" onClick={() => void readPickedSheet()}>Read this sheet</button>
+                        <button type="button" className="icon-btn" aria-label="Cancel" onClick={() => setPick(null)}><Icon name="x" /></button>
+                      </div>
+                    )}
                     {!sf10Busy && state.sf10File && (
                       <div className="sf10-file-row">
                         <span className="file-type-icon"><Icon name="file-text" /></span>

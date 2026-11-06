@@ -133,3 +133,45 @@ describe('llm', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer k');
   });
 });
+
+describe('sf10 roster mode', () => {
+  const rows: unknown[][] = [
+    ['LRN', 'LAST NAME', 'FIRST NAME', 'ADVISER', 'GRADE 11', '', '', 'GRADE 11', '', ''],
+    ['', '', '', '', 'COR 001 - Oral Communication in Context', '', '', 'COR 002 - Reading and Writing Skills', '', ''],
+    ['', '', '', '', 'Q1', 'Q2', 'FINAL', 'Q1', 'Q2', 'FINAL'],
+    ['117624130043', 'CULLO', 'PRINCESS', 'MS. GALLO', 84, 86, 85, 87, 86, 87],
+    ['123456789012', 'REYES', 'JUAN', 'MS. GALLO', 78, 82, 80, '', '', ''],
+    ['', '', '', '', '', '', '', '', '', '']
+  ];
+  const mapping = async () => ({
+    first_data_row: 3,
+    learner: { lrn: 0, lastName: 1, firstName: 2, adviser: 3 },
+    subjects: [
+      { name: 'Oral Communication in Context', category: 'Core', gradeLevel: '11', sem: '1', q1: 4, q2: 5, final: 6 },
+      { name: 'Reading and Writing Skills', category: 'Core', gradeLevel: '11', sem: '2', q1: 7, q2: 8, final: 9 }
+    ],
+    class_details: { year: '2024-2025' }
+  });
+
+  it('is not mistaken for a form, and builds one SF10 per learner', async () => {
+    const { looksLikeForm, runRosterImport } = await import('@/server/sf10Roster');
+    const grid = readSheets('x.xlsx', workbook(rows))[0];
+    expect(looksLikeForm(grid)).toBe(false);
+    const out = await runRosterImport(grid, mapping);
+    expect(out.students).toHaveLength(2);
+    const a = out.students[0];
+    expect(a.lrn).toBe('117624130043');
+    expect(a.sf10!.semesters.map((s) => `${s.gradeLevel}-${s.sem}`)).toEqual(['11-1', '11-2']);
+    expect(a.sf10!.semesters[0].rows[0]).toMatchObject({ subject: 'Oral Communication in Context', q1: '84', q2: '86', final: '85', action: 'PASSED' });
+    expect(a.sf10!.semesters[0].average).toBe('85');
+    expect(a.sf10!.semesters[0].adviser).toBe('MS. GALLO');
+    // second learner has no second-semester grades, so that semester is left out (nothing invented)
+    expect(out.students[1].sf10!.semesters).toHaveLength(1);
+  });
+
+  it('recognises a real SF10 form', async () => {
+    const { looksLikeForm } = await import('@/server/sf10Roster');
+    const grid = readSheets('x.xlsx', workbook([["LEARNER'S INFORMATION"], ['LAST NAME:', 'CULLO']]))[0];
+    expect(looksLikeForm(grid)).toBe(true);
+  });
+});

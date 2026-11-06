@@ -147,21 +147,31 @@ export async function importSf9(file: File): Promise<ImportOutcome> {
   };
 }
 
-interface Sf10Response { students: Student[]; warnings: string[]; sheets: number; schoolLogo?: string }
+interface Sf10Response { students?: Student[]; warnings?: string[]; sheets?: number | { name: string; rows: number; cols: number; label?: string }[]; schoolLogo?: string; mode?: 'pick' | 'roster' }
 
-/** Upload an SF10 workbook: the AI reads every form field, one learner per sheet. */
-export async function importSf10(file: File): Promise<ImportOutcome> {
+export interface Sf10Outcome extends ImportOutcome { pick?: { name: string; rows: number; cols: number; label?: string }[] }
+
+/**
+ * Upload an SF10 file. One learner per sheet forms are read by the AI directly; a school grading
+ * workbook (learners in rows) first asks the teacher which sheet to read, then maps its columns.
+ */
+export async function importSf10(file: File, sheet?: string): Promise<Sf10Outcome> {
   const problem = checkFile(file, ['.csv', '.xlsx', '.xls']);
   if (problem) return { ok: false, error: problem, type: 'error', message: problem };
-  const { data, error } = await callApi<Sf10Response>('/api/import-sf10', file, {}, 240_000);
+  const { data, error } = await callApi<Sf10Response>('/api/import-sf10', file, sheet ? { sheet } : {}, 240_000);
   if (error || !data) return { ok: false, error, type: 'error', message: `SF10 could not be read: ${error}` };
+  if (data.mode === 'pick' && Array.isArray(data.sheets)) {
+    return { ok: true, pick: data.sheets, type: 'info', message: 'Choose the sheet that lists your learners and their grades.' };
+  }
+  const students = data.students ?? [];
+  if (!students.length) return { ok: false, error: 'No SF10 record was found in this file.', type: 'error', message: 'SF10 could not be read: no SF10 record was found.' };
   setState((s) => ({
-    sf10Students: data.students,
+    sf10Students: students,
     sf10Index: 0,
-    sf10File: { name: file.name, size: file.size, warnings: data.warnings },
+    sf10File: { name: sheet && sheet !== '__forms__' ? `${file.name} · ${sheet}` : file.name, size: file.size, warnings: data.warnings ?? [] },
     school: data.schoolLogo ? { ...s.school, logo: data.schoolLogo } : s.school
   }));
-  const n = data.students.length;
+  const n = students.length;
   return { ok: true, type: 'success', message: `${n} SF10 record${n === 1 ? '' : 's'} read.` };
 }
 

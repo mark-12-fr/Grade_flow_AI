@@ -1706,3 +1706,8 @@ img { max-width: 100%; display: block; }
   .docs-item, .docs-item:first-child, .docs-item:last-child { padding: 0; border-left: 0; }
   .docs-item:last-child { padding-top: 18px; border-top: 1px solid var(--border); }
 }
+
+/* SF10 sheet picker (school grading workbooks) */
+.sf10-pick { flex-wrap: wrap; }
+.sf10-pick .sf10-file-name { flex: 1 1 calc(100% - 40px); white-space: normal; }
+.sf10-pick .select-wrap { flex: 1 1 200px; }

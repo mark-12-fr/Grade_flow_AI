@@ -1200,7 +1200,7 @@ img { max-width: 100%; display: block; }
 .history-list { border-top: 1px solid var(--border); }
 .history-row {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 12px;
   padding: 13px 2px;

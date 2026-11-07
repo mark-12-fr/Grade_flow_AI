@@ -40,7 +40,7 @@ src/lib/            curriculum, grading, store, actions, sf10Record, pdf/ (jsPDF
 src/server/         llm (free AI providers), mapper, sf10, template, extract, guard
 tests/              vitest tests for the server code
 samples/            fictional sample workbook and the script that builds it
-public/reel/        27-second promo reel (plain HTML/CSS/JS)
+public/reel/        27-second promo reel (plain HTML/CSS/JS) and its synthesized soundtrack
 scripts/            render-reel.mjs (turns the reel into an MP4)
 ```
 
@@ -48,9 +48,15 @@ scripts/            render-reel.mjs (turns the reel into an MP4)
 
 `public/reel/index.html` is a 27-second, 1920×1080 promo with six scenes: identity, promise, how to use, why it matters, no guessing, and the closing card. It uses only fictional learners.
 
-- **Watch it:** run `npm run dev` and open http://localhost:3000/reel/index.html, or just open the file in a browser. Keys: Space play/pause, ← → seek, R restart, F fullscreen.
+- **Watch it:** run `npm run dev` and open http://localhost:3000/reel/index.html, or just open the file in a browser. Keys: Space play/pause, ← → seek, R restart, M sound, F fullscreen.
 - **Options:** `?url=your-app.vercel.app` puts your address in the closing pill. `?once` plays it once instead of looping.
-- **Export an MP4:** `npm run reel` writes `gradeflow-ai-reel.mp4` (needs Playwright with Chromium and ffmpeg). Every frame is drawn at an exact time, so the video has no dropped frames. `npm run reel -- out.mp4 --fps 60 --url your-app.vercel.app` changes the defaults, and `npm run reel -- --still 12.5 frame.png` saves one frame.
+- **Music:** `public/reel/soundtrack.js` synthesizes an original score (no samples, no third-party music, nothing to license) from the reel's own timeline. Every cut gets a hit, and the UI moments get small sounds: file drop, check pings, key clicks for the LRN search, the download click. The sound starts off because browsers block autoplay with sound, so press the speaker button or M. The track is built on first use, which takes about a second.
+- **Export an MP4:** `npm run reel` writes `gradeflow-ai-reel.mp4` with the soundtrack (needs Playwright with Chromium and ffmpeg). Every frame is drawn at an exact time, so the video has no dropped frames. Other options:
+  - `npm run reel -- out.mp4 --fps 60 --url your-app.vercel.app` changes the defaults.
+  - `--music track.mp3` uses your own track instead. It loops if it is shorter than the reel and fades out at the end. Use only music you have the rights to.
+  - `--no-music` makes a silent video.
+  - `--wav soundtrack.wav` writes only the soundtrack.
+  - `--still 12.5 frame.png` saves one frame.
 
 ## Tests
 

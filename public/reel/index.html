@@ -14,7 +14,10 @@
   Query options:  ?url=gradeflow.example.com  shows your address in the closing pill
                   ?once                       plays once instead of looping
                   ?render                     1920x1080, no controls (used by the renderer)
-  Keys:  Space play/pause · ← → seek 1 s · R restart · F fullscreen
+  Keys:  Space play/pause · ← → seek 1 s · R restart · M sound · F fullscreen
+
+  Sound: soundtrack.js synthesizes an original score from the timeline below (T, END) and the
+  sound cues placed with sfx(), so music and effects stay in sync with every cut.
 -->
 <style>
   :root {
@@ -256,6 +259,8 @@
   #ctl.idle { opacity: 0; }
   #ctl button { width: 34px; height: 34px; border-radius: 9px; border: 0; background: rgba(255, 255, 255, .12); color: #fff; cursor: pointer; display: grid; place-items: center; }
   #ctl button:hover { background: rgba(255, 255, 255, .22); }
+  #ctl button[hidden] { display: none; }
+  #ctl button:disabled { opacity: .6; cursor: progress; }
   #ctl button:focus-visible, #ctl input:focus-visible { outline: 2px solid var(--blue-400); outline-offset: 2px; }
   #ctl input[type=range] { width: min(46vw, 520px); accent-color: var(--amber); }
   #ctlTime { min-width: 118px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
@@ -483,9 +488,11 @@
   <button type="button" id="ctlPlay" aria-label="Pause"></button>
   <input type="range" id="ctlSeek" min="0" max="1000" step="1" value="0" aria-label="Seek">
   <span id="ctlTime">0.0 s</span>
+  <button type="button" id="ctlSound" aria-label="Turn sound on" aria-pressed="false"></button>
   <button type="button" id="ctlFull" aria-label="Fullscreen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 </div>
 
+<script src="soundtrack.js"></script>
 <script>
 (() => {
   'use strict';
@@ -562,6 +569,10 @@
     for (const f of fns) f.fn(f.ease(clamp(f.dur > 0 ? (t - f.at) / f.dur : (t >= f.at ? 1 : 0))), t);
   }
 
+  /* Sound cues: placed next to the animations they belong to; soundtrack.js renders them. */
+  const SOUND = [];
+  const sfx = (t, type, o = {}) => SOUND.push({ t: Math.round(t * 1000) / 1000, type, ...o });
+
   /* SVG stroke drawing: dash = path length, offset animates from length to 0. */
   function drawPath(el, at, dur, ease = 'inOut3') {
     const len = el.getTotalLength();
@@ -582,12 +593,20 @@
   A('#s1markWrap', 2.4, 0.8, { s: [1, 1.07] }, 'in3');
   stagger($$('#s1word .w'), 1.55, 0.045, 0.55, { o: [0, 1], y: [12, 0], b: [8, 0] }, 'out3');
   A('#s1sweep', 1.3, 1.5, { x: [0, 2700] }, 'inOut3');
+  sfx(0.4, 'bell', { notes: [76], g: 0.5, dur: 2.2 });
+  sfx(0.95, 'bell', { notes: [81], g: 0.45, dur: 2 });
+  sfx(1.4, 'bell', { notes: [84, 91], g: 0.8, dur: 2.4 }); // the amber crossbar lands
+  sfx(1.3, 'whoosh', { dur: 1.5, g: 0.3, pan: -0.3 });
+  const letterNotes = [81, 84, 86, 88, 91, 93, 96, 98, 100, 0, 103, 105];
+  $$('#s1word .w').forEach((el, i) => { if (letterNotes[i]) sfx(1.55 + i * 0.045, 'tick', { note: letterNotes[i], g: 0.35, pan: (i / 11) * 1.2 - 0.6 }); });
 
   /* ---------- 2 · promise ---------- */
   A('#s2eye', T.s2 + 0.25, 0.6, { o: [0, 1], y: [14, 0] });
   stagger($$('#s2h .w'), T.s2 + 0.35, 0.11, 0.75, { o: [0, 1], y: [70, 0], b: [18, 0], s: [1.06, 1] }, 'out5');
   drawPath($('#s2under'), T.s2 + 1.35, 0.6, 'out3');
   drawPath($('#s2circle'), T.s2 + 1.9, 0.75, 'inOut3');
+  sfx(T.s2 + 1.35, 'scribble', { dur: 0.6 });
+  sfx(T.s2 + 1.9, 'scribble', { dur: 0.75 });
   A('#s2copy', T.s3 - 0.5, 0.6, { s: [1, 1.04], o: [1, 0.85] }, 'in3');
   let rowX0 = 0;
   const hitAt = T.s2 + 2.25, rowSpeed = -150;
@@ -613,6 +632,9 @@
   // beat A: file drop + real-looking read progress
   const readAt = T.s3 + 1.25, readDur = 1.45;
   A('#s3file', T.s3 + 0.55, 0.65, { o: [0, 1], x: [320, 0], y: [-260, 0], r: [10, 0], s: [1.08, 1] }, 'out5');
+  sfx(T.s3 + 0.15, 'whoosh', { dur: 0.8, g: 0.45, pan: 0.4 });
+  sfx(T.s3 + 0.55, 'whoosh', { dur: 0.55, g: 0.5, up: false, pan: 0.3 });
+  sfx(T.s3 + 1.12, 'thump', { g: 0.8 });
   A('#s3file', readAt - 0.15, 0.3, { s: [1, 0.9], o: [1, 0] }, 'in3');
   A('#s3drop', T.s3 + 1.05, 0.25, { s: [1, 0.985] }, 'out3');
   A('#s3drop', readAt - 0.1, 0.25, { o: [1, 0] }, 'lin');
@@ -628,8 +650,11 @@
   // checks land when the (eased) percent crosses the next stage: solve inOut3 for p
   const invInOut3 = (y) => (y < 0.5 ? Math.cbrt(y / 4) : 1 - Math.cbrt(2 * (1 - y)) / 2);
   [25, 40, 90, 100].forEach((pct, i) => {
-    A('#ck' + (i + 1), readAt + readDur * invInOut3(pct / 100), 0.28, { o: [0, 1], s: [0.4, 1] }, 'back');
+    const at = readAt + readDur * invInOut3(pct / 100);
+    A('#ck' + (i + 1), at, 0.28, { o: [0, 1], s: [0.4, 1] }, 'back');
+    sfx(at, 'ping', { note: [88, 91, 93, 96][i] });
   });
+  sfx(readAt + readDur, 'chime', { notes: [84, 91, 96] });
   F(readAt, readDur, (p, t) => { $('#s3spin').style.transform = `rotate(${((t - readAt) * 520).toFixed(1)}deg)`; $('#s3spin').style.opacity = p < 1 ? 1 : 0; });
   A('#s3done', readAt + readDur - 0.02, 0.35, { o: [0, 1], s: [0.4, 1] }, 'back');
   A('#s3ok', readAt + readDur + 0.05, 0.45, { o: [0, 1], s: [0.6, 1], y: [10, 0] }, 'back');
@@ -637,6 +662,7 @@
   // beat B: pane switch, LRN search, preview, download
   A('#p1', T.s3b - 0.15, 0.35, { o: [1, 0], x: [0, -40] }, 'in3');
   A('#p2', T.s3b + 0.05, 0.45, { o: [0, 1], x: [40, 0] }, 'out3');
+  sfx(T.s3b - 0.15, 'whoosh', { dur: 0.45, g: 0.4 });
   F(T.s3b, 0.01, (p) => {
     $('#st1').classList.toggle('on', p < 1);
     $('#st2').classList.toggle('on', p >= 1);
@@ -650,6 +676,9 @@
     $('#s3ph').style.display = n === 0 ? '' : 'none';
     $('#s3caret').style.opacity = (Math.floor(t * 2.4) % 2 === 0 || (p > 0 && p < 1)) ? 1 : 0;
   });
+  // one key click per character, at the moment it appears (n = round(p * length), p linear)
+  for (let i = 1; i <= query.length; i++) sfx(typeAt + typeDur * (i - 0.5) / query.length, 'key');
+  sfx(typeAt + typeDur + 0.05, 'tick', { note: 88, g: 0.6 });
   const rows = $$('#p2 .lr');
   stagger(rows, T.s3b + 0.3, 0.06, 0.45, { o: [0, 1], x: [-18, 0] });
   // the full LRN narrows the list to one learner; the selection slides to that row
@@ -666,6 +695,8 @@
   A('#s3btn', pressAt + 0.12, 0.3, { s: [0.94, 1] }, 'back');
   A('#s3ripple', pressAt, 0.55, { s: [0, 1.4], o: [1, 0] }, 'out3');
   A('#s3toast', pressAt + 0.2, 0.45, { o: [0, 1], y: [-20, 0], s: [0.94, 1] }, 'back');
+  sfx(pressAt, 'click');
+  sfx(pressAt + 0.2, 'pop');
 
   /* ---------- 4 · why it matters ---------- */
   A($('#s4a .eyebrow'), T.s4 + 0.25, 0.6, { o: [0, 1], y: [14, 0] });
@@ -677,6 +708,11 @@
   A('#s4c1', T.s4 + 1.25, 0.5, { o: [0, 1], s: [0.5, 1], x: [-30, 0] }, 'back');
   A('#s4c2', T.s4 + 1.55, 0.5, { o: [0, 1], s: [0.5, 1], x: [-30, 0] }, 'back');
   A('#s4a', T.s4b - 0.35, 0.4, { o: [1, 0], s: [1, 0.97], b: [0, 10] }, 'in3');
+  sfx(T.s4 + 0.1, 'whoosh', { dur: 0.8, g: 0.4, pan: 0.4 });
+  sfx(T.s4 + 0.4, 'scan', { dur: 1.3 });
+  sfx(T.s4 + 1.25, 'pop');
+  sfx(T.s4 + 1.55, 'pop', { g: 0.8 });
+  sfx(T.s4b - 0.35, 'whoosh', { dur: 0.5, g: 0.4 });
 
   stagger($$('#s4b h2 .w'), T.s4b + 0.05, 0.16, 0.7, blurIn, 'out5');
   A($('#s4b .mono'), T.s4b + 0.45, 0.6, { o: [0, 1], y: [10, 0] });
@@ -687,6 +723,7 @@
     A('#r' + n + 'o', at + 0.12, 0.35, { o: [0, 1], y: [12, 0] }, 'out3');
     A('#r' + n + 'd', at, 0.2, { o: [1, 0], sx: [1, 0.2] }, 'in3');
     A('#r' + n + 'y', at + 0.1, 0.4, { o: [0, 1], s: [0.3, 1] }, 'back');
+    sfx(at + 0.1, 'ping', { note: [84, 88, 91][i] });
   });
 
   /* ---------- 5 · no guessing ---------- */
@@ -696,6 +733,9 @@
   A(s5[2], T.s5 + 1.25, 0.7, { o: [0, 1], y: [20, 0] });
   stagger(s5.slice(3), T.s5 + 1.65, 0.12, 0.55, { o: [0, 1], y: [18, 0], s: [0.92, 1] }, 'back');
   A('#s5 .center', T.s5, T.s6 - T.s5 + XF, { s: [1, 1.035] }, 'lin');
+  sfx(T.s5 + 0.2, 'hit');
+  sfx(T.s5 + 0.65, 'hit', { g: 0.9 });
+  [76, 81, 84].forEach((note, i) => sfx(T.s5 + 1.65 + i * 0.12, 'tick', { note, g: 0.8, pan: (i - 1) * 0.4 }));
 
   /* ---------- 6 · outro ---------- */
   drawPath($('#s6arc'), T.s6 + 0.25, 0.85, 'inOut3');
@@ -705,6 +745,9 @@
   A('#s6tag', T.s6 + 1.25, 0.7, { o: [0, 1], y: [20, 0] });
   A('#s6pill', T.s6 + 1.6, 0.6, { o: [0, 1], y: [16, 0], s: [0.94, 1] }, 'back');
   A('#s6 .center', T.s6, END - T.s6, { s: [1.02, 1] }, 'out3');
+  sfx(T.s6 + 0.25, 'shimmer', { dur: 0.85 });
+  sfx(T.s6 + 1.0, 'bell', { notes: [84, 88, 91, 96], g: 0.8, dur: 3 });
+  sfx(T.s6 + 1.6, 'ping', { note: 96, g: 0.6 });
 
   /* ---------- scenes, HUD ---------- */
   const sceneEls = SCENES.map((s) => document.getElementById(s.id));
@@ -775,11 +818,75 @@
     seek.value = String(Math.round(current / END * 1000));
     timeEl.textContent = `${current.toFixed(1)} / ${END.toFixed(1)} s`;
   }
-  function setPlaying(v) { playing = v; if (v && current >= END) current = 0; last = performance.now(); syncUi(); }
+  /* Sound: off until the viewer turns it on (browsers block autoplay with sound). The track is
+     synthesized on first use. While it plays, the audio clock drives the timeline, so picture and
+     sound cannot drift apart. */
+  const soundBtn = $('#ctlSound');
+  const ICON_SOUND_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>';
+  const ICON_SOUND_ON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6M18.8 6.5a8 8 0 0 1 0 11"/></svg>';
+  let actx = null, abuf = null, src = null, aStart = 0, aOffset = 0, soundOn = false;
+  function stopAudio() {
+    if (!src) return;
+    try { src.stop(); } catch { /* already stopped */ }
+    src.disconnect();
+    src = null;
+  }
+  function startAudio(at) {
+    stopAudio();
+    if (!soundOn || !abuf || !playing) return;
+    src = actx.createBufferSource();
+    src.buffer = abuf;
+    src.connect(actx.destination);
+    src.start(0, Math.min(at, abuf.duration));
+    aStart = actx.currentTime;
+    aOffset = at;
+  }
+  async function toggleSound() {
+    if (!window.GFSoundtrack) return;
+    soundOn = !soundOn;
+    if (soundOn && !actx) {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      soundBtn.disabled = true;
+      soundBtn.textContent = '…';
+      await new Promise((r) => setTimeout(r, 30)); // let the button repaint before the synth runs
+      const track = window.GFSoundtrack.render({ T, END, events: SOUND }, { sampleRate: actx.sampleRate });
+      abuf = actx.createBuffer(2, track.left.length, track.sampleRate);
+      abuf.copyToChannel(track.left, 0);
+      abuf.copyToChannel(track.right, 1);
+      soundBtn.disabled = false;
+    }
+    if (actx && actx.state === 'suspended') await actx.resume();
+    if (soundOn && !playing) setPlaying(true);
+    else if (soundOn) startAudio(current);
+    else stopAudio();
+    syncSound();
+  }
+  function syncSound() {
+    soundBtn.innerHTML = soundOn ? ICON_SOUND_ON : ICON_SOUND_OFF;
+    soundBtn.setAttribute('aria-pressed', String(soundOn));
+    soundBtn.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
+  }
+  function seekTo(t) {
+    current = clamp(t, 0, END);
+    render(current);
+    if (playing) startAudio(current);
+    syncUi();
+  }
+
+  function setPlaying(v) {
+    playing = v;
+    if (v && current >= END) current = 0;
+    last = performance.now();
+    if (v) startAudio(current); else stopAudio();
+    syncUi();
+  }
   function loop(now) {
     if (playing) {
-      current += Math.min(0.1, (now - last) / 1000);
-      if (current >= END) { if (LOOP) current = 0; else { current = END; playing = false; } }
+      current = src ? aOffset + (actx.currentTime - aStart) : current + Math.min(0.1, (now - last) / 1000);
+      if (current >= END) {
+        if (LOOP) { current = 0; startAudio(0); }
+        else { current = END; playing = false; stopAudio(); }
+      }
       render(current);
       syncUi();
     }
@@ -793,17 +900,23 @@
     window.__END = END;
     window.__FPS = FPS;
     window.__seek = (t) => { render(t); return t; };
+    window.__SOUND = { T, END, events: SOUND };
     window.__ready = true;
     if (RENDER) return;
     playBtn.addEventListener('click', () => setPlaying(!playing));
-    seek.addEventListener('input', () => { current = +seek.value / 1000 * END; render(current); syncUi(); });
+    seek.addEventListener('input', () => seekTo(+seek.value / 1000 * END));
+    soundBtn.addEventListener('click', toggleSound);
+    soundBtn.hidden = !window.GFSoundtrack;
+    syncSound();
     $('#ctlFull').addEventListener('click', toggleFull);
     addEventListener('keydown', (e) => {
       if (e.target === seek && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+      if (e.target instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return; // let the focused button act
       if (e.key === ' ' || e.key === 'k') { e.preventDefault(); setPlaying(!playing); }
-      else if (e.key === 'ArrowRight') { current = Math.min(END, current + 1); render(current); syncUi(); }
-      else if (e.key === 'ArrowLeft') { current = Math.max(0, current - 1); render(current); syncUi(); }
-      else if (e.key === 'r' || e.key === 'R') { current = 0; render(0); setPlaying(true); }
+      else if (e.key === 'ArrowRight') seekTo(current + 1);
+      else if (e.key === 'ArrowLeft') seekTo(current - 1);
+      else if (e.key === 'r' || e.key === 'R') { seekTo(0); setPlaying(true); }
+      else if (e.key === 'm' || e.key === 'M') toggleSound();
       else if (e.key === 'f' || e.key === 'F') toggleFull();
     });
     let idle;

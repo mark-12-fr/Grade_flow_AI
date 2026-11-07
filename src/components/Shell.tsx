@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Icon, type IconName } from './Icon';
 import { PAGE_META, STEP_ORDER } from '@/lib/curriculum';
-import { formatDate, prettyYear } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { allCommentsReviewed, missingGradeCells, readyToGenerate } from '@/lib/grading';
 import { useAppState } from '@/lib/store';
 import type { PageId } from '@/lib/types';
@@ -117,7 +117,6 @@ export function Shell({ children }: { children: ReactNode }) {
             </nav>
           </div>
           <div className="topbar-right">
-            <span className="academic-year">School year <strong>{prettyYear(state.year)}</strong></span>
             <button type="button" className="icon-btn theme-toggle" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} aria-pressed={theme === 'dark'} onClick={toggle}>
               <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
               <span className="sr-only">{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>

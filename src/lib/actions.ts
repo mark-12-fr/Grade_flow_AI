@@ -83,7 +83,11 @@ async function callApi<T>(url: string, file: File, extra: Record<string, string>
   try {
     const ev = JSON.parse(last) as { done?: T; error?: string };
     if (ev.error) return { error: ev.error };
-    if (ev.done !== undefined) { setReadProgress({ percent: 100, label: 'Done' }); return { data: ev.done }; }
+    if (ev.done !== undefined) {
+      setReadProgress({ percent: 100, label: 'Done' });
+      await new Promise((r) => setTimeout(r, 700)); // let the bar glide to 100% before the indicator closes
+      return { data: ev.done };
+    }
   } catch { /* fall through */ }
   return { error: 'The server stopped before the file was read. Try again.' };
 }

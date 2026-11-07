@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useReadProgress } from '@/lib/progress';
 
 const STEPS: Record<'sf9' | 'sf10' | 'sheet', string[]> = {
@@ -11,7 +12,26 @@ const STARTS = [0, 25, 40, 90]; // percent at which each step begins; the percen
 
 /** Shows a file being read: spinner, the real percent, the current stage, a step checklist and the file name. */
 export function Reading({ fileName, kind }: { fileName: string; kind: 'sf9' | 'sf10' | 'sheet' }) {
-  const { percent, label } = useReadProgress();
+  const { percent: real, label } = useReadProgress();
+  // The number glides 1 -> 100 instead of jumping between the server's stages. It never passes the real
+  // progress by more than a small margin, and it only reaches 100 once the real result has arrived.
+  const [percent, setPercent] = useState(0);
+  const target = useRef(real);
+  target.current = real;
+  useEffect(() => {
+    let slow = 0;
+    const id = window.setInterval(() => {
+      setPercent((d) => {
+        const t = target.current;
+        if (t >= 100) return Math.min(100, d + Math.max(2, Math.ceil((100 - d) / 4)));
+        if (d < t) return Math.min(t, d + Math.max(1, Math.ceil((t - d) / 6)));
+        slow += 40;
+        if (d < Math.min(99, t + 12) && slow >= 600) { slow = 0; return d + 1; } // waiting on the AI: keep moving, slowly
+        return d;
+      });
+    }, 40);
+    return () => window.clearInterval(id);
+  }, []);
   const steps = STEPS[kind];
   const stage = percent >= 100 ? steps.length : STARTS.filter((s) => percent >= s).length - 1;
   return (

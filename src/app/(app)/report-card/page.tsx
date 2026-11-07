@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { useUi } from '@/components/Providers';
 import { ReportCard } from '@/components/ReportCard';
 import { downloadReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/grading';
+import { learnerMeta } from '@/lib/sf10Record';
 import { setState, useAppState } from '@/lib/store';
 import type { Student } from '@/lib/types';
 
@@ -22,16 +23,47 @@ export default function ReportCardPage() {
   const context = useMemo(() => reportContext(state, { generatedAt: state.generatedAt || new Date() }), [state]);
 
   const [query, setQuery] = useState('');
-  const [active, setActive] = useState(0);
-  const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return students.map((s, i) => ({ s, i })).filter(({ s }) =>
-      s.name.toLowerCase().includes(q) || String(s.roll).toLowerCase().includes(q) || String(s.lrn || '').toLowerCase().includes(q));
-  }, [query, students]);
+  const [strand, setStrand] = useState('');
+  const [section, setSection] = useState('');
+  const [level, setLevel] = useState('');
+  const [quality, setQuality] = useState<'all' | 'check' | 'complete'>('all');
+  const listRef = useRef<HTMLDivElement>(null);
+  const selectAll = useRef<HTMLInputElement>(null);
 
-  const select = (i: number) => { setState({ previewIndex: i }); setQuery(''); setActive(0); };
-  const move = (offset: number) => { if (total) setState({ previewIndex: Math.min(Math.max(0, index + offset), total - 1) }); };
+  const metas = useMemo(() => new Map(students.map((s) => [s.id, learnerMeta(s, state)])), [students, state]);
+  const missingBy = useMemo(() => {
+    const map = new Map<number, number>();
+    missingGradeCells(students).forEach(({ student: st }) => map.set(st.id, (map.get(st.id) ?? 0) + 1));
+    return map;
+  }, [students]);
+  const options = useMemo(() => {
+    const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
+    const all = [...metas.values()];
+    return { strands: uniq(all.map((m) => m.strand)), sections: uniq(all.filter((m) => !strand || m.strand === strand).map((m) => m.section)), levels: uniq(all.flatMap((m) => m.levels)) };
+  }, [metas, strand]);
+  const needCheck = students.filter((s) => missingBy.has(s.id)).length;
+  const q = query.trim().toLowerCase();
+  const filtered = useMemo(() => students.filter((s) => {
+    const m = metas.get(s.id)!;
+    if (strand && m.strand !== strand) return false;
+    if (section && m.section !== section) return false;
+    if (level && !m.levels.includes(level)) return false;
+    const count = missingBy.get(s.id) ?? 0;
+    if (quality === 'check' && !count) return false;
+    if (quality === 'complete' && count) return false;
+    return !q || s.name.toLowerCase().includes(q) || String(s.lrn || '').toLowerCase().includes(q) || String(s.roll).toLowerCase().includes(q);
+  }), [students, metas, strand, section, level, q, quality, missingBy]);
+  const filtersOn = Boolean(q || strand || section || level || quality !== 'all');
+  const visibleIndex = student ? filtered.findIndex((s) => s.id === student.id) : -1;
+  const show = (st: Student | undefined) => { if (st) setState({ previewIndex: students.findIndex((x) => x.id === st.id) }); };
+  const move = (offset: number) => show(filtered[Math.min(Math.max(0, visibleIndex + offset), filtered.length - 1)]);
+
+  // When the filters hide the learner on screen, show the first match instead.
+  useEffect(() => {
+    if (filtered.length && visibleIndex === -1) show(filtered[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, visibleIndex]);
+  useEffect(() => { listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' }); }, [student?.id]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -51,6 +83,8 @@ export default function ReportCardPage() {
   const [busy, setBusy] = useState(false);
   const picked = new Set(state.selectedReportIds);
   const selectedStudents = students.filter((s) => picked.has(s.id));
+  const pickedShown = filtered.filter((s) => picked.has(s.id)).length;
+  useEffect(() => { if (selectAll.current) selectAll.current.indeterminate = pickedShown > 0 && pickedShown < filtered.length; });
   const toggle = (id: number, on: boolean) => setState((s) => ({ selectedReportIds: on ? [...new Set([...s.selectedReportIds, id])] : s.selectedReportIds.filter((x) => x !== id) }));
 
   async function download(list: Student[], single = false) {
@@ -94,69 +128,85 @@ export default function ReportCardPage() {
         <span className={`pill ${approved === total ? 'pill-green' : 'pill-blue'}`}><Icon name="check-circle" /> <span>{approved} of {total} approved</span></span>
       </div>
 
-      <div className="card student-picker">
-        <label htmlFor="preview-student-search">Find a student</label>
-        <div className="student-search">
-          <div className="search-field">
+      <div className="card sf10-browser">
+        <div className="sf10-filters">
+          <div className="search-field sf10-search">
             <Icon name="search" />
-            <input
-              type="search" id="preview-student-search" placeholder="Search name, LRN or ID number..." autoComplete="off" role="combobox"
-              aria-autocomplete="list" aria-expanded={Boolean(query.trim())} aria-controls="preview-student-results" value={query}
-              onChange={(e) => { setQuery(e.target.value); setActive(0); }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                  if (matches.length) { e.preventDefault(); setActive((a) => Math.min(matches.length - 1, Math.max(0, a + (e.key === 'ArrowDown' ? 1 : -1)))); }
-                } else if (e.key === 'Enter') {
-                  const exact = matches.find(({ s }) => s.name.toLowerCase() === query.trim().toLowerCase() || String(s.roll).toLowerCase() === query.trim().toLowerCase());
-                  const pick = exact ?? matches[active] ?? (matches.length === 1 ? matches[0] : undefined);
-                  if (pick) { e.preventDefault(); select(pick.i); }
-                } else if (e.key === 'Escape' && query) { setQuery(''); }
-              }}
-            />
+            <input type="search" placeholder="Search LRN or name..." aria-label="Search learners by LRN or name" value={query} autoComplete="off"
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && filtered.length) { e.preventDefault(); show(filtered[0]); } }} />
           </div>
-          {query.trim() && (
-            <div className="student-search-results" id="preview-student-results" role="listbox" aria-label="Matching students">
-              {matches.length === 0
-                ? <div className="student-search-empty">No students found. Try a name, LRN or ID number.</div>
-                : matches.map(({ s, i }, n) => (
-                  <button key={s.id} type="button" className="student-search-result" role="option" tabIndex={-1} aria-selected={n === active} onClick={() => select(i)}>
-                    <strong>{s.name}</strong><span>{s.lrn ? `LRN ${s.lrn}` : `ID ${s.roll}`}</span>
-                  </button>
-                ))}
+          {[
+            { label: 'Strand', value: strand, set: (v: string) => { setStrand(v); setSection(''); }, items: options.strands },
+            { label: 'Section', value: section, set: setSection, items: options.sections },
+            { label: 'Grade level', value: level, set: setLevel, items: options.levels }
+          ].map((f) => (
+            <div className="select-wrap select-wrap-sm" key={f.label}>
+              <select aria-label={`Filter by ${f.label.toLowerCase()}`} value={f.value} disabled={!f.items.length} onChange={(e) => f.set(e.target.value)}>
+                <option value="">{f.label === 'Grade level' ? 'All grade levels' : `All ${f.label.toLowerCase()}s`}</option>
+                {f.items.map((it) => <option key={it} value={it}>{f.label === 'Grade level' ? `Grade ${it}` : it}</option>)}
+              </select>
+              <Icon name="chevron-down" className="select-chevron" />
             </div>
-          )}
-        </div>
-        <label htmlFor="preview-student-select">Or select</label>
-        <div className="student-select">
-          <div className="select-wrap">
-            <select id="preview-student-select" value={index} onChange={(e) => select(Number(e.target.value))}>
-              {students.map((s, i) => <option key={s.id} value={i}>{s.lrn || s.name}</option>)}
+          ))}
+          <div className="select-wrap select-wrap-sm">
+            <select aria-label="Filter by grade check" value={quality} onChange={(e) => setQuality(e.target.value as 'all' | 'check' | 'complete')}>
+              <option value="all">All records</option>
+              <option value="check">Needs checking ({needCheck})</option>
+              <option value="complete">Complete ({total - needCheck})</option>
             </select>
             <Icon name="chevron-down" className="select-chevron" />
           </div>
+          {filtersOn && <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setQuery(''); setStrand(''); setSection(''); setLevel(''); setQuality('all'); }}>Clear</button>}
         </div>
-        <div className="student-pager">
-          <button type="button" className="icon-btn" aria-label="Previous student" disabled={index <= 0} onClick={() => move(-1)}><Icon name="chevron-left" /></button>
-          <span>{total ? `${index + 1} of ${total}` : '0 of 0'}</span>
-          <button type="button" className="icon-btn" aria-label="Next student" disabled={index >= total - 1} onClick={() => move(1)}><Icon name="chevron-right" /></button>
-        </div>
-        <span className="picker-meta"><Icon name="file-text" /> A4 landscape · 1 page per student</span>
-      </div>
 
-      <div className="sf10-actions" style={{ marginBottom: 14 }}>
-        <label className="sf10-check">
-          <input type="checkbox" disabled={!student} checked={Boolean(student && picked.has(student.id))} onChange={(e) => student && toggle(student.id, e.target.checked)} />
-          <span>Select this learner</span>
-        </label>
-        <button type="button" className="btn btn-secondary btn-sm" disabled={!student || busy} onClick={() => student && void download([student], true)}>
-          <Icon name="download" /> This learner (PDF)
-        </button>
-        <button type="button" className="btn btn-secondary btn-sm" disabled={!selectedStudents.length || busy} onClick={() => void download(selectedStudents)}>
-          <Icon name="download" /> Selected ({selectedStudents.length})
-        </button>
-        <button type="button" className="btn btn-primary btn-sm" disabled={!total || busy} onClick={() => void download(students)}>
-          <Icon name="download" /> Everyone ({total})
-        </button>
+        <div className="sf10-list-head">
+          <label className="sf10-check">
+            <input ref={selectAll} type="checkbox" disabled={!filtered.length} checked={filtered.length > 0 && pickedShown === filtered.length}
+              aria-label={`Select all ${filtered.length} shown learners`} onChange={(e) => filtered.forEach((s) => toggle(s.id, e.target.checked))} />
+            <span>{filtered.length} shown · {selectedStudents.length} selected</span>
+          </label>
+          <div className="student-pager">
+            <button type="button" className="icon-btn" aria-label="Previous learner" disabled={visibleIndex <= 0} onClick={() => move(-1)}><Icon name="chevron-left" /></button>
+            <span>{filtered.length ? `${visibleIndex + 1} of ${filtered.length}` : '0 of 0'}</span>
+            <button type="button" className="icon-btn" aria-label="Next learner" disabled={visibleIndex < 0 || visibleIndex >= filtered.length - 1} onClick={() => move(1)}><Icon name="chevron-right" /></button>
+          </div>
+        </div>
+
+        <div className="sf10-list" ref={listRef} role="listbox" aria-label="Learners">
+          {filtered.length === 0
+            ? <div className="sf10-list-empty">{total ? 'No learners match. Try another LRN, name or filter.' : 'Upload an SF9 file first.'}</div>
+            : filtered.map((s) => {
+              const m = metas.get(s.id)!;
+              const active = student?.id === s.id;
+              const count = missingBy.get(s.id) ?? 0;
+              return (
+                <div key={s.id} className={`sf10-row${active ? ' active' : ''}${picked.has(s.id) ? ' picked' : ''}`} role="option" aria-selected={active} aria-current={active ? 'true' : undefined}>
+                  <input type="checkbox" checked={picked.has(s.id)} aria-label={`Select ${s.name}`} onChange={(e) => toggle(s.id, e.target.checked)} />
+                  <button type="button" className="sf10-row-main" onClick={() => show(s)}>
+                    <strong>{s.lrn || s.roll || '—'}</strong>
+                    <span>{s.name}</span>
+                    <em>{[m.strand, m.section].filter(Boolean).join(' · ')}</em>
+                  </button>
+                  <span className={`sf10-quality ${count ? 'check' : 'ok'}`} title={count ? `${count} grade${count === 1 ? '' : 's'} missing` : 'Complete'}>
+                    <i aria-hidden="true" />{count ? `${count} to check` : 'Complete'}
+                  </span>
+                </div>
+              );
+            })}
+        </div>
+
+        <div className="sf10-actions">
+          <button type="button" className="btn btn-secondary btn-sm" disabled={!student || busy} onClick={() => student && void download([student], true)}>
+            <Icon name="download" /> This learner (PDF)
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={!selectedStudents.length || busy} onClick={() => void download(selectedStudents)}>
+            <Icon name="download" /> Selected ({selectedStudents.length})
+          </button>
+          <button type="button" className="btn btn-primary btn-sm" disabled={!filtered.length || busy} onClick={() => void download(filtered)}>
+            <Icon name="download" /> {filtersOn ? `All shown (${filtered.length})` : `Everyone (${filtered.length})`}
+          </button>
+        </div>
       </div>
 
       <div className="preview-canvas">

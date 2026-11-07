@@ -84,7 +84,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <path d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
             <path d="M34 32h13" fill="none" stroke="#f5a524" strokeWidth="6" strokeLinecap="round" />
           </svg>
-          <span className="brand-name">Grade<span>Flow</span></span>
+          <span className="brand-name">Grade<span>Flow</span><b>AI</b></span>
         </Link>
         <nav className="nav-links">
           {NAV.map((item) => (

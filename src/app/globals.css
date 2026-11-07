@@ -199,6 +199,8 @@ img { max-width: 100%; display: block; }
   color: var(--navy);
 }
 .brand-name span { font-weight: 400; letter-spacing: -0.02em; }
+.brand-name b { margin-left: 4px; color: #c27803; font-weight: 800; letter-spacing: 0; }
+[data-theme="dark"] .brand-name b { color: #f5a524; }
 [data-theme="dark"] .brand-mark { color: #243b6b; }
 
 .nav-links { display: flex; flex-direction: column; gap: 2px; }

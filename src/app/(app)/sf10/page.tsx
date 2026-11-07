@@ -90,10 +90,7 @@ export default function Sf10Page() {
   return (
     <section className="page active" aria-labelledby="sf10-page-title">
       <div className="page-heading">
-        <div>
-          <h1 id="sf10-page-title">SF10 permanent record</h1>
-          <p>Read from the uploaded SF10 (or built from the class grades). Search by LRN or name, filter, and download one, several or a whole section.</p>
-        </div>
+        <div><h1 id="sf10-page-title">SF10 permanent record</h1></div>
         <span className="pill pill-blue">{source.length} learner{source.length === 1 ? '' : 's'}{needCheck ? ` · ${needCheck} to check` : ' · all complete'}</span>
       </div>
 

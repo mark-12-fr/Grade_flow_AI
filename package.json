@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "reel": "node scripts/render-reel.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",

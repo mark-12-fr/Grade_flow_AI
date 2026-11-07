@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GradeFlow AI · Teacher Reel</title>
+<link rel="icon" href="../assets/favicon.svg">
+<!--
+  GradeFlow AI promo reel, about 27 seconds, 1920x1080.
+
+  Everything is driven by one clock (t, in seconds) through render(t), so the reel is
+  seekable and renders frame-accurately to video (scripts/render-reel.mjs).
+
+  Query options:  ?url=gradeflow.example.com  shows your address in the closing pill
+                  ?once                       plays once instead of looping
+                  ?render                     1920x1080, no controls (used by the renderer)
+  Keys:  Space play/pause · ← → seek 1 s · R restart · F fullscreen
+-->
+<style>
+  :root {
+    --navy: #14213d;
+    --amber: #f5a524;
+    --blue: #3b82f6;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --blue-400: #60a5fa;
+    --blue-300: #93c5fd;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --dark: #070d1a;
+    --green: #059669;
+    --green-l: #34d399;
+    --sans: "Inter Display", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  body { font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+
+  #stage {
+    position: absolute; left: 50%; top: 50%;
+    width: 1920px; height: 1080px; overflow: hidden;
+    background: var(--dark);
+    transform-origin: 50% 50%;
+  }
+  .render #stage { left: 0; top: 0; transform: none !important; }
+
+  .scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; overflow: hidden; }
+  .beat { position: absolute; inset: 0; }
+  .w { display: inline-block; will-change: transform, opacity, filter; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: absolute; inset: 0; z-index: 50; pointer-events: none; font-family: var(--mono); font-size: 15px; letter-spacing: .28em; text-transform: uppercase; }
+  #hud > div { position: absolute; }
+  .hud-tl { left: 54px; top: 46px; display: flex; align-items: center; gap: 14px; }
+  .hud-tl .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .hud-tl .sl { opacity: .5; }
+  .hud-tr { right: 54px; top: 46px; }
+  .hud-bl { left: 54px; bottom: 46px; letter-spacing: .14em; }
+  .hud-br { right: 54px; bottom: 52px; width: 230px; height: 2px; background: currentColor; opacity: .25; }
+  #hudFillWrap { position: absolute; right: 54px; bottom: 52px; width: 230px; height: 2px; }
+  #hudFill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: currentColor; }
+
+  /* ---------- shared type ---------- */
+  .eyebrow { font-family: var(--mono); font-size: 17px; letter-spacing: .3em; text-transform: uppercase; font-weight: 500; }
+  .h-xl { font-size: 104px; line-height: .98; font-weight: 800; letter-spacing: -.045em; }
+  .h-lg { font-size: 84px; line-height: 1; font-weight: 800; letter-spacing: -.04em; }
+  .sub { font-size: 30px; line-height: 1.45; font-weight: 400; letter-spacing: -.01em; }
+  .c-blue-l { color: var(--blue-400); }
+  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+
+  /* ---------- 1 · identity ---------- */
+  #s1 { background: radial-gradient(ellipse at 50% 50%, #0c1730 0%, #060b16 55%, #03060d 100%); }
+  #s1glow { position: absolute; left: 50%; top: 50%; width: 1100px; height: 1100px; margin: -550px 0 0 -550px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(37, 99, 235, .55) 0%, rgba(37, 99, 235, .18) 32%, rgba(37, 99, 235, 0) 66%); }
+  #s1mark { width: 270px; height: 270px; overflow: visible; filter: drop-shadow(0 0 14px rgba(96, 165, 250, .95)) drop-shadow(0 0 46px rgba(37, 99, 235, .8)); }
+  #s1word { margin-top: 58px; font-family: var(--mono); font-size: 22px; letter-spacing: .62em; padding-left: .62em; color: #cfe0ff; }
+  #s1word b { color: var(--amber); font-weight: 600; }
+  #s1sweep { position: absolute; top: 0; bottom: 0; width: 360px; left: -400px;
+    background: linear-gradient(90deg, rgba(96, 165, 250, 0), rgba(96, 165, 250, .10), rgba(96, 165, 250, 0)); }
+
+  /* ---------- 2 · promise ---------- */
+  #s2 { background: linear-gradient(128deg, #1e40af 0%, #2563eb 45%, #3b82f6 100%); }
+  #s2 .eyebrow { color: rgba(255, 255, 255, .7); font-size: 15px; margin-bottom: 44px; }
+  #s2h { font-size: 168px; line-height: 1.02; font-weight: 800; letter-spacing: -.05em; }
+  #s2h .ln { display: block; white-space: nowrap; }
+  .u { position: relative; display: inline-block; }
+  .u svg { position: absolute; left: -2%; width: 104%; bottom: -26px; height: 34px; overflow: visible; }
+  #s2copy { position: absolute; left: 0; right: 0; top: 140px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #s2row { position: absolute; left: 0; bottom: -78px; white-space: nowrap; font-size: 330px; font-weight: 800; letter-spacing: -.04em;
+    color: rgba(255, 255, 255, .09); display: flex; gap: 150px; }
+  #s2row span { position: relative; display: inline-block; }
+  #s2hit svg { position: absolute; left: -60px; right: -60px; top: 30px; bottom: 50px; width: calc(100% + 120px); height: calc(100% - 80px); overflow: visible; }
+
+  /* ---------- 3 · how to use ---------- */
+  #s3 { background: radial-gradient(ellipse at 78% 40%, #dbe7ff 0%, #eef3ff 30%, #f8fafc 62%); color: var(--ink); }
+  .s3-copy { position: absolute; left: 150px; top: 330px; width: 740px; }
+  .s3-copy .eyebrow { color: var(--blue-600); margin-bottom: 30px; }
+  .s3-copy .h-xl { font-size: 92px; color: var(--ink); }
+  .s3-copy .sub { color: var(--muted); margin-top: 34px; font-size: 28px; }
+  #s3dev { position: absolute; left: 920px; top: 170px; width: 900px; height: 720px; }
+  .bob, .tilt { width: 100%; height: 100%; }
+  .tilt { transform: perspective(2200px) rotateY(-13deg) rotateX(5deg); transform-origin: 30% 50%; }
+  .win { width: 100%; height: 100%; border-radius: 22px; background: #fff; overflow: hidden; position: relative;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, .06), 0 30px 80px rgba(30, 64, 175, .22), 0 0 0 1px rgba(15, 23, 42, .06); }
+  .win-bar { height: 52px; display: flex; align-items: center; gap: 9px; padding: 0 20px; background: #f1f5f9; border-bottom: 1px solid var(--line); }
+  .win-bar > i { width: 13px; height: 13px; border-radius: 50%; background: #cbd5e1; }
+  .win-bar .url { margin-left: 22px; flex: 1; height: 30px; border-radius: 8px; background: #fff; border: 1px solid var(--line);
+    font-size: 15px; color: var(--muted); display: flex; align-items: center; padding: 0 14px; letter-spacing: -.01em; }
+  .app-head { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid var(--line); }
+  .brand-mini { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; letter-spacing: -.04em; color: var(--navy); }
+  .brand-mini svg { width: 32px; height: 32px; }
+  .brand-mini em { font-style: normal; font-weight: 400; }
+  .brand-mini b { margin-left: 4px; color: #c27803; letter-spacing: 0; }
+  .stepper { display: flex; gap: 8px; }
+  .stepper span { font-size: 14px; font-weight: 600; padding: 7px 14px; border-radius: 999px; color: var(--muted); background: #f1f5f9; }
+  .stepper span.on { background: var(--blue-600); color: #fff; }
+  .pane { position: absolute; left: 0; right: 0; top: 122px; bottom: 0; padding: 28px 34px; }
+  .pane-title { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  .pane-title small { display: block; font-size: 15px; font-weight: 500; color: var(--muted); margin-top: 4px; letter-spacing: 0; }
+  .drop { position: absolute; left: 34px; right: 34px; top: 112px; bottom: 34px; border-radius: 18px; border: 2px dashed #cbd5e1; background: #f8fafc;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted); font-size: 19px; }
+  .drop .ico { width: 64px; height: 64px; border-radius: 16px; background: #e0ebff; display: grid; place-items: center; color: var(--blue-600); margin-bottom: 6px; }
+  .drop strong { color: var(--ink); font-size: 23px; letter-spacing: -.01em; }
+  #s3file { position: absolute; left: 50%; top: 50%; width: 380px; margin-left: -190px; margin-top: -42px; height: 84px; border-radius: 14px; background: #fff;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, .16), 0 0 0 1px rgba(15, 23, 42, .06); display: flex; align-items: center; gap: 16px; padding: 0 18px; z-index: 3; }
+  .xls { width: 46px; height: 52px; border-radius: 8px; background: #107c41; color: #fff; font-size: 13px; font-weight: 800; display: grid; place-items: center; letter-spacing: .02em; }
+  #s3file b { display: block; font-size: 18px; color: var(--ink); letter-spacing: -.01em; }
+  #s3file small { font-size: 14px; color: var(--muted); }
+  #s3read { position: absolute; left: 34px; right: 34px; top: 112px; bottom: 34px; border-radius: 18px; border: 1px solid var(--line); background: #fff; padding: 34px 40px; }
+  .rd-top { display: flex; align-items: center; gap: 18px; }
+  .spin-slot { position: relative; width: 34px; height: 34px; flex: none; }
+  #s3done { position: absolute; inset: 0; border-radius: 50%; background: var(--green); display: grid; place-items: center; }
+  #s3spin { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #dbeafe; border-top-color: var(--blue-600); }
+  .rd-top strong { font-size: 22px; letter-spacing: -.01em; flex: 1; }
+  #s3pct { font-size: 40px; font-weight: 800; letter-spacing: -.03em; color: var(--blue-600); font-variant-numeric: tabular-nums; }
+  .rd-bar { margin-top: 22px; height: 10px; border-radius: 99px; background: #eef2f7; overflow: hidden; }
+  #s3barFill { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .rd-steps { list-style: none; margin-top: 30px; display: grid; gap: 16px; }
+  .rd-steps li { display: flex; align-items: center; gap: 14px; font-size: 19px; color: var(--ink); }
+  .rd-steps .ck { position: relative; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #cbd5e1; flex: none; }
+  .rd-steps .ck i { position: absolute; inset: -2px; border-radius: 50%; background: var(--green); display: grid; place-items: center; }
+  .rd-file { position: absolute; left: 40px; bottom: 28px; font-size: 15px; color: var(--muted); }
+  #s3ok { position: absolute; right: 40px; bottom: 22px; display: flex; align-items: center; gap: 10px; padding: 10px 18px 10px 12px; border-radius: 999px;
+    background: #ecfdf5; color: #047857; font-weight: 700; font-size: 18px; }
+  #s3ok i { width: 28px; height: 28px; border-radius: 50%; background: var(--green); display: grid; place-items: center; }
+
+  .search { height: 50px; border-radius: 12px; border: 1.5px solid var(--blue-600); box-shadow: 0 0 0 4px rgba(37, 99, 235, .14);
+    display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 19px; color: var(--ink); }
+  .search .ph { color: #94a3b8; }
+  #s3caret { width: 2px; height: 24px; background: var(--blue-600); }
+  .cols { display: grid; grid-template-columns: 300px 1fr; gap: 22px; margin-top: 20px; }
+  .list { display: grid; gap: 8px; align-content: start; position: relative; }
+  .lr { height: 60px; border-radius: 12px; display: flex; align-items: center; gap: 12px; padding: 0 12px; position: relative; z-index: 1; }
+  .av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; flex: none; }
+  .lr b { display: block; font-size: 15px; letter-spacing: -.01em; }
+  .lr small { font-size: 12.5px; color: var(--muted); font-family: var(--mono); letter-spacing: .02em; }
+  #s3sel { position: absolute; left: 0; right: 0; top: 0; height: 60px; border-radius: 12px; background: #eff6ff; box-shadow: inset 0 0 0 1.5px #93c5fd; }
+  .sf9 { border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; background: #fffdf8; font-size: 13px; color: #1f2937; }
+  .sf9 .gov { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+  .sf9 h4 { text-align: center; font-size: 15px; font-weight: 800; letter-spacing: .04em; margin: 4px 0 2px; }
+  .sf9 .who { text-align: center; font-size: 11.5px; color: #334155; margin-bottom: 10px; font-family: var(--mono); }
+  .sf9 table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .sf9 th { text-align: left; font-weight: 700; color: #475569; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 6px 4px; border-bottom: 1.5px solid #cbd5e1; }
+  .sf9 td { padding: 6px 4px; border-bottom: 1px solid #eef2f7; }
+  .sf9 td.n, .sf9 th.n { text-align: center; width: 46px; font-variant-numeric: tabular-nums; }
+  .sf9 tr.avg td { font-weight: 800; border-bottom: 0; padding-top: 9px; }
+  .btns { position: absolute; left: 34px; right: 34px; bottom: 26px; display: flex; gap: 12px; }
+  .btn { height: 48px; padding: 0 20px; border-radius: 11px; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 9px; border: 1.5px solid var(--line); color: var(--ink); background: #fff; }
+  .btn.pri { background: var(--blue-600); border-color: var(--blue-600); color: #fff; position: relative; overflow: hidden; }
+  #s3ripple { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; border-radius: 50%; background: rgba(255, 255, 255, .45); }
+  #s3toast { position: absolute; right: 34px; bottom: 22px; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 14px 20px 14px 14px; border-radius: 14px;
+    background: var(--ink); color: #fff; font-size: 16px; font-weight: 600; box-shadow: 0 18px 40px rgba(15, 23, 42, .3); }
+  #s3toast i { width: 30px; height: 30px; border-radius: 9px; background: #dc2626; display: grid; place-items: center; font-size: 10px; font-weight: 800; font-style: normal; }
+  #s3toast small { display: block; font-size: 13px; color: #94a3b8; font-weight: 500; }
+
+  /* ---------- 4 · why it matters ---------- */
+  #s4 { background: radial-gradient(ellipse at 30% 55%, #0f1d3d 0%, #070d1a 58%, #04070f 100%); }
+  .s4-copy { position: absolute; left: 150px; top: 380px; }
+  .s4-copy .eyebrow { color: var(--blue-400); margin-bottom: 30px; font-size: 16px; }
+  .s4-copy .h-xl { font-size: 116px; }
+  .s4-copy .h-xl.c-blue-l { font-size: 74px; margin-top: 18px; letter-spacing: -.035em; }
+  #s4doc { position: absolute; left: 1110px; top: 150px; width: 560px; height: 760px; }
+  #s4doc .tilt { transform: perspective(2400px) rotateY(-9deg) rotateZ(2.5deg); transform-origin: 50% 50%; position: relative; }
+  .doc { position: absolute; inset: 0; border-radius: 10px; background: #f6f5f1; color: var(--ink); padding: 46px 44px; overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .06); }
+  .doc-head { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
+  .doc-head svg { width: 50px; height: 50px; }
+  .doc-head b { display: block; font-size: 22px; letter-spacing: .02em; }
+  .doc-head small { font-size: 15px; color: var(--muted); }
+  .sk { height: 13px; border-radius: 7px; background: #e3e1da; margin-bottom: 15px; }
+  .doc-box { border: 2px solid #b9cdf3; border-radius: 12px; padding: 18px 22px; margin: 30px 0; background: #fff; }
+  .doc-box small { display: block; font-size: 15px; color: var(--muted); margin-bottom: 6px; }
+  .doc-box strong { font-size: 38px; font-weight: 800; letter-spacing: -.03em; }
+  .doc-foot { position: absolute; left: 44px; bottom: 40px; font-size: 15px; color: var(--muted); }
+  #s4scan { position: absolute; left: 0; right: 0; top: 0; height: 120px;
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0), rgba(59, 130, 246, .16) 80%, rgba(59, 130, 246, .55) 100%); }
+  .frame { position: absolute; inset: -34px; z-index: 2; }
+  .frame i { position: absolute; width: 54px; height: 54px; border: 3px solid rgba(255, 255, 255, .85); }
+  .frame .tl { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 8px; }
+  .frame .tr { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 8px; }
+  .frame .bl { left: 0; bottom: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 8px; }
+  .frame .br { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 8px; }
+  .chip { position: absolute; z-index: 3; height: 66px; padding: 0 28px; border-radius: 999px; display: flex; align-items: center; gap: 12px;
+    font-size: 24px; font-weight: 600; box-shadow: 0 18px 40px rgba(0, 0, 0, .35); white-space: nowrap; }
+  .chip b { font-weight: 800; }
+  .chip.blue { background: var(--blue-600); color: #fff; }
+  .chip.white { background: #fff; color: var(--ink); }
+  #s4c1 { left: 360px; top: 262px; }
+  #s4c2 { left: 390px; top: 418px; }
+
+  #s4b .head { position: absolute; left: 0; right: 0; top: 150px; text-align: center; }
+  #s4b .mono { margin-top: 26px; text-transform: uppercase; font-family: var(--mono); font-size: 16px; letter-spacing: .3em; color: rgba(255, 255, 255, .55); }
+  .rows { position: absolute; left: 50%; top: 395px; width: 820px; margin-left: -410px; display: grid; gap: 22px; }
+  .row { position: relative; height: 150px; border-radius: 26px; background: #141b2a; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+    display: flex; align-items: center; gap: 30px; padding: 0 34px; }
+  .tile { width: 92px; height: 92px; border-radius: 22px; display: grid; place-items: center; flex: none; }
+  .tile.amber { background: #3a2a10; color: #f5a524; }
+  .tile.violet { background: #2a2147; color: #a78bfa; }
+  .tile.green { background: #0f2e25; color: #34d399; }
+  .rt { flex: 1; position: relative; height: 80px; }
+  .rt b { display: block; font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
+  .rt span { position: absolute; left: 0; top: 46px; font-size: 25px; font-weight: 500; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+  .rt span::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+  .rt .wait { color: #f5b84a; }
+  .rt .ok { color: var(--green-l); }
+  .row .end { position: relative; width: 48px; height: 48px; flex: none; }
+  .row .end .dash { position: absolute; left: 6px; right: 6px; top: 22px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .22); }
+  .row .end .yes { position: absolute; inset: 0; border-radius: 50%; background: rgba(52, 211, 153, .16); color: var(--green-l); display: grid; place-items: center; }
+
+  /* ---------- 5 · no guessing ---------- */
+  #s5 { background: radial-gradient(ellipse at 50% 44%, #0d1a36 0%, #050912 52%, #020409 100%); }
+  #s5 .h1 { font-size: 150px; line-height: 1.02; font-weight: 800; letter-spacing: -.05em; }
+  #s5 .h1.c-blue-l { color: #5b9bff; }
+  #s5 .sub { margin-top: 44px; color: rgba(255, 255, 255, .72); font-size: 36px; }
+  .pills { display: flex; gap: 18px; margin-top: 56px; }
+  .pill { height: 62px; padding: 0 26px; border-radius: 999px; background: #161d2b; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+    display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 500; color: rgba(255, 255, 255, .9); }
+  .pill svg { width: 22px; height: 22px; }
+
+  /* ---------- 6 · outro ---------- */
+  #s6 { background: radial-gradient(ellipse at 50% 42%, #3b82f6 0%, #2563eb 45%, #1d4ed8 100%); }
+  #s6mark { width: 200px; height: 200px; overflow: visible; filter: drop-shadow(0 10px 30px rgba(15, 23, 42, .25)); }
+  #s6word { margin-top: 30px; font-size: 156px; font-weight: 800; letter-spacing: -.05em; line-height: 1; white-space: nowrap; }
+  #s6word span { font-weight: 400; letter-spacing: -.03em; }
+  #s6word b { margin-left: 26px; color: var(--amber); font-weight: 800; letter-spacing: -.02em; }
+  #s6tag { margin-top: 34px; font-size: 38px; font-weight: 500; color: rgba(255, 255, 255, .92); letter-spacing: -.01em; }
+  #s6pill { margin-top: 46px; height: 64px; padding: 0 28px; border-radius: 999px; background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
+    display: flex; align-items: center; gap: 14px; font-size: 24px; font-weight: 500; }
+
+  /* ---------- player controls (not in render mode) ---------- */
+  #ctl { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 14px;
+    padding: 10px 16px; border-radius: 14px; background: rgba(15, 23, 42, .78); backdrop-filter: blur(10px); color: #fff;
+    font: 500 13px/1 var(--mono); transition: opacity .3s; box-shadow: 0 10px 30px rgba(0, 0, 0, .4); }
+  #ctl.idle { opacity: 0; }
+  #ctl button { width: 34px; height: 34px; border-radius: 9px; border: 0; background: rgba(255, 255, 255, .12); color: #fff; cursor: pointer; display: grid; place-items: center; }
+  #ctl button:hover { background: rgba(255, 255, 255, .22); }
+  #ctl button:focus-visible, #ctl input:focus-visible { outline: 2px solid var(--blue-400); outline-offset: 2px; }
+  #ctl input[type=range] { width: min(46vw, 520px); accent-color: var(--amber); }
+  #ctlTime { min-width: 118px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+  .render #ctl { display: none; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="gf" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="16" fill="#14213d"/>
+      <path d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+      <path d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="6" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div id="stage" role="img" aria-label="GradeFlow AI promo: upload the class sheet you already have, the AI reads it, every grade is checked against your file, and SF9 report cards and SF10 records are ready to download.">
+
+  <!-- 1 · IDENTITY -->
+  <section class="scene" id="s1">
+    <div id="s1glow"></div>
+    <div id="s1sweep"></div>
+    <div class="center">
+      <div id="s1markWrap">
+        <svg id="s1mark" viewBox="0 0 64 64">
+          <path id="s1arc" d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#bcd5ff" stroke-width="5" stroke-linecap="round"/>
+          <path id="s1bar" d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="s1word"><span class="w">G</span><span class="w">R</span><span class="w">A</span><span class="w">D</span><span class="w">E</span><span class="w">F</span><span class="w">L</span><span class="w">O</span><span class="w">W</span><span class="w">&nbsp;</span><b class="w">A</b><b class="w">I</b></div>
+    </div>
+  </section>
+
+  <!-- 2 · PROMISE -->
+  <section class="scene" id="s2">
+    <div id="s2row"><span>78</span><span>83</span><span>86</span><span>88</span><span id="s2hit">90<svg viewBox="0 0 450 255" preserveAspectRatio="none"><path id="s2circle" d="M358 54 C 281 15, 108 19, 52 88 C 9 145, 79 223, 232 228 C 371 231, 448 167, 419 100 C 396 53, 326 34, 221 37" fill="none" stroke="#fdba74" stroke-width="7" stroke-linecap="round"/></svg></span><span>92</span><span>95</span><span>97</span><span>99</span></div>
+    <div id="s2copy">
+      <div class="eyebrow" id="s2eye">GradeFlow AI · Senior High School</div>
+      <h1 id="s2h">
+        <span class="ln"><span class="w">Report</span> <span class="w">cards,</span></span>
+        <span class="ln"><span class="w">done</span> <span class="w">in</span> <span class="w u">minutes.<svg viewBox="0 0 640 34" preserveAspectRatio="none"><path id="s2under" d="M6 22 C 176 10, 400 30, 634 12" fill="none" stroke="#fdba74" stroke-width="7" stroke-linecap="round"/></svg></span></span>
+      </h1>
+    </div>
+  </section>
+
+  <!-- 3 · HOW TO USE -->
+  <section class="scene" id="s3">
+    <div class="s3-copy">
+      <div class="beat" id="s3a">
+        <div class="eyebrow w">Step 1 · Upload</div><br>
+        <h2 class="h-xl"><span class="w">Upload the sheet</span><br><span class="w">you already have.</span></h2>
+        <p class="sub w">Excel or CSV, as it is. The AI maps the columns,<br>and every grade is copied straight from your file.</p>
+      </div>
+      <div class="beat" id="s3b">
+        <div class="eyebrow w">Step 2 · Preview</div><br>
+        <h2 class="h-xl"><span class="w">Pick a learner.</span><br><span class="w">See the SF9.</span></h2>
+        <p class="sub w">Search by LRN or name. Download one learner,<br>the ones you pick, or the whole class as PDF.</p>
+      </div>
+    </div>
+
+    <div id="s3dev"><div class="bob" id="s3bob"><div class="tilt"><div class="win">
+      <div class="win-bar"><i></i><i></i><i></i><div class="url" id="s3url">gradeflow-ai · Upload Class Details</div></div>
+      <div class="app-head">
+        <div class="brand-mini"><svg><use href="#gf"/></svg><span>Grade<em>Flow</em><b>AI</b></span></div>
+        <div class="stepper"><span id="st1" class="on">Upload</span><span id="st2">SF9</span><span>SF10</span></div>
+      </div>
+
+      <div class="pane" id="p1">
+        <div class="pane-title">Upload Class Details<small>Step 1 of 3 · SF9 Learner's Report Card</small></div>
+        <div class="drop" id="s3drop">
+          <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></div>
+          <strong>Drop your class sheet here</strong>
+          <span>XLSX, XLS or CSV · your original file won't be changed</span>
+        </div>
+        <div id="s3read">
+          <div class="rd-top"><div class="spin-slot"><div id="s3spin"></div><i id="s3done"><svg width="18" height="18" color="#fff"><use href="#i-check"/></svg></i></div><strong id="s3label">Uploading your file</strong><span id="s3pct">0%</span></div>
+          <div class="rd-bar"><div id="s3barFill"></div></div>
+          <ol class="rd-steps">
+            <li><span class="ck"><i id="ck1"><svg width="16" height="16" color="#fff"><use href="#i-check"/></svg></i></span>Uploading your file</li>
+            <li><span class="ck"><i id="ck2"><svg width="16" height="16" color="#fff"><use href="#i-check"/></svg></i></span>Reading the sheet</li>
+            <li><span class="ck"><i id="ck3"><svg width="16" height="16" color="#fff"><use href="#i-check"/></svg></i></span>Finding the learners and subjects</li>
+            <li><span class="ck"><i id="ck4"><svg width="16" height="16" color="#fff"><use href="#i-check"/></svg></i></span>Copying the grades into the report cards</li>
+          </ol>
+          <div class="rd-file">G11-HUMSS-A.xlsx</div>
+          <div id="s3ok"><i><svg width="17" height="17" color="#fff"><use href="#i-check"/></svg></i>42 learners ready</div>
+        </div>
+        <div id="s3file"><div class="xls">XLSX</div><div><b>G11-HUMSS-A.xlsx</b><small>48 KB · 1st semester</small></div></div>
+      </div>
+
+      <div class="pane" id="p2">
+        <div class="search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span id="s3typed"></span><span id="s3caret"></span><span class="ph" id="s3ph">Search by LRN or name</span>
+        </div>
+        <div class="cols">
+          <div class="list">
+            <div id="s3sel"></div>
+            <div class="lr" id="lr1"><span class="av" style="background:#e0ebff;color:#1d4ed8">BA</span><div><b>AQUINO, BEA</b><small>136512090041</small></div></div>
+            <div class="lr" id="lr2"><span class="av" style="background:#fce7f3;color:#be185d">CB</span><div><b>BAUTISTA, CARLO</b><small>136512090058</small></div></div>
+            <div class="lr" id="lr3"><span class="av" style="background:#dcfce7;color:#15803d">MD</span><div><b>DELA ROSA, MIKA</b><small>136512090063</small></div></div>
+            <div class="lr" id="lr4"><span class="av" style="background:#fef3c7;color:#b45309">JF</span><div><b>FERRER, JOMAR</b><small>136512090077</small></div></div>
+            <div class="lr" id="lr5"><span class="av" style="background:#ede9fe;color:#6d28d9">LG</span><div><b>GARCIA, LIANNE</b><small>136512090082</small></div></div>
+          </div>
+          <div class="sf9" id="s3card">
+            <div class="gov">Republic of the Philippines · Department of Education</div>
+            <h4>LEARNER'S PROGRESS REPORT CARD</h4>
+            <div class="who">DELA ROSA, MIKA · LRN 136512090063 · G11 HUMSS</div>
+            <table>
+              <thead><tr><th>Subject</th><th class="n">Q1</th><th class="n">Q2</th><th class="n">Final</th></tr></thead>
+              <tbody>
+                <tr><td>Oral Communication</td><td class="n g" data-v="91"></td><td class="n g" data-v="93"></td><td class="n g" data-v="92"></td></tr>
+                <tr><td>Komunikasyon at Pananaliksik</td><td class="n g" data-v="89"></td><td class="n g" data-v="90"></td><td class="n g" data-v="90"></td></tr>
+                <tr><td>General Mathematics</td><td class="n g" data-v="87"></td><td class="n g" data-v="89"></td><td class="n g" data-v="88"></td></tr>
+                <tr><td>Earth and Life Science</td><td class="n g" data-v="90"></td><td class="n g" data-v="92"></td><td class="n g" data-v="91"></td></tr>
+                <tr><td>Personal Development</td><td class="n g" data-v="94"></td><td class="n g" data-v="95"></td><td class="n g" data-v="95"></td></tr>
+                <tr class="avg"><td>General Average</td><td class="n"></td><td class="n"></td><td class="n g" data-v="91"></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="btns">
+          <div class="btn pri" id="s3btn"><span id="s3ripple"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>This learner</div>
+          <div class="btn">Selected</div>
+          <div class="btn">Everyone</div>
+        </div>
+        <div id="s3toast"><i>PDF</i><div>SF9_DelaRosa_Mika.pdf<small>Downloaded · 1 page</small></div></div>
+      </div>
+    </div></div></div></div>
+  </section>
+
+  <!-- 4 · WHY IT MATTERS -->
+  <section class="scene" id="s4">
+    <div class="beat" id="s4a">
+      <div class="s4-copy">
+        <div class="eyebrow w">Instant check</div><br>
+        <h2 class="h-xl w">Upload it.</h2><br>
+        <h2 class="h-xl c-blue-l w">The cards are ready.</h2>
+      </div>
+      <div id="s4doc"><div class="tilt">
+        <div class="frame" id="s4frame"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+        <div class="doc">
+          <div class="doc-head"><svg><use href="#gf"/></svg><div><b>GRADEFLOW AI</b><small>SF9 · Learner's Report Card</small></div></div>
+          <div class="sk" style="width:72%"></div><div class="sk" style="width:54%"></div>
+          <div class="doc-box"><small>Class imported · Grade 11 HUMSS A</small><strong id="s4count">0 learners</strong></div>
+          <div class="doc-box"><small>Generated</small><strong>Nov 7, 2026 · 8:30</strong></div>
+          <div class="sk" style="width:82%"></div><div class="sk" style="width:64%"></div><div class="sk" style="width:46%"></div>
+          <div class="doc-foot">Prepared by the class adviser · 1st semester</div>
+          <div id="s4scan"></div>
+        </div>
+        <div class="chip blue" id="s4c1">Grades <b>42 / 42</b></div>
+        <div class="chip white" id="s4c2">Ready to <b>print</b></div>
+      </div></div>
+    </div>
+
+    <div class="beat" id="s4b">
+      <div class="head">
+        <h2 class="h-lg"><span class="w">Every grade,</span> <span class="w c-blue-l">checked against your sheet.</span></h2>
+        <div class="mono w">Code copies every value · AI only reads the layout</div>
+      </div>
+      <div class="rows">
+        <div class="row w" id="r1">
+          <div class="tile amber"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5v13"/></svg></div>
+          <div class="rt"><b>Core subjects</b><span class="wait" id="r1w">Checking…</span><span class="ok" id="r1o">8 of 8 match your sheet</span></div>
+          <div class="end"><i class="dash" id="r1d"></i><span class="yes" id="r1y"><svg width="26" height="26"><use href="#i-check"/></svg></span></div>
+        </div>
+        <div class="row w" id="r2">
+          <div class="tile violet"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4"/></svg></div>
+          <div class="rt"><b>Applied and specialized</b><span class="wait" id="r2w">Checking…</span><span class="ok" id="r2o">6 of 6 match your sheet</span></div>
+          <div class="end"><i class="dash" id="r2d"></i><span class="yes" id="r2y"><svg width="26" height="26"><use href="#i-check"/></svg></span></div>
+        </div>
+        <div class="row w" id="r3">
+          <div class="tile green"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M9 15l2 2 4-4"/></svg></div>
+          <div class="rt"><b>Attendance</b><span class="wait" id="r3w">Checking…</span><span class="ok" id="r3o">10 of 10 months on file</span></div>
+          <div class="end"><i class="dash" id="r3d"></i><span class="yes" id="r3y"><svg width="26" height="26"><use href="#i-check"/></svg></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · NO GUESSING -->
+  <section class="scene" id="s5">
+    <div class="center">
+      <div class="h1 w">No grade in the sheet.</div>
+      <div class="h1 c-blue-l w">No grade on the card.</div>
+      <p class="sub w">GradeFlow AI never makes up a grade. Blank stays blank, and it gets flagged.</p>
+      <div class="pills">
+        <div class="pill w"><svg viewBox="0 0 24 24" fill="none" stroke="#f5b84a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3L12 4zM12 10v4M12 17.5v.01"/></svg>Missing cells flagged</div>
+        <div class="pill w"><svg viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg>Copied from your file</div>
+        <div class="pill w"><svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Checked before you print</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · OUTRO -->
+  <section class="scene" id="s6">
+    <div class="center">
+      <div id="s6markWrap">
+        <svg id="s6mark" viewBox="0 0 64 64">
+          <path id="s6arc" d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          <path id="s6bar" d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="s6word" class="w">Grade<span>Flow</span><b>AI</b></div>
+      <div id="s6tag" class="w">Upload once. Every report card, ready.</div>
+      <div id="s6pill" class="w">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/></svg>
+        <span id="s6url">SF9 · SF10 · Senior High School</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-tl"><i class="dot"></i>GradeFlow AI <span class="sl">/</span> Teacher reel 2026</div>
+    <div class="hud-tr"><span id="hudNum">01 / 06</span> — <span id="hudLabel">Identity</span></div>
+    <div class="hud-bl" id="tc">00:00:00:00</div>
+    <div class="hud-br"></div>
+    <div id="hudFillWrap"><i id="hudFill"></i></div>
+  </div>
+</div>
+
+<div id="ctl" role="group" aria-label="Reel controls">
+  <button type="button" id="ctlPlay" aria-label="Pause"></button>
+  <input type="range" id="ctlSeek" min="0" max="1000" step="1" value="0" aria-label="Seek">
+  <span id="ctlTime">0.0 s</span>
+  <button type="button" id="ctlFull" aria-label="Fullscreen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const params = new URLSearchParams(location.search);
+  const RENDER = params.has('render');
+  const LOOP = !params.has('once');
+  const FPS = 30;
+  if (RENDER) document.documentElement.classList.add('render');
+  if (params.get('url')) document.getElementById('s6url').textContent = params.get('url').slice(0, 60);
+
+  /* ---------- timeline ---------- */
+  const T = { s1: 0, s2: 3.2, s3: 7.4, s3b: 10.6, s4: 13.6, s4b: 16.2, s5: 19.2, s6: 23.0, end: 27.5 };
+  const SCENES = [
+    { id: 's1', at: T.s1, label: 'Identity', tone: 'light' },
+    { id: 's2', at: T.s2, label: 'Promise', tone: 'light' },
+    { id: 's3', at: T.s3, label: 'How to use', tone: 'dark' },
+    { id: 's4', at: T.s4, label: 'Why it matters', tone: 'light' },
+    { id: 's5', at: T.s5, label: 'No guessing', tone: 'light' },
+    { id: 's6', at: T.s6, label: 'Get started', tone: 'light' }
+  ];
+  const XF = 0.42; // crossfade between scenes, seconds
+  const END = T.end;
+
+  /* ---------- easing + helpers ---------- */
+  const E = {
+    lin: (p) => p,
+    out3: (p) => 1 - Math.pow(1 - p, 3),
+    out5: (p) => 1 - Math.pow(1 - p, 5),
+    inOut3: (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2),
+    in3: (p) => p * p * p,
+    back: (p) => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); },
+    expo: (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p))
+  };
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const $ = (s, root = document) => root.querySelector(s);
+  const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+
+  /* Property tracks: keyframe semantics. Before an element's first track the "from" value holds;
+     once a track starts it owns the property, and its end value holds after it finishes. */
+  const DEF = { o: 1, x: 0, y: 0, s: 1, sx: 1, r: 0, b: 0 };
+  const tracks = new Map(); // element -> [{at, dur, ease, props}]
+  function A(target, at, dur, props, ease = 'out3') {
+    const els = typeof target === 'string' ? $$(target) : Array.isArray(target) ? target : [target];
+    for (const el of els) {
+      if (!el) throw new Error('Missing element for track: ' + target);
+      if (!tracks.has(el)) tracks.set(el, []);
+      tracks.get(el).push({ at, dur, ease: E[ease], props });
+    }
+  }
+  /* Staggered entrance for a list of elements. */
+  function stagger(els, at, gap, dur, props, ease) { els.forEach((el, i) => A(el, at + i * gap, dur, props, ease)); }
+  /* Function tracks: called every frame with eased progress p (0..1) and absolute time t. */
+  const fns = [];
+  function F(at, dur, fn, ease = 'lin') { fns.push({ at, dur, ease: E[ease], fn }); }
+
+  function applyTracks(t) {
+    for (const [el, list] of tracks) {
+      const v = { ...DEF }, seen = {};
+      for (const tr of list) {
+        const raw = tr.dur > 0 ? clamp((t - tr.at) / tr.dur) : (t >= tr.at ? 1 : 0);
+        for (const k in tr.props) {
+          const [a, b] = tr.props[k];
+          if (t < tr.at) { if (!seen[k]) v[k] = a; }
+          else v[k] = lerp(a, b, tr.ease(raw));
+          seen[k] = true;
+        }
+      }
+      el.style.opacity = v.o.toFixed(4);
+      el.style.transform = `translate3d(${v.x.toFixed(2)}px,${v.y.toFixed(2)}px,0) scale(${(v.s * v.sx).toFixed(4)},${v.s.toFixed(4)}) rotate(${v.r.toFixed(3)}deg)`;
+      el.style.filter = v.b > 0.05 ? `blur(${v.b.toFixed(2)}px)` : 'none';
+    }
+    for (const f of fns) f.fn(f.ease(clamp(f.dur > 0 ? (t - f.at) / f.dur : (t >= f.at ? 1 : 0))), t);
+  }
+
+  /* SVG stroke drawing: dash = path length, offset animates from length to 0. */
+  function drawPath(el, at, dur, ease = 'inOut3') {
+    const len = el.getTotalLength();
+    el.style.strokeDasharray = `${len} ${len}`;
+    F(at, dur, (p) => {
+      el.style.strokeDashoffset = (len * (1 - p)).toFixed(2);
+      el.style.opacity = p > 0.001 ? 1 : 0;
+    }, ease);
+  }
+  const blurIn = { o: [0, 1], y: [34, 0], b: [14, 0] };
+
+  /* ---------- 1 · identity ---------- */
+  A('#s1glow', 0, 2.2, { o: [0, 1], s: [0.55, 1] }, 'out3');
+  A('#s1glow', 2.3, 0.9, { s: [1, 1.18] }, 'inOut3');
+  drawPath($('#s1arc'), 0.35, 1.15, 'inOut3');
+  drawPath($('#s1bar'), 1.38, 0.42, 'out3');
+  A('#s1markWrap', 0.2, 1.6, { s: [0.86, 1] }, 'out5');
+  A('#s1markWrap', 2.4, 0.8, { s: [1, 1.07] }, 'in3');
+  stagger($$('#s1word .w'), 1.55, 0.045, 0.55, { o: [0, 1], y: [12, 0], b: [8, 0] }, 'out3');
+  A('#s1sweep', 1.3, 1.5, { x: [0, 2700] }, 'inOut3');
+
+  /* ---------- 2 · promise ---------- */
+  A('#s2eye', T.s2 + 0.25, 0.6, { o: [0, 1], y: [14, 0] });
+  stagger($$('#s2h .w'), T.s2 + 0.35, 0.11, 0.75, { o: [0, 1], y: [70, 0], b: [18, 0], s: [1.06, 1] }, 'out5');
+  drawPath($('#s2under'), T.s2 + 1.35, 0.6, 'out3');
+  drawPath($('#s2circle'), T.s2 + 1.9, 0.75, 'inOut3');
+  A('#s2copy', T.s3 - 0.5, 0.6, { s: [1, 1.04], o: [1, 0.85] }, 'in3');
+  let rowX0 = 0;
+  const hitAt = T.s2 + 2.25, rowSpeed = -150;
+  F(T.s2 - XF, (T.s3 + XF) - (T.s2 - XF), (p, t) => {
+    $('#s2row').style.transform = `translate3d(${(rowX0 + rowSpeed * (t - hitAt)).toFixed(2)}px,0,0)`;
+    const glow = clamp((t - (T.s2 + 1.9)) / 0.6);
+    $('#s2hit').style.color = `rgba(255,255,255,${(0.09 + 0.2 * E.out3(glow)).toFixed(3)})`;
+  });
+
+  /* ---------- 3 · how to use ---------- */
+  const s3aHead = $$('#s3a .h-xl .w');
+  A($('#s3a .eyebrow'), T.s3 + 0.3, 0.6, { o: [0, 1], y: [14, 0] });
+  stagger(s3aHead, T.s3 + 0.38, 0.12, 0.75, blurIn, 'out5');
+  A($('#s3a .sub'), T.s3 + 0.75, 0.7, { o: [0, 1], y: [20, 0] });
+  A($('#s3a'), T.s3b - 0.35, 0.4, { o: [1, 0], y: [0, -30], b: [0, 8] }, 'in3');
+  A($('#s3b .eyebrow'), T.s3b + 0.05, 0.6, { o: [0, 1], y: [14, 0] });
+  stagger($$('#s3b .h-xl .w'), T.s3b + 0.12, 0.12, 0.75, blurIn, 'out5');
+  A($('#s3b .sub'), T.s3b + 0.5, 0.7, { o: [0, 1], y: [20, 0] });
+
+  A('#s3dev', T.s3 + 0.15, 1.0, { o: [0, 1], x: [140, 0], y: [40, 0], s: [0.94, 1] }, 'out5');
+  F(T.s3 - XF, T.s4 - T.s3 + 2 * XF, (p, t) => { $('#s3bob').style.transform = `translate3d(0,${(Math.sin((t - T.s3) * 1.5) * 9).toFixed(2)}px,0)`; });
+
+  // beat A: file drop + real-looking read progress
+  const readAt = T.s3 + 1.25, readDur = 1.45;
+  A('#s3file', T.s3 + 0.55, 0.65, { o: [0, 1], x: [320, 0], y: [-260, 0], r: [10, 0], s: [1.08, 1] }, 'out5');
+  A('#s3file', readAt - 0.15, 0.3, { s: [1, 0.9], o: [1, 0] }, 'in3');
+  A('#s3drop', T.s3 + 1.05, 0.25, { s: [1, 0.985] }, 'out3');
+  A('#s3drop', readAt - 0.1, 0.25, { o: [1, 0] }, 'lin');
+  A('#s3read', readAt - 0.1, 0.35, { o: [0, 1], s: [0.97, 1] }, 'out3');
+  const labels = ['Uploading your file', 'Reading the sheet', 'Finding the learners and subjects', 'Copying the grades into the report cards', 'Done: 42 learners read'];
+  const starts = [0, 25, 40, 90, 100];
+  F(readAt, readDur, (p) => {
+    const pct = Math.round(p * 100);
+    $('#s3pct').textContent = pct + '%';
+    $('#s3barFill').style.width = (p * 100).toFixed(2) + '%';
+    $('#s3label').textContent = labels[starts.filter((s) => pct >= s).length - 1];
+  }, 'inOut3');
+  // checks land when the (eased) percent crosses the next stage: solve inOut3 for p
+  const invInOut3 = (y) => (y < 0.5 ? Math.cbrt(y / 4) : 1 - Math.cbrt(2 * (1 - y)) / 2);
+  [25, 40, 90, 100].forEach((pct, i) => {
+    A('#ck' + (i + 1), readAt + readDur * invInOut3(pct / 100), 0.28, { o: [0, 1], s: [0.4, 1] }, 'back');
+  });
+  F(readAt, readDur, (p, t) => { $('#s3spin').style.transform = `rotate(${((t - readAt) * 520).toFixed(1)}deg)`; $('#s3spin').style.opacity = p < 1 ? 1 : 0; });
+  A('#s3done', readAt + readDur - 0.02, 0.35, { o: [0, 1], s: [0.4, 1] }, 'back');
+  A('#s3ok', readAt + readDur + 0.05, 0.45, { o: [0, 1], s: [0.6, 1], y: [10, 0] }, 'back');
+
+  // beat B: pane switch, LRN search, preview, download
+  A('#p1', T.s3b - 0.15, 0.35, { o: [1, 0], x: [0, -40] }, 'in3');
+  A('#p2', T.s3b + 0.05, 0.45, { o: [0, 1], x: [40, 0] }, 'out3');
+  F(T.s3b, 0.01, (p) => {
+    $('#st1').classList.toggle('on', p < 1);
+    $('#st2').classList.toggle('on', p >= 1);
+    $('#s3url').textContent = p < 1 ? 'gradeflow-ai · Upload Class Details' : 'gradeflow-ai · SF9 report card';
+  });
+  const query = '136512090063';
+  const typeAt = T.s3b + 0.45, typeDur = 0.75;
+  F(typeAt, typeDur, (p, t) => {
+    const n = Math.round(p * query.length);
+    $('#s3typed').textContent = query.slice(0, n);
+    $('#s3ph').style.display = n === 0 ? '' : 'none';
+    $('#s3caret').style.opacity = (Math.floor(t * 2.4) % 2 === 0 || (p > 0 && p < 1)) ? 1 : 0;
+  });
+  const rows = $$('#p2 .lr');
+  stagger(rows, T.s3b + 0.3, 0.06, 0.45, { o: [0, 1], x: [-18, 0] });
+  // the full LRN narrows the list to one learner; the selection slides to that row
+  A([rows[0], rows[1], rows[3], rows[4]], typeAt + typeDur * 0.85, 0.3, { o: [1, 0.35] }, 'out3');
+  A('#s3sel', T.s3b + 0.3, 0.3, { o: [0, 1] });
+  A('#s3sel', typeAt + typeDur + 0.05, 0.4, { y: [0, 136] }, 'inOut3');
+  A('#s3card', T.s3b + 0.45, 0.5, { o: [0, 1], y: [16, 0] });
+  $$('#s3card td.g').forEach((td, i) => {
+    const v = +td.dataset.v, at = typeAt + typeDur + 0.3 + i * 0.022;
+    F(at, 0.45, (p) => { td.textContent = p <= 0 ? '' : String(Math.round(lerp(70, v, p))); }, 'out3');
+  });
+  const pressAt = T.s3b + 2.3;
+  A('#s3btn', pressAt, 0.12, { s: [1, 0.94] }, 'out3');
+  A('#s3btn', pressAt + 0.12, 0.3, { s: [0.94, 1] }, 'back');
+  A('#s3ripple', pressAt, 0.55, { s: [0, 1.4], o: [1, 0] }, 'out3');
+  A('#s3toast', pressAt + 0.2, 0.45, { o: [0, 1], y: [-20, 0], s: [0.94, 1] }, 'back');
+
+  /* ---------- 4 · why it matters ---------- */
+  A($('#s4a .eyebrow'), T.s4 + 0.25, 0.6, { o: [0, 1], y: [14, 0] });
+  stagger($$('#s4a .h-xl'), T.s4 + 0.32, 0.22, 0.8, blurIn, 'out5');
+  A('#s4doc', T.s4 + 0.1, 0.9, { o: [0, 1], y: [80, 0], s: [0.92, 1], r: [4, 0] }, 'out5');
+  A('#s4frame', T.s4 + 0.5, 0.6, { o: [0, 1], s: [1.12, 1] }, 'out3');
+  F(T.s4 + 0.4, 1.3, (p) => { $('#s4scan').style.transform = `translate3d(0,${(lerp(-140, 780, p)).toFixed(1)}px,0)`; $('#s4scan').style.opacity = p > 0 && p < 1 ? 1 : 0; }, 'inOut3');
+  F(T.s4 + 0.6, 0.9, (p) => { $('#s4count').textContent = Math.round(42 * p) + ' learners'; }, 'out3');
+  A('#s4c1', T.s4 + 1.25, 0.5, { o: [0, 1], s: [0.5, 1], x: [-30, 0] }, 'back');
+  A('#s4c2', T.s4 + 1.55, 0.5, { o: [0, 1], s: [0.5, 1], x: [-30, 0] }, 'back');
+  A('#s4a', T.s4b - 0.35, 0.4, { o: [1, 0], s: [1, 0.97], b: [0, 10] }, 'in3');
+
+  stagger($$('#s4b h2 .w'), T.s4b + 0.05, 0.16, 0.7, blurIn, 'out5');
+  A($('#s4b .mono'), T.s4b + 0.45, 0.6, { o: [0, 1], y: [10, 0] });
+  stagger($$('#s4b .row'), T.s4b + 0.4, 0.12, 0.7, { o: [0, 1], y: [40, 0], s: [0.97, 1] }, 'out5');
+  [1, 2, 3].forEach((n, i) => {
+    const at = T.s4b + 1.1 + i * 0.34;
+    A('#r' + n + 'w', at, 0.25, { o: [1, 0], y: [0, -10] }, 'in3');
+    A('#r' + n + 'o', at + 0.12, 0.35, { o: [0, 1], y: [12, 0] }, 'out3');
+    A('#r' + n + 'd', at, 0.2, { o: [1, 0], sx: [1, 0.2] }, 'in3');
+    A('#r' + n + 'y', at + 0.1, 0.4, { o: [0, 1], s: [0.3, 1] }, 'back');
+  });
+
+  /* ---------- 5 · no guessing ---------- */
+  const s5 = $$('#s5 .w');
+  A(s5[0], T.s5 + 0.2, 0.8, { o: [0, 1], y: [60, 0], b: [18, 0], s: [1.04, 1] }, 'out5');
+  A(s5[1], T.s5 + 0.65, 0.8, { o: [0, 1], y: [60, 0], b: [18, 0], s: [1.04, 1] }, 'out5');
+  A(s5[2], T.s5 + 1.25, 0.7, { o: [0, 1], y: [20, 0] });
+  stagger(s5.slice(3), T.s5 + 1.65, 0.12, 0.55, { o: [0, 1], y: [18, 0], s: [0.92, 1] }, 'back');
+  A('#s5 .center', T.s5, T.s6 - T.s5 + XF, { s: [1, 1.035] }, 'lin');
+
+  /* ---------- 6 · outro ---------- */
+  drawPath($('#s6arc'), T.s6 + 0.25, 0.85, 'inOut3');
+  drawPath($('#s6bar'), T.s6 + 1.0, 0.35, 'out3');
+  A('#s6markWrap', T.s6 + 0.15, 1.1, { s: [0.8, 1], o: [0, 1] }, 'out5');
+  A('#s6word', T.s6 + 0.75, 0.85, { o: [0, 1], y: [40, 0], b: [16, 0] }, 'out5');
+  A('#s6tag', T.s6 + 1.25, 0.7, { o: [0, 1], y: [20, 0] });
+  A('#s6pill', T.s6 + 1.6, 0.6, { o: [0, 1], y: [16, 0], s: [0.94, 1] }, 'back');
+  A('#s6 .center', T.s6, END - T.s6, { s: [1.02, 1] }, 'out3');
+
+  /* ---------- scenes, HUD ---------- */
+  const sceneEls = SCENES.map((s) => document.getElementById(s.id));
+  function sceneAlpha(i, t) {
+    const start = SCENES[i].at;
+    const end = i + 1 < SCENES.length ? SCENES[i + 1].at + XF : Infinity;
+    if (t < start || t >= end) return 0;
+    if (i > 0 && t < start + XF) return E.inOut3((t - start) / XF);
+    return 1;
+  }
+  const hud = $('#hud');
+  const pad = (n, w = 2) => String(n).padStart(w, '0');
+  function timecode(t) {
+    const f = Math.floor(t * FPS + 1e-6);
+    const s = Math.floor(f / FPS);
+    return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}:${pad(f % FPS)}`;
+  }
+
+  function render(t) {
+    t = clamp(t, 0, END);
+    let top = 0;
+    sceneEls.forEach((el, i) => {
+      const a = sceneAlpha(i, t);
+      el.style.visibility = a > 0 ? 'visible' : 'hidden';
+      el.style.opacity = a.toFixed(4);
+      el.style.zIndex = String(i + 1);
+      const k = i > 0 && t < SCENES[i].at + XF ? 1.03 - 0.03 * E.out3(clamp((t - SCENES[i].at) / XF)) : 1;
+      el.style.transform = `scale(${k.toFixed(4)})`;
+      if (a > 0.5) top = i;
+    });
+    applyTracks(t);
+
+    const sc = SCENES[top];
+    hud.style.color = sc.tone === 'dark' ? '#0f172a' : '#ffffff';
+    hud.style.opacity = (sc.tone === 'dark' ? 0.75 : 0.8) * (1 - E.out3(clamp((t - T.s6) / 0.4)));
+    $('#hudNum').textContent = `${pad(top + 1)} / ${pad(SCENES.length)}`;
+    $('#hudLabel').textContent = sc.label;
+    $('#tc').textContent = timecode(t);
+    $('#hudFill').style.width = (t / END * 100).toFixed(2) + '%';
+    current = t;
+  }
+
+  /* ---------- stage fit ---------- */
+  const stage = $('#stage');
+  function fit() {
+    if (RENDER) return;
+    const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `translate(-50%,-50%) scale(${k})`;
+  }
+  addEventListener('resize', fit);
+  fit();
+
+  /* rowX0 needs layout: place the circled grade at the screen centre when the circle is drawn */
+  function measure() {
+    const hit = $('#s2hit');
+    rowX0 = 960 - (hit.offsetLeft + hit.offsetWidth / 2);
+  }
+
+  /* ---------- player ---------- */
+  let current = 0, playing = false, last = 0;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const playBtn = $('#ctlPlay'), seek = $('#ctlSeek'), timeEl = $('#ctlTime'), ctl = $('#ctl');
+  const ICON_PLAY = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+  const ICON_PAUSE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5.5" y="4.5" width="4.5" height="15" rx="1"/><rect x="14" y="4.5" width="4.5" height="15" rx="1"/></svg>';
+  function syncUi() {
+    playBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
+    playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    seek.value = String(Math.round(current / END * 1000));
+    timeEl.textContent = `${current.toFixed(1)} / ${END.toFixed(1)} s`;
+  }
+  function setPlaying(v) { playing = v; if (v && current >= END) current = 0; last = performance.now(); syncUi(); }
+  function loop(now) {
+    if (playing) {
+      current += Math.min(0.1, (now - last) / 1000);
+      if (current >= END) { if (LOOP) current = 0; else { current = END; playing = false; } }
+      render(current);
+      syncUi();
+    }
+    last = now;
+    requestAnimationFrame(loop);
+  }
+
+  function start() {
+    measure();
+    render(0);
+    window.__END = END;
+    window.__FPS = FPS;
+    window.__seek = (t) => { render(t); return t; };
+    window.__ready = true;
+    if (RENDER) return;
+    playBtn.addEventListener('click', () => setPlaying(!playing));
+    seek.addEventListener('input', () => { current = +seek.value / 1000 * END; render(current); syncUi(); });
+    $('#ctlFull').addEventListener('click', toggleFull);
+    addEventListener('keydown', (e) => {
+      if (e.target === seek && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
+      if (e.key === ' ' || e.key === 'k') { e.preventDefault(); setPlaying(!playing); }
+      else if (e.key === 'ArrowRight') { current = Math.min(END, current + 1); render(current); syncUi(); }
+      else if (e.key === 'ArrowLeft') { current = Math.max(0, current - 1); render(current); syncUi(); }
+      else if (e.key === 'r' || e.key === 'R') { current = 0; render(0); setPlaying(true); }
+      else if (e.key === 'f' || e.key === 'F') toggleFull();
+    });
+    let idle;
+    const wake = () => { ctl.classList.remove('idle'); clearTimeout(idle); idle = setTimeout(() => playing && ctl.classList.add('idle'), 2200); };
+    addEventListener('pointermove', wake);
+    addEventListener('keydown', wake);
+    wake();
+    if (reduce) { current = END; render(END); syncUi(); } // show the end card; the viewer can press play
+    else setPlaying(true);
+    requestAnimationFrame(loop);
+  }
+  function toggleFull() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  }
+
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(start);
+})();
+</script>
+</body>
+</html>

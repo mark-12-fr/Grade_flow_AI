@@ -10,13 +10,17 @@ const STAGES: Record<'sf9' | 'sf10' | 'sheet', string[]> = {
 
 /** Shows that a file is being read: spinner, moving bar, rotating steps and a running timer. */
 export function Reading({ fileName, kind }: { fileName: string; kind: 'sf9' | 'sf10' | 'sheet' }) {
-  const [seconds, setSeconds] = useState(0);
+  const [elapsed, setElapsed] = useState(0); // milliseconds
   useEffect(() => {
-    const id = window.setInterval(() => setSeconds((s) => s + 1), 1000);
+    const start = performance.now();
+    const id = window.setInterval(() => setElapsed(performance.now() - start), 200);
     return () => window.clearInterval(id);
   }, []);
+  const seconds = Math.floor(elapsed / 1000);
+  // The server gives no real progress, so the percent eases toward 95% and never claims to be finished.
+  const percent = Math.min(95, Math.round(95 * (1 - Math.exp(-elapsed / 12000))));
   const steps = STAGES[kind];
-  const stage = Math.min(steps.length - 1, Math.floor(seconds / 3));
+  const stage = Math.min(steps.length - 1, Math.floor(percent / 22));
   return (
     <div className="reading" role="status" aria-live="polite">
       <div className="reading-head">
@@ -25,9 +29,11 @@ export function Reading({ fileName, kind }: { fileName: string; kind: 'sf9' | 's
           <strong key={stage} className="reading-step">{steps[stage]}<span className="reading-dots" aria-hidden="true" /></strong>
           <span className="reading-file">{fileName}</span>
         </div>
-        <span className="reading-time">{seconds}s</span>
+        <span className="reading-time"><strong>{percent}%</strong> · {seconds}s</span>
       </div>
-      <div className="reading-bar" aria-hidden="true"><span /></div>
+      <div className="reading-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+        <span style={{ width: `${percent}%`, animation: 'none', background: 'var(--blue)', transition: 'width 0.3s var(--ease-soft)' }} />
+      </div>
       <ol className="reading-steps" aria-hidden="true">
         {steps.slice(0, 4).map((label, i) => (
           <li key={label} className={i < stage ? 'done' : i === stage ? 'current' : ''}>{label.replace(/^AI is /, '')}</li>

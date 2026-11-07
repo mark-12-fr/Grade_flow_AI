@@ -103,7 +103,6 @@ export default function UploadPage() {
                         <span className="docs-sub">Learner&apos;s Report Card</span>
                       </div>
                     </div>
-                    <p className="docs-desc">Quarterly grades for every learner in the class, used to build the report cards.</p>
                     <div className="dropzone-actions">
                       <button type="button" className="btn btn-secondary btn-sm" aria-labelledby="browse-sf9 sf9-label" id="browse-sf9" disabled={Boolean(sf9Busy)} onClick={() => sf9Input.current?.click()}>
                         <Icon name="folder" /> Choose file
@@ -137,7 +136,6 @@ export default function UploadPage() {
                         <span className="docs-sub">Learner&apos;s Permanent Record</span>
                       </div>
                     </div>
-                    <p className="docs-desc">Cumulative record of past semesters, used to prepare the permanent record.</p>
                     <div className="dropzone-actions">
                       <button type="button" className="btn btn-secondary btn-sm" aria-labelledby="browse-sf10 sf10-label" id="browse-sf10" disabled={Boolean(sf10Busy)} onClick={() => sf10Input.current?.click()}>
                         <Icon name="folder" /> Choose file

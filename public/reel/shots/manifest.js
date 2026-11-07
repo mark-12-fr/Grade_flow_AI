@@ -123,87 +123,79 @@ window.REEL_SHOTS = {
   },
   "sf9-type-1": {
    "file": "sf9-type-1.webp",
-   "w": 1223,
-   "h": 437,
-   "x": 345,
-   "y": 206
+   "w": 1680,
+   "h": 1050
   },
   "sf9-type-2": {
    "file": "sf9-type-2.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-3": {
    "file": "sf9-type-3.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-4": {
    "file": "sf9-type-4.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-5": {
    "file": "sf9-type-5.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-6": {
    "file": "sf9-type-6.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-7": {
    "file": "sf9-type-7.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-8": {
    "file": "sf9-type-8.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-9": {
    "file": "sf9-type-9.webp",
    "w": 1223,
-   "h": 437,
+   "h": 479,
    "x": 345,
    "y": 206
   },
   "sf9-type-10": {
    "file": "sf9-type-10.webp",
-   "w": 1223,
-   "h": 437,
-   "x": 345,
-   "y": 206
+   "w": 1680,
+   "h": 1050
   },
   "sf9-type-11": {
    "file": "sf9-type-11.webp",
-   "w": 1223,
-   "h": 437,
-   "x": 345,
-   "y": 206
+   "w": 1680,
+   "h": 1050
   },
   "sf9-type-12": {
    "file": "sf9-type-12.webp",
-   "w": 1223,
-   "h": 437,
-   "x": 345,
-   "y": 206
+   "w": 1680,
+   "h": 1050
   },
   "sf9-picked": {
    "file": "sf9-picked.webp",
@@ -480,27 +472,27 @@ window.REEL_SHOTS = {
   },
   {
    "shot": "reading-4",
-   "pct": 49
+   "pct": 31
   },
   {
    "shot": "reading-5",
-   "pct": 72
+   "pct": 62
   },
   {
    "shot": "reading-6",
-   "pct": 85
+   "pct": 79
   },
   {
    "shot": "reading-7",
-   "pct": 92
+   "pct": 89
   },
   {
    "shot": "reading-8",
-   "pct": 94
+   "pct": 92
   },
   {
    "shot": "reading-9",
-   "pct": 98
+   "pct": 96
   },
   {
    "shot": "reading-10",

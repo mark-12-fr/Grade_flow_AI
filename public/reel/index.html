@@ -583,7 +583,12 @@
     const typeAt = T.s3b + 0.95;
     w3.move(T.s3b + 0.1, 0.6, center(B.sf9.search)).click(T.s3b + 0.75).camera(T.s3b + 0.45, 0.65, 1.6, 800, 420);
     sfx(T.s3b + 0.75, 'click', { g: 0.7 });
-    SH.typing.forEach((name, i) => { const at = typeAt + i * 0.09; w3.show(at, ['sf9', name]); sfx(at, 'key'); });
+    // a clipped capture (only the search card changed) sits on the first full typed frame
+    SH.typing.forEach((name, i) => {
+      const at = typeAt + i * 0.09;
+      w3.show(at, SH.shots[name].x === undefined ? [name] : [SH.typing[0], name]);
+      sfx(at, 'key');
+    });
     const pickedAt = typeAt + SH.typing.length * 0.09 + 0.12;
     w3.show(pickedAt, ['sf9-picked'], 0.2).camera(pickedAt + 0.15, 0.7, 1, 840, 525);
     sfx(pickedAt, 'tick', { note: 88, g: 0.6 });

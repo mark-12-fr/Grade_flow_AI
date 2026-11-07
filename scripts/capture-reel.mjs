@@ -142,10 +142,16 @@ try {
     thisLearner: await box(page.getByRole('button', { name: /This learner \(PDF\)/ })), sheet: await box(page.locator('.report-sheet'))
   };
   await page.locator('.sf10-search input').click();
+  let typedH = 0;
   for (let i = 1; i <= LEARNER.lrn.length; i++) {
     await page.keyboard.type(LEARNER.lrn[i - 1]);
     await wait(90);
-    await shot(`sf9-type-${i}`, { clip: { x: card.x, y: card.y, width: card.w, height: card.h } });
+    // The first key adds a Clear button, so the first frame is the whole screen. After that only the
+    // search card changes until the list narrows (the card shrinks, the preview moves up): grab just the
+    // card while its size holds, the whole screen otherwise.
+    const now = await box(page.locator('.sf10-browser'));
+    if (i === 1) typedH = now.h;
+    await shot(`sf9-type-${i}`, i > 1 && now.h === typedH ? { clip: { x: now.x, y: now.y, width: now.w, height: now.h } } : {});
     manifest.typing.push(`sf9-type-${i}`);
   }
   await page.keyboard.press('Enter');

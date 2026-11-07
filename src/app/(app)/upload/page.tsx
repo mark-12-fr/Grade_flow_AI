@@ -7,7 +7,7 @@ import { Reading } from '@/components/Reading';
 import { useUi } from '@/components/Providers';
 import { importSf10, importSf9, removeSf10, removeSf9, validateBeforeProcessing } from '@/lib/actions';
 import { formatFileSize } from '@/lib/format';
-import { setState, useAppState } from '@/lib/store';
+import { getState, setState, useAppState } from '@/lib/store';
 
 // Preselect the sheet that most likely lists the learners: the biggest one with many columns.
 const guessSheet = (sheets: { name: string; rows: number; cols: number; label?: string }[]) =>
@@ -69,14 +69,14 @@ export default function UploadPage() {
     if (problem) { setError(problem); toast(problem.split('\n')[0], 'error'); return; }
     setError('');
     setState({ processed: false, processing: false, progress: 0, generated: false, generatedAt: null });
-    router.push('/processing');
+    router.push(getState().upload ? '/report-card' : '/sf10');
   }
 
   return (
     <section className="page active" aria-labelledby="upload-title">
       <div className="page-heading">
         <div><h1 id="upload-title">Upload your grade sheet</h1></div>
-        <span className="pill pill-blue">Step 1 of 5</span>
+        <span className="pill pill-blue">Step 1 of 4</span>
       </div>
 
       <div className="upload-layout">

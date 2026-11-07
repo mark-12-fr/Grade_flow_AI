@@ -61,7 +61,7 @@ export interface UploadInfo {
 }
 
 export type PageId =
-  | 'upload' | 'processing' | 'verification' | 'report-card' | 'generated-reports'
+  | 'upload' | 'verification' | 'report-card' | 'generated-reports'
   | 'sf10' | 'summary' | 'history' | 'settings' | 'help';
 
 export interface AppState {

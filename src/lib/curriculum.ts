@@ -74,7 +74,6 @@ export const TRANSFER_FIELDS = [
 
 export const PAGE_META: Record<PageId, { label: string; breadcrumb: string; nav: PageId }> = {
   upload: { label: 'Upload Grades', breadcrumb: 'Upload Grades', nav: 'upload' },
-  processing: { label: 'Preparing Reports', breadcrumb: 'Preparing Reports', nav: 'processing' },
   verification: { label: 'Grade Verification', breadcrumb: 'Grade Verification', nav: 'verification' },
   'report-card': { label: 'Report Cards', breadcrumb: 'Report Cards', nav: 'report-card' },
   'generated-reports': { label: 'Generated Reports', breadcrumb: 'Report Cards', nav: 'report-card' },
@@ -85,7 +84,7 @@ export const PAGE_META: Record<PageId, { label: string; breadcrumb: string; nav:
   help: { label: 'Help', breadcrumb: 'Help', nav: 'help' }
 };
 
-export const STEP_ORDER: PageId[] = ['upload', 'processing', 'report-card', 'sf10', 'generated-reports'];
+export const STEP_ORDER: PageId[] = ['upload', 'report-card', 'sf10', 'generated-reports'];
 export const PASSING_GRADE = 75;
 
 export const STRAND_TRACK: Record<string, string> = {

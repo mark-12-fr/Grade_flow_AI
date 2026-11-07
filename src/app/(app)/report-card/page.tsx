@@ -6,8 +6,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { useUi } from '@/components/Providers';
 import { ReportCard } from '@/components/ReportCard';
+import { downloadReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/grading';
 import { setState, useAppState } from '@/lib/store';
+import type { Student } from '@/lib/types';
 
 export default function ReportCardPage() {
   const router = useRouter();
@@ -45,6 +47,22 @@ export default function ReportCardPage() {
   const missing = missingGradeCells(students).length;
   const ready = readyToGenerate(students);
   const label = total === 1 ? 'report card' : 'report cards';
+
+  const [busy, setBusy] = useState(false);
+  const picked = new Set(state.selectedReportIds);
+  const selectedStudents = students.filter((s) => picked.has(s.id));
+  const toggle = (id: number, on: boolean) => setState((s) => ({ selectedReportIds: on ? [...new Set([...s.selectedReportIds, id])] : s.selectedReportIds.filter((x) => x !== id) }));
+
+  async function download(list: Student[], single = false) {
+    if (!list.length) { toast('Choose at least one learner first.', 'error'); return; }
+    setBusy(true);
+    try {
+      await downloadReportCards(list, context, state, { single });
+      toast(single ? `Downloaded ${list[0].name}'s report card as a PDF.` : `Downloaded ${list.length} report card${list.length === 1 ? '' : 's'} as one PDF.`);
+    } catch (error) {
+      toast(`The PDF could not be prepared. ${(error as Error).message}`, 'error');
+    } finally { setBusy(false); }
+  }
 
   function generate() {
     if (!ready) { toast('Finish grade corrections before generating.', 'error'); return; }
@@ -123,6 +141,22 @@ export default function ReportCardPage() {
           <button type="button" className="icon-btn" aria-label="Next student" disabled={index >= total - 1} onClick={() => move(1)}><Icon name="chevron-right" /></button>
         </div>
         <span className="picker-meta"><Icon name="file-text" /> A4 landscape · 1 page per student</span>
+      </div>
+
+      <div className="sf10-actions" style={{ marginBottom: 14 }}>
+        <label className="sf10-check">
+          <input type="checkbox" disabled={!student} checked={Boolean(student && picked.has(student.id))} onChange={(e) => student && toggle(student.id, e.target.checked)} />
+          <span>Select this learner</span>
+        </label>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={!student || busy} onClick={() => student && void download([student], true)}>
+          <Icon name="download" /> This learner (PDF)
+        </button>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={!selectedStudents.length || busy} onClick={() => void download(selectedStudents)}>
+          <Icon name="download" /> Selected ({selectedStudents.length})
+        </button>
+        <button type="button" className="btn btn-primary btn-sm" disabled={!total || busy} onClick={() => void download(students)}>
+          <Icon name="download" /> Everyone ({total})
+        </button>
       </div>
 
       <div className="preview-canvas">

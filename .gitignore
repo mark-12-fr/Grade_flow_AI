@@ -7,3 +7,8 @@ node_modules/
 .next/
 next-env.d.ts
 *.tsbuildinfo
+
+# rendered reel output (npm run reel)
+*.mp4
+*.wav
+reel-frame.png

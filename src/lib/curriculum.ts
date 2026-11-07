@@ -73,7 +73,7 @@ export const TRANSFER_FIELDS = [
 ] as const;
 
 export const PAGE_META: Record<PageId, { label: string; breadcrumb: string; nav: PageId }> = {
-  upload: { label: 'Upload Grades', breadcrumb: 'Upload Grades', nav: 'upload' },
+  upload: { label: 'Upload Class Details', breadcrumb: 'Upload Class Details', nav: 'upload' },
   verification: { label: 'Grade Verification', breadcrumb: 'Grade Verification', nav: 'verification' },
   'report-card': { label: 'Report Cards', breadcrumb: 'Report Cards', nav: 'report-card' },
   'generated-reports': { label: 'Generated Reports', breadcrumb: 'Report Cards', nav: 'report-card' },

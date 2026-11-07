@@ -76,7 +76,7 @@ export default function UploadPage() {
     <section className="page active" aria-labelledby="upload-title">
       <div className="page-heading">
         <div>
-          <h1 id="upload-title">Upload grade sheets</h1>
+          <h1 id="upload-title">Upload Class Details</h1>
           <p>Add your SF9 class grade sheet, your SF10 record, or both. CSV and Excel files are supported.</p>
         </div>
         <span className="pill pill-blue">Step 1 of 3</span>

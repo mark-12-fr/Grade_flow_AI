@@ -11,7 +11,7 @@ import { useAppState } from '@/lib/store';
 import type { PageId } from '@/lib/types';
 
 const NAV: { page: PageId; icon: IconName; label: string }[] = [
-  { page: 'upload', icon: 'upload', label: 'Upload Grades' },
+  { page: 'upload', icon: 'upload', label: 'Uploads' },
   { page: 'history', icon: 'history', label: 'History' }
 ];
 

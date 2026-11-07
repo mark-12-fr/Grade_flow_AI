@@ -79,8 +79,13 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className={`app${collapsed ? ' sidebar-collapsed' : ''}`}>
       <aside className={`sidebar${menuOpen ? ' open' : ''}`} id="sidebar" aria-label="Main navigation">
         <Link className="brand" href="/upload" aria-label="GradeFlow AI home">
-          <span className="brand-mark"><Icon name="layers" /></span>
-          <span className="brand-name">GradeFlow</span>
+          <svg className="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+            <rect width="64" height="64" rx="14" fill="currentColor" />
+            <path d="M20 13h17l10 10v28a3 3 0 0 1-3 3H20a3 3 0 0 1-3-3V16a3 3 0 0 1 3-3Z" fill="#fff" />
+            <path d="M37 13v8a2 2 0 0 0 2 2h8Z" fill="#bfdbfe" />
+            <path d="m25 38 5.5 5.5L41 31" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="brand-name">Grade<span>Flow</span></span>
         </Link>
         <nav className="nav-links">
           {NAV.map((item) => (

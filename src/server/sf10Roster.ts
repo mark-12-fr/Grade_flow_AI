@@ -183,13 +183,15 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
   });
 
   const students: Student[] = [];
+  const skipped = { footer: [] as number[], noGrades: [] as number[] };
   for (let r = first; r < grid.rows.length; r += 1) {
     const row = grid.rows[r];
     const full = cell(row, cols.name);
     const lrn = lrnText(cell(row, cols.lrn));
     const named = cols.last >= 0 ? { last: cell(row, cols.last), first: cell(row, cols.first), middle: cell(row, cols.middle) } : splitName(full);
     if (!named.last && !named.first && !lrn) continue;
-    if (FOOTER.test(named.last || full)) break;
+    const footer = FOOTER.test(named.last || full);
+    if (footer && !lrn) { skipped.footer.push(r + 1); continue; } // a subtotal or signature row, not the end of the list
 
     const section = cell(row, cols.section), adviser = cell(row, cols.adviser);
     const semesters: Sf10Semester[] = [];
@@ -208,7 +210,7 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
         remedial: { from: '', to: '', school: '', schoolId: '', teacher: '', rows: [] }
       });
     }
-    if (!semesters.length) continue; // a learner without any grade has no record to show
+    if (!semesters.length) { skipped.noGrades.push(r + 1); continue; } // a learner without any grade has no record to show
     const avgs = semesters.map((s) => s.average);
     const total = avgs.every(Boolean) ? Math.round(avgs.reduce((a, b) => a + Number(b), 0) / avgs.length) : null;
     const id = students.length + 1;
@@ -223,6 +225,10 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
       }
     });
   }
+  const listRows = (n: number[]) => `rows ${n.slice(0, 10).join(', ')}${n.length > 10 ? ', ...' : ''}`;
+  if (skipped.noGrades.length) warnings.push(`${skipped.noGrades.length} learner row${skipped.noGrades.length === 1 ? '' : 's'} skipped because no numeric grade was found (${listRows(skipped.noGrades)}).`);
+  if (skipped.footer.length) warnings.push(`${skipped.footer.length} total/signature row${skipped.footer.length === 1 ? '' : 's'} ignored (${listRows(skipped.footer)}).`);
+  warnings.push(`Read ${grid.rows.length - first} rows below the header: ${students.length} learners imported.`);
   if (!students.length) throw new MappingError(`Sheet "${grid.sheet}": no learners with grades were found below the header.`, 'file');
   if (cols.lrn >= 0) {
     const ok = students.filter((x) => /^\d{10,13}$/.test(x.lrn)).length;

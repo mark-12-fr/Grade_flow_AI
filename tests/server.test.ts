@@ -172,6 +172,21 @@ describe('sf10 roster mode', () => {
     expect(out.warnings.some((w) => w.includes('LRN'))).toBe(false);
   });
 
+  it('keeps reading past total rows and reports skipped rows', async () => {
+    const { runRosterImport } = await import('@/server/sf10Roster');
+    const body: unknown[][] = [];
+    for (let i = 0; i < 900; i += 1) {
+      body.push([String(100000000000 + i), `LAST${i}`, 'FIRST', 'MS. GALLO', 80, 82, 81, '', '', '']);
+      if (i % 300 === 299) body.push(['', 'TOTAL', '', '', '', '', '', '', '', '']);
+    }
+    body.push(['', 'NOGRADE', 'X', '', '', '', '', '', '', '']);
+    const grid = readSheets('x.xlsx', workbook([...rows.slice(0, 3), ...body]))[0];
+    const out = await runRosterImport(grid, mapping);
+    expect(out.students).toHaveLength(900);
+    expect(out.warnings.some((w) => w.includes('3 total/signature'))).toBe(true);
+    expect(out.warnings.some((w) => w.includes('1 learner row skipped'))).toBe(true);
+  });
+
   it('warns when the LRN column does not hold LRNs', async () => {
     const { runRosterImport } = await import('@/server/sf10Roster');
     const grid = readSheets('x.xlsx', workbook(rows))[0];

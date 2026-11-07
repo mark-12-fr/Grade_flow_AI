@@ -294,38 +294,52 @@
       }
     }
 
-    /* ---------- arrangement ---------- */
+    /* ---------- arrangement ----------
+       A plan is a list of sections: { at, kind, chords, pluck, hit, riser, riserG, roll, marks }.
+         kind    intro (dark pad, drone) · hook (low drone, the reel adds hits) · groove (120 BPM four on
+                 the floor, side-chained) · half (half time) · drop (heartbeat) · end (ringing C major)
+         hit     an impact on the cut, this size · riser / roll: seconds of riser / snare roll into the cut
+         marks   extra light hits inside the section
+       A reel can pass score.plan; without one the plan comes from the 16:9 reel's timeline T. */
     // one chord per 2 s bar, cycling through `names` until the section is full
     const bars = (names, len) => Array.from({ length: Math.max(1, Math.ceil(len / 2 - 1e-6)) }, (_, i) => [i * 2, names[i % names.length]]);
-    // 1 identity: dark pad opening up, sub drone, riser into the first cut
-    pad(CH.Am.pad, 0, T.s2, { gain: 0.03, cut: [260, 1500], attack: 1.8, release: 0.25, rev: 0.5 });
-    drone(0, T.s2, 33, 0.1, 1.5);
-    riser(T.s2, 0.9, 0.55);
-    // 2 promise: the beat drops on the cut
-    impact(T.s2, 1);
-    section(T.s2, T.s3, bars(['F', 'G', 'C'], T.s3 - T.s2), { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pad: { gain: 0.026, cut: [1400, 2600] } });
-    riser(T.s3, 0.5, 0.35);
-    // 3 how to use: same groove plus a plucked arpeggio; a lighter hit marks step 2
-    impact(T.s3, 0.55);
-    section(T.s3, T.s4, bars(['Am', 'F', 'C', 'G'], T.s4 - T.s3), { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pluck: 0.8, pad: { gain: 0.022, cut: [1800, 2400] } });
-    if (T.s3b) { riser(T.s3b, 0.4, 0.25); impact(T.s3b, 0.4); }
-    riser(T.s4, 0.7, 0.5);
-    // 4 the forms: darker, half time
-    impact(T.s4, 1);
-    section(T.s4, T.s5, bars(['Am', 'F', 'G', 'Am'], T.s5 - T.s4), { kick: 'half', snare: 0.8, hats8: 0.45, bass: 'sustain', pad: { gain: 0.028, cut: [700, 1400] } });
-    riser(T.s5, 0.8, 0.45);
-    // 5 no guessing: everything drops out to a low pulse, then a snare roll into the end card
-    impact(T.s5, 1.2);
-    pad(CH.Am.pad.map((m) => m - 12), T.s5, T.s6, { gain: 0.03, cut: [300, 700], attack: 0.6, release: 0.2, rev: 0.5 });
-    drone(T.s5, T.s6, 33, 0.12, 0.4);
-    section(T.s5, T.s6 - 1.2, [[0, 'Am']], { kick: 'heart' });
-    for (let t = T.s6 - 1.2, gap = 0.2, g = 0.25; t < T.s6 - 0.02; t += gap, gap = Math.max(0.035, gap * 0.82), g = Math.min(0.9, g * 1.12)) snare(t, g);
-    riser(T.s6, 1.4, 0.8);
-    // 6 end card: big hit, bright C major chord that rings out
-    impact(T.s6, 1.4);
-    pad([...CH.C.pad, 79, 84], T.s6, END, { gain: 0.03, cut: [2800, 1500], attack: 0.03, release: 0.01, rev: 0.55 });
-    bassNote(T.s6, END - T.s6 - 0.05, 36, 0.6);
-    drone(T.s6, END, 24, 0.09, 0.05);
+    const plan = score.plan || [
+      { at: 0, kind: 'intro' },
+      { at: T.s2, kind: 'groove', chords: ['F', 'G', 'C'], hit: 1, riser: 0.9, riserG: 0.55 },
+      { at: T.s3, kind: 'groove', pluck: true, chords: ['Am', 'F', 'C', 'G'], hit: 0.55, riser: 0.5, riserG: 0.35, marks: T.s3b ? [T.s3b] : [] },
+      { at: T.s4, kind: 'half', chords: ['Am', 'F', 'G', 'Am'], hit: 1, riser: 0.7, riserG: 0.5 },
+      { at: T.s5, kind: 'drop', hit: 1.2, riser: 0.8, riserG: 0.45 },
+      { at: T.s6, kind: 'end', hit: 1.4, riser: 1.4, riserG: 0.8, roll: 1.2 }
+    ];
+    plan.forEach((sec, i) => {
+      const s = sec.at, e = i + 1 < plan.length ? plan[i + 1].at : END, len = e - s;
+      const nextRoll = i + 1 < plan.length ? plan[i + 1].roll || 0 : 0;
+      if (sec.riser) riser(s, sec.riser, sec.riserG ?? 0.5);
+      if (sec.roll) for (let t = s - sec.roll, gap = 0.2, g = 0.25; t < s - 0.02; t += gap, gap = Math.max(0.035, gap * 0.82), g = Math.min(0.9, g * 1.12)) snare(t, g);
+      if (sec.hit) impact(s, sec.hit);
+      for (const m of sec.marks || []) { riser(m, 0.4, 0.25); impact(m, 0.4); }
+      const chords = bars(sec.chords || ['Am'], len);
+      if (sec.kind === 'intro') {
+        pad(CH.Am.pad, s, e, { gain: 0.03, cut: [260, 1500], attack: Math.min(1.8, len / 2), release: 0.25, rev: 0.5 });
+        drone(s, e, 33, 0.1, Math.min(1.5, len / 2));
+      } else if (sec.kind === 'hook') {
+        pad(CH.Am.pad.map((m) => m - 12), s, e, { gain: 0.026, cut: [300, 900], attack: 0.05, release: 0.15, rev: 0.5 });
+        drone(s, e, 33, 0.13, 0.05);
+      } else if (sec.kind === 'groove') {
+        section(s, e, chords, { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pluck: sec.pluck ? 0.8 : 0,
+          pad: sec.pluck ? { gain: 0.022, cut: [1800, 2400] } : { gain: 0.026, cut: [1400, 2600] } });
+      } else if (sec.kind === 'half') {
+        section(s, e, chords, { kick: 'half', snare: 0.8, hats8: 0.45, bass: 'sustain', pad: { gain: 0.028, cut: [700, 1400] } });
+      } else if (sec.kind === 'drop') {
+        pad(CH.Am.pad.map((m) => m - 12), s, e, { gain: 0.03, cut: [300, 700], attack: 0.6, release: 0.2, rev: 0.5 });
+        drone(s, e, 33, 0.12, 0.4);
+        section(s, e - nextRoll, [[0, 'Am']], { kick: 'heart' });
+      } else if (sec.kind === 'end') {
+        pad([...CH.C.pad, 79, 84], s, e, { gain: 0.03, cut: [2800, 1500], attack: 0.03, release: 0.01, rev: 0.55 });
+        bassNote(s, len - 0.05, 36, 0.6);
+        drone(s, e, 24, 0.09, 0.05);
+      }
+    });
 
     /* ---------- sound effects placed by the reel ---------- */
     for (const ev of score.events || []) {

@@ -239,18 +239,18 @@ window.REEL_SHOTS = {
   },
   "sf9-pdf-1": {
    "file": "sf9-pdf-1.webp",
-   "w": 1871,
-   "h": 1323
+   "w": 2573,
+   "h": 1819
   },
   "sf10-pdf-1": {
    "file": "sf10-pdf-1.webp",
-   "w": 1323,
-   "h": 1871
+   "w": 1819,
+   "h": 2573
   },
   "sf10-pdf-2": {
    "file": "sf10-pdf-2.webp",
-   "w": 1323,
-   "h": 1871
+   "w": 1819,
+   "h": 2573
   }
  },
  "boxes": {
@@ -484,7 +484,7 @@ window.REEL_SHOTS = {
   },
   {
    "shot": "reading-7",
-   "pct": 89
+   "pct": 85
   },
   {
    "shot": "reading-8",

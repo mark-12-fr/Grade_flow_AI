@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "reel": "node scripts/render-reel.mjs",
+    "reel:vertical": "node scripts/render-reel.mjs --vertical",
     "reel:capture": "node scripts/capture-reel.mjs"
   },
   "dependencies": {

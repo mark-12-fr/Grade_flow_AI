@@ -211,7 +211,7 @@ try {
   /* ---------- the PDFs, as printed ---------- */
   for (const kind of ['sf9', 'sf10']) {
     const prefix = path.join(tmp, kind);
-    const res = spawnSync('pdftoppm', ['-r', '160', '-png', `${prefix}.pdf`, prefix]);
+    const res = spawnSync('pdftoppm', ['-r', '220', '-png', `${prefix}.pdf`, prefix]);
     if (res.status !== 0) throw new Error(`pdftoppm failed for ${kind}: ${res.stderr}`);
     const pages = readdirSync(tmp).filter((f) => f.startsWith(`${kind}-`) && f.endsWith('.png')).sort();
     manifest.pdf[kind] = [];

@@ -40,13 +40,17 @@ src/lib/            curriculum, grading, store, actions, sf10Record, pdf/ (jsPDF
 src/server/         llm (free AI providers), mapper, sf10, template, extract, guard
 tests/              vitest tests for the server code
 samples/            fictional sample workbooks (messy, and the standard template) and the scripts that build them
-public/reel/        27-second promo reel (plain HTML/CSS/JS) and its synthesized soundtrack
-scripts/            capture-reel.mjs (films the real app for the reel), render-reel.mjs (turns the reel into an MP4)
+public/reel/        promo reels, 16:9 and 9:16 (plain HTML/CSS/JS), their engine and synthesized soundtrack
+scripts/            capture-reel.mjs (films the real app for the reels), render-reel.mjs (turns a reel into an MP4)
 ```
 
 ## Promo reel
 
 `public/reel/index.html` is a 34-second, 1920×1080 promo with six scenes: identity, promise, how to use, SF9 and SF10, no guessing, and the closing card. It uses only fictional learners.
+
+`public/reel/vertical.html` is a 26-second, 1080×1920 cut for Facebook Reels and TikTok. It opens with a hook ("Still encoding SF9s by hand?"), cuts on every bar at 120 BPM with whip transitions, and uses big word-pop captions and punch zooms on the same real screens and PDFs. Its text stays clear of the bottom of the frame, where Reels and TikTok draw their own captions. Export it with `npm run reel:vertical`. It accepts the same flags as `npm run reel`.
+
+Both reels run on `public/reel/engine.js` (timeline, tracks, the window over the captures, the player) and `public/reel/reel.css`.
 
 - **The app scenes are real.** Scenes 3 to 5 show screenshots of the running app, not mockups: the Upload page, the progress indicator frame by frame, the LRN search one key at a time, the SF9 page, the download toast, the SF10 page, and a blank grade flagged "2 to check". They also show the SF9 and SF10 PDFs the app downloads, page for page. The cursor and camera are animated on top of the captures.
 - **After a UI change, film it again:** run `npm run build`, then `npm run reel:capture`. `scripts/capture-reel.mjs` starts the built app with no AI key, uploads `samples/template_class.xlsx` (fictional learners, read by the built-in template reader, so no data leaves the machine), and writes the captures, element positions and PDF pages to `public/reel/shots/`. It needs Playwright, ffmpeg and `pdftoppm` (poppler-utils). `python3 samples/make_template_class.py` rebuilds the sample.

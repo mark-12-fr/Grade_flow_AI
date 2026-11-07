@@ -20,40 +20,8 @@
   Sound: soundtrack.js synthesizes an original score from the timeline below (T, END) and the
   sound cues placed with sfx(), so music and effects stay in sync with every cut.
 -->
+<link rel="stylesheet" href="reel.css">
 <style>
-  :root {
-    --navy: #14213d;
-    --amber: #f5a524;
-    --blue: #3b82f6;
-    --blue-600: #2563eb;
-    --blue-700: #1d4ed8;
-    --blue-400: #60a5fa;
-    --blue-300: #93c5fd;
-    --ink: #0f172a;
-    --muted: #64748b;
-    --line: #e2e8f0;
-    --dark: #070d1a;
-    --green: #059669;
-    --green-l: #34d399;
-    --sans: "Inter Display", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: #000; overflow: hidden; }
-  body { font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
-
-  #stage {
-    position: absolute; left: 50%; top: 50%;
-    width: 1920px; height: 1080px; overflow: hidden;
-    background: var(--dark);
-    transform-origin: 50% 50%;
-  }
-  .render #stage { left: 0; top: 0; transform: none !important; }
-
-  .scene { position: absolute; inset: 0; opacity: 0; visibility: hidden; overflow: hidden; }
-  .beat { position: absolute; inset: 0; }
-  .w { display: inline-block; will-change: transform, opacity, filter; }
-
   /* ---------- HUD ---------- */
   #hud { position: absolute; inset: 0; z-index: 50; pointer-events: none; font-family: var(--mono); font-size: 15px; letter-spacing: .28em; text-transform: uppercase; }
   #hud > div { position: absolute; }
@@ -65,14 +33,6 @@
   .hud-br { right: 54px; bottom: 52px; width: 230px; height: 2px; background: currentColor; opacity: .25; }
   #hudFillWrap { position: absolute; right: 54px; bottom: 52px; width: 230px; height: 2px; }
   #hudFill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: currentColor; }
-
-  /* ---------- shared type ---------- */
-  .eyebrow { font-family: var(--mono); font-size: 17px; letter-spacing: .3em; text-transform: uppercase; font-weight: 500; }
-  .h-xl { font-size: 104px; line-height: .98; font-weight: 800; letter-spacing: -.045em; }
-  .h-lg { font-size: 84px; line-height: 1; font-weight: 800; letter-spacing: -.04em; }
-  .sub { font-size: 30px; line-height: 1.45; font-weight: 400; letter-spacing: -.01em; }
-  .c-blue-l { color: var(--blue-400); }
-  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
   /* ---------- 1 · identity ---------- */
   #s1 { background: radial-gradient(ellipse at 50% 50%, #0c1730 0%, #060b16 55%, #03060d 100%); }
@@ -102,25 +62,6 @@
   .cap .eyebrow { margin-bottom: 26px; }
   .cap .h-xl { font-size: 66px; line-height: 1.02; letter-spacing: -.045em; }
   .cap .sub { margin-top: 28px; font-size: 26px; line-height: 1.45; }
-  .appwin { position: absolute; border-radius: 18px; overflow: hidden; background: #fff;
-    box-shadow: 0 2px 4px rgba(15, 23, 42, .06), 0 30px 80px rgba(30, 64, 175, .22), 0 0 0 1px rgba(15, 23, 42, .07); }
-  .appwin .bar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: #f1f5f9; border-bottom: 1px solid var(--line); }
-  .appwin .bar > i { width: 11px; height: 11px; border-radius: 50%; background: #cbd5e1; }
-  .appwin .url { margin-left: 18px; flex: 1; height: 26px; border-radius: 7px; background: #fff; border: 1px solid var(--line);
-    font-size: 13px; color: var(--muted); display: flex; align-items: center; padding: 0 12px; }
-  .vp { position: relative; overflow: hidden; background: #f8fafc; }
-  .screen { position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; }
-  .cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-  .cam img { position: absolute; display: block; user-select: none; }
-  .pagelayer, .fixedlayer { position: absolute; left: 0; top: 0; }
-  .fixclip { position: absolute; overflow: hidden; }
-  .cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; z-index: 100; transform-origin: 5px 4px;
-    filter: drop-shadow(0 3px 6px rgba(15, 23, 42, .35)); }
-  .ripple { position: absolute; left: 0; top: 0; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; z-index: 99;
-    border: 3px solid rgba(37, 99, 235, .8); background: rgba(37, 99, 235, .16); }
-  .ring { position: absolute; z-index: 60; border: 4px solid #f5a524; border-radius: 9px;
-    box-shadow: 0 0 0 7px rgba(245, 165, 36, .22), 0 0 30px rgba(245, 165, 36, .55); }
-
   #s3 { background: radial-gradient(ellipse at 74% 40%, #dbe7ff 0%, #eef3ff 32%, #f8fafc 64%); color: var(--ink); }
   #s3 .eyebrow { color: var(--blue-600); }
   #s3 .h-xl { color: var(--ink); }
@@ -129,22 +70,11 @@
   #s4 { background: radial-gradient(ellipse at 62% 50%, #12224a 0%, #070d1a 60%, #04070f 100%); }
   #s4 .eyebrow { color: var(--blue-400); }
   #s4 .sub { color: rgba(255, 255, 255, .7); }
-  .paper { position: absolute; overflow: hidden; border-radius: 4px; background: #fff; box-shadow: 0 40px 100px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .06); }
-  .paper img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-  .paper .scanbar { position: absolute; left: 0; right: 0; top: 0; height: 140px; z-index: 2;
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0), rgba(59, 130, 246, .14) 80%, rgba(59, 130, 246, .5) 100%); }
-  .chip { position: absolute; z-index: 3; height: 58px; padding: 0 24px; border-radius: 999px; display: flex; align-items: center; gap: 10px;
-    font-size: 21px; font-weight: 600; box-shadow: 0 18px 40px rgba(0, 0, 0, .35); white-space: nowrap; }
-  .chip b { font-weight: 800; }
-  .chip.blue { background: var(--blue-600); color: #fff; }
-  .chip.white { background: #fff; color: var(--ink); }
-
   #s5 { background: radial-gradient(ellipse at 50% 40%, #0d1a36 0%, #050912 55%, #020409 100%); }
   #s5 .h1 { font-size: 104px; line-height: 1.02; font-weight: 800; letter-spacing: -.05em; }
   #s5 .h1.c-blue-l { color: #5b9bff; }
   #s5 .sub { position: absolute; left: 0; right: 0; top: 948px; text-align: center; color: rgba(255, 255, 255, .74); font-size: 30px; }
   #s5 .heads { position: absolute; left: 0; right: 0; top: 110px; text-align: center; }
-  .noshots { position: absolute; inset: 0; display: grid; place-items: center; font: 600 28px var(--sans); color: #64748b; }
 
   /* ---------- 6 · outro ---------- */
   #s6 { background: radial-gradient(ellipse at 50% 42%, #3b82f6 0%, #2563eb 45%, #1d4ed8 100%); }
@@ -156,19 +86,6 @@
   #s6pill { margin-top: 46px; height: 64px; padding: 0 28px; border-radius: 999px; background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
     display: flex; align-items: center; gap: 14px; font-size: 24px; font-weight: 500; }
 
-  /* ---------- player controls (not in render mode) ---------- */
-  #ctl { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 14px;
-    padding: 10px 16px; border-radius: 14px; background: rgba(15, 23, 42, .78); backdrop-filter: blur(10px); color: #fff;
-    font: 500 13px/1 var(--mono); transition: opacity .3s; box-shadow: 0 10px 30px rgba(0, 0, 0, .4); }
-  #ctl.idle { opacity: 0; }
-  #ctl button { width: 34px; height: 34px; border-radius: 9px; border: 0; background: rgba(255, 255, 255, .12); color: #fff; cursor: pointer; display: grid; place-items: center; }
-  #ctl button:hover { background: rgba(255, 255, 255, .22); }
-  #ctl button[hidden] { display: none; }
-  #ctl button:disabled { opacity: .6; cursor: progress; }
-  #ctl button:focus-visible, #ctl input:focus-visible { outline: 2px solid var(--blue-400); outline-offset: 2px; }
-  #ctl input[type=range] { width: min(46vw, 520px); accent-color: var(--amber); }
-  #ctlTime { min-width: 118px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
-  .render #ctl { display: none; }
 </style>
 </head>
 <body>
@@ -290,26 +207,12 @@
   </div>
 </div>
 
-<div id="ctl" role="group" aria-label="Reel controls">
-  <button type="button" id="ctlPlay" aria-label="Pause"></button>
-  <input type="range" id="ctlSeek" min="0" max="1000" step="1" value="0" aria-label="Seek">
-  <span id="ctlTime">0.0 s</span>
-  <button type="button" id="ctlSound" aria-label="Turn sound on" aria-pressed="false"></button>
-  <button type="button" id="ctlFull" aria-label="Fullscreen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
-</div>
-
 <script src="shots/manifest.js"></script>
 <script src="soundtrack.js"></script>
+<script src="engine.js"></script>
 <script>
 (() => {
   'use strict';
-
-  const params = new URLSearchParams(location.search);
-  const RENDER = params.has('render');
-  const LOOP = !params.has('once');
-  const FPS = 30;
-  if (RENDER) document.documentElement.classList.add('render');
-  if (params.get('url')) document.getElementById('s6url').textContent = params.get('url').slice(0, 60);
 
   /* ---------- timeline ---------- */
   const T = { s1: 0, s2: 3.2, s3: 7.4, s3b: 12.4, s4: 18.6, s4b: 21.8, s5: 25.2, s6: 29.2, end: 33.7 };
@@ -321,75 +224,14 @@
     { id: 's5', at: T.s5, label: 'No guessing', tone: 'light' },
     { id: 's6', at: T.s6, label: 'Get started', tone: 'light' }
   ];
-  const XF = 0.42; // crossfade between scenes, seconds
   const END = T.end;
-
-  /* ---------- easing + helpers ---------- */
-  const E = {
-    lin: (p) => p,
-    out3: (p) => 1 - Math.pow(1 - p, 3),
-    out5: (p) => 1 - Math.pow(1 - p, 5),
-    inOut3: (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2),
-    in3: (p) => p * p * p,
-    back: (p) => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); },
-    expo: (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p))
-  };
-  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-  const lerp = (a, b, p) => a + (b - a) * p;
-  const $ = (s, root = document) => root.querySelector(s);
-  const $$ = (s, root = document) => [...root.querySelectorAll(s)];
-
-  /* Property tracks: keyframe semantics. Before an element's first track the "from" value holds;
-     once a track starts it owns the property, and its end value holds after it finishes. */
-  const DEF = { o: 1, x: 0, y: 0, s: 1, sx: 1, r: 0, b: 0 };
-  const tracks = new Map(); // element -> [{at, dur, ease, props}]
-  function A(target, at, dur, props, ease = 'out3') {
-    const els = typeof target === 'string' ? $$(target) : Array.isArray(target) ? target : [target];
-    for (const el of els) {
-      if (!el) throw new Error('Missing element for track: ' + target);
-      if (!tracks.has(el)) tracks.set(el, []);
-      tracks.get(el).push({ at, dur, ease: E[ease], props });
-    }
-  }
-  /* Staggered entrance for a list of elements. */
-  function stagger(els, at, gap, dur, props, ease) { els.forEach((el, i) => A(el, at + i * gap, dur, props, ease)); }
-  /* Function tracks: called every frame with eased progress p (0..1) and absolute time t. */
-  const fns = [];
-  function F(at, dur, fn, ease = 'lin') { fns.push({ at, dur, ease: E[ease], fn }); }
-
-  function applyTracks(t) {
-    for (const [el, list] of tracks) {
-      const v = { ...DEF }, seen = {};
-      for (const tr of list) {
-        const raw = tr.dur > 0 ? clamp((t - tr.at) / tr.dur) : (t >= tr.at ? 1 : 0);
-        for (const k in tr.props) {
-          const [a, b] = tr.props[k];
-          if (t < tr.at) { if (!seen[k]) v[k] = a; }
-          else v[k] = lerp(a, b, tr.ease(raw));
-          seen[k] = true;
-        }
-      }
-      el.style.opacity = v.o.toFixed(4);
-      el.style.transform = `translate3d(${v.x.toFixed(2)}px,${v.y.toFixed(2)}px,0) scale(${(v.s * v.sx).toFixed(4)},${v.s.toFixed(4)}) rotate(${v.r.toFixed(3)}deg)`;
-      el.style.filter = v.b > 0.05 ? `blur(${v.b.toFixed(2)}px)` : 'none';
-    }
-    for (const f of fns) f.fn(f.ease(clamp(f.dur > 0 ? (t - f.at) / f.dur : (t >= f.at ? 1 : 0))), t);
-  }
-
-  /* Sound cues: placed next to the animations they belong to; soundtrack.js renders them. */
-  const SOUND = [];
-  const sfx = (t, type, o = {}) => SOUND.push({ t: Math.round(t * 1000) / 1000, type, ...o });
-
-  /* SVG stroke drawing: dash = path length, offset animates from length to 0. */
-  function drawPath(el, at, dur, ease = 'inOut3') {
-    const len = el.getTotalLength();
-    el.style.strokeDasharray = `${len} ${len}`;
-    F(at, dur, (p) => {
-      el.style.strokeDashoffset = (len * (1 - p)).toFixed(2);
-      el.style.opacity = p > 0.001 ? 1 : 0;
-    }, ease);
-  }
-  const blurIn = { o: [0, 1], y: [34, 0], b: [14, 0] };
+  let rowX0 = 0;
+  const reel = ReelEngine.create({
+    width: 1920, height: 1080, T, END, scenes: SCENES,
+    transition: { type: 'fade', dur: 0.42 }, onFrame: hudFrame, onMeasure: measure
+  });
+  const { E, clamp, lerp, $, $$, center, A, F, stagger, sfx, drawPath, blurIn, SH, Screen, params, fps: FPS, XD: XF } = reel;
+  if (params.get('url')) $('#s6url').textContent = params.get('url').slice(0, 60);
 
   /* ---------- 1 · identity ---------- */
   A('#s1glow', 0, 2.2, { o: [0, 1], s: [0.55, 1] }, 'out3');
@@ -415,7 +257,6 @@
   sfx(T.s2 + 1.35, 'scribble', { dur: 0.6 });
   sfx(T.s2 + 1.9, 'scribble', { dur: 0.75 });
   A('#s2copy', T.s3 - 0.5, 0.6, { s: [1, 1.04], o: [1, 0.85] }, 'in3');
-  let rowX0 = 0;
   const hitAt = T.s2 + 2.25, rowSpeed = -150;
   F(T.s2 - XF, (T.s3 + XF) - (T.s2 - XF), (p, t) => {
     $('#s2row').style.transform = `translate3d(${(rowX0 + rowSpeed * (t - hitAt)).toFixed(2)}px,0,0)`;
@@ -427,117 +268,6 @@
      Scenes 3 to 5 show the real app: screenshots, element boxes and PDFs captured by
      scripts/capture-reel.mjs (shots/manifest.js). A Screen is a browser window over those
      captures with a camera (zoom and pan), page scrolling and a cursor, all keyed to the clock. */
-  const SH = window.REEL_SHOTS || null;
-  const center = (b) => [b.x + b.w / 2, b.y + b.h / 2];
-  const CURSOR_SVG = '<svg viewBox="0 0 34 34" width="34" height="34"><path d="M5 3.5v24.2l6.3-6 4.4 9.6 4.3-1.9-4.3-9.4h8.8z" fill="#0f172a" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>';
-  const screens = [];
-
-  class Screen {
-    constructor(host, { left, top, width, vh = SH.view.height, url = '' }) {
-      const vw = SH.view.width, k = width / vw;
-      Object.assign(host.style, { left: left + 'px', top: top + 'px', width: width + 'px' });
-      host.innerHTML = '<div class="bar"><i></i><i></i><i></i><div class="url"></div></div>'
-        + '<div class="vp"><div class="screen"><div class="cam"><div class="pagelayer"></div><div class="fixedlayer"></div></div></div></div>';
-      this.vw = vw; this.vh = vh;
-      this.urlEl = host.querySelector('.url');
-      this.urlEl.textContent = url;
-      Object.assign(host.querySelector('.vp').style, { width: width + 'px', height: vh * k + 'px' });
-      Object.assign(host.querySelector('.screen').style, { width: vw + 'px', height: vh + 'px', transform: `scale(${k})` });
-      this.cam = host.querySelector('.cam');
-      Object.assign(this.cam.style, { width: vw + 'px', height: vh + 'px' });
-      this.page = host.querySelector('.pagelayer');
-      this.fixed = host.querySelector('.fixedlayer');
-      this.cursor = document.createElement('div'); this.cursor.className = 'cursor'; this.cursor.innerHTML = CURSOR_SVG;
-      this.ripple = document.createElement('div'); this.ripple.className = 'ripple';
-      this.cam.append(this.ripple, this.cursor);
-      this.layers = new Map();
-      this.seq = []; this.camKeys = []; this.scrollKeys = []; this.curKeys = []; this.clicks = []; this.curVis = []; this.urls = [];
-      this.curStart = { x: vw * 0.72, y: vh * 0.78 };
-      screens.push(this);
-    }
-    layer(name, fixedFrom) {
-      if (this.layers.has(name)) return;
-      const s = SH.shots[name];
-      if (!s) throw new Error('Missing capture: ' + name);
-      const img = new Image(); img.alt = ''; img.src = 'shots/' + s.file;
-      Object.assign(img.style, { left: (s.x || 0) + 'px', top: (s.y || 0) + 'px', width: s.w + 'px', height: s.h + 'px' });
-      this.page.appendChild(img);
-      const fixed = [];
-      // a full-page capture scrolls; the fixed sidebar and the sticky top bar stay where they are
-      if (fixedFrom) for (const b of [SH.layout.sidebar, SH.layout.topbar]) {
-        const clip = document.createElement('div'); clip.className = 'fixclip';
-        Object.assign(clip.style, { left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px' });
-        const fi = new Image(); fi.alt = ''; fi.src = 'shots/' + SH.shots[fixedFrom].file;
-        Object.assign(fi.style, { left: -b.x + 'px', top: -b.y + 'px', width: SH.view.width + 'px', height: SH.view.height + 'px' });
-        clip.appendChild(fi); this.fixed.appendChild(clip); fixed.push(clip);
-      }
-      this.layers.set(name, { img, fixed });
-    }
-    /* from `at`, show these captures (later names on top); fade crossfades from the previous set */
-    show(at, names, fade = 0, fixedFrom = null) { names.forEach((n, i) => this.layer(n, i === 0 ? fixedFrom : null)); this.seq.push({ at, names, fade }); return this; }
-    camera(at, dur, z, x, y, ease = 'inOut3') { this.camKeys.push({ at, dur, v: { z, x, y }, ease: E[ease] }); return this; }
-    scroll(at, dur, to, ease = 'inOut3') { this.scrollKeys.push({ at, dur, v: { s: to }, ease: E[ease] }); return this; }
-    cursorFrom([x, y]) { this.curStart = { x, y }; return this; }
-    move(at, dur, [x, y], ease = 'inOut3') { this.curKeys.push({ at, dur, v: { x, y }, ease: E[ease] }); return this; }
-    click(at) { this.clicks.push(at); return this; }
-    cursorOn(at, on) { this.curVis.push({ at, on }); return this; }
-    url(at, text) { this.urls.push({ at, text }); return this; }
-    /* an amber highlight around a box (page coordinates, so it scrolls with the page) */
-    ring(at, dur, b, pad = 6) {
-      const el = document.createElement('div'); el.className = 'ring';
-      Object.assign(el.style, { left: b.x - pad + 'px', top: b.y - pad + 'px', width: b.w + 2 * pad + 'px', height: b.h + 2 * pad + 'px' });
-      this.page.appendChild(el);
-      A(el, at, 0.45, { o: [0, 1], s: [1.25, 1] }, 'back');
-      if (dur) A(el, at + dur, 0.3, { o: [1, 0] }, 'in3');
-      return this;
-    }
-    /* keyframes: each key eases from the value before it to its own */
-    static keyed(keys, t, start) {
-      const v = { ...start };
-      for (const k of keys) {
-        if (t <= k.at) break;
-        const p = k.dur > 0 ? clamp((t - k.at) / k.dur) : 1, e = k.ease(p), from = { ...v };
-        for (const key in k.v) v[key] = lerp(from[key], k.v[key], e);
-        if (p < 1) break;
-      }
-      return v;
-    }
-    render(t) {
-      let i = 0;
-      for (let j = 0; j < this.seq.length; j++) if (t >= this.seq[j].at) i = j;
-      const cur = this.seq[i], prev = this.seq[i - 1];
-      const p = cur.fade > 0 && t >= cur.at ? E.inOut3(clamp((t - cur.at) / cur.fade)) : 1;
-      for (const [name, L] of this.layers) {
-        const ci = cur.names.indexOf(name), pi = prev ? prev.names.indexOf(name) : -1;
-        let o = 0, z = 0;
-        if (ci >= 0) { o = pi >= 0 ? 1 : p; z = 20 + ci; }
-        else if (pi >= 0 && p < 1) { o = 1; z = 10 + pi; }
-        for (const el of [L.img, ...L.fixed]) { el.style.opacity = o.toFixed(3); el.style.visibility = o > 0 ? 'visible' : 'hidden'; }
-        L.img.style.zIndex = z;
-      }
-      const s = Screen.keyed(this.scrollKeys, t, { s: 0 }).s;
-      this.page.style.transform = `translate3d(0,${(-s).toFixed(2)}px,0)`;
-      const c = Screen.keyed(this.camKeys, t, { z: 1, x: this.vw / 2, y: this.vh / 2 });
-      const tx = clamp(this.vw / 2 - c.x * c.z, this.vw - this.vw * c.z, 0), ty = clamp(this.vh / 2 - c.y * c.z, this.vh - this.vh * c.z, 0);
-      this.cam.style.transform = `translate3d(${tx.toFixed(2)}px,${ty.toFixed(2)}px,0) scale(${c.z.toFixed(4)})`;
-      let vis = false;
-      for (const v of this.curVis) if (t >= v.at) vis = v.on;
-      const m = Screen.keyed(this.curKeys, t, this.curStart);
-      let press = 0, rip = null;
-      for (const at of this.clicks) {
-        const d = t - at;
-        if (d >= 0 && d < 0.6) { rip = d; press = Math.max(press, d < 0.08 ? d / 0.08 : Math.max(0, 1 - (d - 0.08) / 0.16)); }
-      }
-      this.cursor.style.opacity = vis ? 1 : 0;
-      this.cursor.style.transform = `translate3d(${(m.x - 5).toFixed(2)}px,${(m.y - 4).toFixed(2)}px,0) scale(${(1 - 0.16 * press).toFixed(3)})`;
-      this.ripple.style.opacity = rip === null || !vis ? 0 : (1 - rip / 0.6).toFixed(3);
-      this.ripple.style.transform = `translate3d(${m.x.toFixed(2)}px,${m.y.toFixed(2)}px,0) scale(${rip === null ? 0 : (0.3 + 1.2 * E.out3(rip / 0.6)).toFixed(3)})`;
-      let u = null;
-      for (const x of this.urls) if (t >= x.at) u = x.text;
-      if (u !== null && this.urlEl.textContent !== u) this.urlEl.textContent = u;
-    }
-  }
-
   const caption = (sel, at, out) => {
     A($(sel + ' .eyebrow'), at, 0.6, { o: [0, 1], y: [14, 0] });
     stagger($$(sel + ' .h-xl .w'), at + 0.08, 0.12, 0.75, blurIn, 'out5');
@@ -687,57 +417,23 @@
   sfx(T.s6 + 1.0, 'bell', { notes: [84, 88, 91, 96], g: 0.8, dur: 3 });
   sfx(T.s6 + 1.6, 'ping', { note: 96, g: 0.6 });
 
-  /* ---------- scenes, HUD ---------- */
-  const sceneEls = SCENES.map((s) => document.getElementById(s.id));
-  function sceneAlpha(i, t) {
-    const start = SCENES[i].at;
-    const end = i + 1 < SCENES.length ? SCENES[i + 1].at + XF : Infinity;
-    if (t < start || t >= end) return 0;
-    if (i > 0 && t < start + XF) return E.inOut3((t - start) / XF);
-    return 1;
-  }
+  /* ---------- HUD ---------- */
   const hud = $('#hud');
   const pad = (n, w = 2) => String(n).padStart(w, '0');
   function timecode(t) {
     const f = Math.floor(t * FPS + 1e-6);
-    const s = Math.floor(f / FPS);
-    return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}:${pad(f % FPS)}`;
+    const sec = Math.floor(f / FPS);
+    return `${pad(Math.floor(sec / 3600))}:${pad(Math.floor(sec / 60) % 60)}:${pad(sec % 60)}:${pad(f % FPS)}`;
   }
-
-  function render(t) {
-    t = clamp(t, 0, END);
-    let top = 0;
-    sceneEls.forEach((el, i) => {
-      const a = sceneAlpha(i, t);
-      el.style.visibility = a > 0 ? 'visible' : 'hidden';
-      el.style.opacity = a.toFixed(4);
-      el.style.zIndex = String(i + 1);
-      const k = i > 0 && t < SCENES[i].at + XF ? 1.03 - 0.03 * E.out3(clamp((t - SCENES[i].at) / XF)) : 1;
-      el.style.transform = `scale(${k.toFixed(4)})`;
-      if (a > 0.5) top = i;
-    });
-    applyTracks(t);
-    for (const s of screens) s.render(t);
-
+  function hudFrame(t, top) {
     const sc = SCENES[top];
     hud.style.color = sc.tone === 'dark' ? '#0f172a' : '#ffffff';
     hud.style.opacity = (sc.tone === 'dark' ? 0.75 : 0.8) * (1 - E.out3(clamp((t - T.s6) / 0.4)));
     $('#hudNum').textContent = `${pad(top + 1)} / ${pad(SCENES.length)}`;
     $('#hudLabel').textContent = sc.label;
     $('#tc').textContent = timecode(t);
-    $('#hudFill').style.width = (t / END * 100).toFixed(2) + '%';
-    current = t;
+    $('#hudFill').style.width = ((t / END) * 100).toFixed(2) + '%';
   }
-
-  /* ---------- stage fit ---------- */
-  const stage = $('#stage');
-  function fit() {
-    if (RENDER) return;
-    const k = Math.min(innerWidth / 1920, innerHeight / 1080);
-    stage.style.transform = `translate(-50%,-50%) scale(${k})`;
-  }
-  addEventListener('resize', fit);
-  fit();
 
   /* rowX0 needs layout: place the circled grade at the screen centre when the circle is drawn */
   function measure() {
@@ -745,136 +441,7 @@
     rowX0 = 960 - (hit.offsetLeft + hit.offsetWidth / 2);
   }
 
-  /* ---------- player ---------- */
-  let current = 0, playing = false, last = 0;
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const playBtn = $('#ctlPlay'), seek = $('#ctlSeek'), timeEl = $('#ctlTime'), ctl = $('#ctl');
-  const ICON_PLAY = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
-  const ICON_PAUSE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5.5" y="4.5" width="4.5" height="15" rx="1"/><rect x="14" y="4.5" width="4.5" height="15" rx="1"/></svg>';
-  function syncUi() {
-    playBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
-    playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
-    seek.value = String(Math.round(current / END * 1000));
-    timeEl.textContent = `${current.toFixed(1)} / ${END.toFixed(1)} s`;
-  }
-  /* Sound: off until the viewer turns it on (browsers block autoplay with sound). The track is
-     synthesized on first use. While it plays, the audio clock drives the timeline, so picture and
-     sound cannot drift apart. */
-  const soundBtn = $('#ctlSound');
-  const ICON_SOUND_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>';
-  const ICON_SOUND_ON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9a4.2 4.2 0 0 1 0 6M18.8 6.5a8 8 0 0 1 0 11"/></svg>';
-  let actx = null, abuf = null, src = null, aStart = 0, aOffset = 0, soundOn = false;
-  function stopAudio() {
-    if (!src) return;
-    try { src.stop(); } catch { /* already stopped */ }
-    src.disconnect();
-    src = null;
-  }
-  function startAudio(at) {
-    stopAudio();
-    if (!soundOn || !abuf || !playing) return;
-    src = actx.createBufferSource();
-    src.buffer = abuf;
-    src.connect(actx.destination);
-    src.start(0, Math.min(at, abuf.duration));
-    aStart = actx.currentTime;
-    aOffset = at;
-  }
-  async function toggleSound() {
-    if (!window.GFSoundtrack) return;
-    soundOn = !soundOn;
-    if (soundOn && !actx) {
-      actx = new (window.AudioContext || window.webkitAudioContext)();
-      soundBtn.disabled = true;
-      soundBtn.textContent = '…';
-      await new Promise((r) => setTimeout(r, 30)); // let the button repaint before the synth runs
-      const track = window.GFSoundtrack.render({ T, END, events: SOUND }, { sampleRate: actx.sampleRate });
-      abuf = actx.createBuffer(2, track.left.length, track.sampleRate);
-      abuf.copyToChannel(track.left, 0);
-      abuf.copyToChannel(track.right, 1);
-      soundBtn.disabled = false;
-    }
-    if (actx && actx.state === 'suspended') await actx.resume();
-    if (soundOn && !playing) setPlaying(true);
-    else if (soundOn) startAudio(current);
-    else stopAudio();
-    syncSound();
-  }
-  function syncSound() {
-    soundBtn.innerHTML = soundOn ? ICON_SOUND_ON : ICON_SOUND_OFF;
-    soundBtn.setAttribute('aria-pressed', String(soundOn));
-    soundBtn.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
-  }
-  function seekTo(t) {
-    current = clamp(t, 0, END);
-    render(current);
-    if (playing) startAudio(current);
-    syncUi();
-  }
-
-  function setPlaying(v) {
-    playing = v;
-    if (v && current >= END) current = 0;
-    last = performance.now();
-    if (v) startAudio(current); else stopAudio();
-    syncUi();
-  }
-  function loop(now) {
-    if (playing) {
-      current = src ? aOffset + (actx.currentTime - aStart) : current + Math.min(0.1, (now - last) / 1000);
-      if (current >= END) {
-        if (LOOP) { current = 0; startAudio(0); }
-        else { current = END; playing = false; stopAudio(); }
-      }
-      render(current);
-      syncUi();
-    }
-    last = now;
-    requestAnimationFrame(loop);
-  }
-
-  async function start() {
-    measure();
-    render(0);
-    window.__END = END;
-    window.__FPS = FPS;
-    window.__seek = (t) => { render(t); return t; };
-    window.__SOUND = { T, END, events: SOUND };
-    await Promise.all([...document.images].map((im) => (im.decode ? im.decode().catch(() => {}) : null)));
-    render(current);
-    window.__ready = true;
-    if (RENDER) return;
-    playBtn.addEventListener('click', () => setPlaying(!playing));
-    seek.addEventListener('input', () => seekTo(+seek.value / 1000 * END));
-    soundBtn.addEventListener('click', toggleSound);
-    soundBtn.hidden = !window.GFSoundtrack;
-    syncSound();
-    $('#ctlFull').addEventListener('click', toggleFull);
-    addEventListener('keydown', (e) => {
-      if (e.target === seek && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
-      if (e.target instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return; // let the focused button act
-      if (e.key === ' ' || e.key === 'k') { e.preventDefault(); setPlaying(!playing); }
-      else if (e.key === 'ArrowRight') seekTo(current + 1);
-      else if (e.key === 'ArrowLeft') seekTo(current - 1);
-      else if (e.key === 'r' || e.key === 'R') { seekTo(0); setPlaying(true); }
-      else if (e.key === 'm' || e.key === 'M') toggleSound();
-      else if (e.key === 'f' || e.key === 'F') toggleFull();
-    });
-    let idle;
-    const wake = () => { ctl.classList.remove('idle'); clearTimeout(idle); idle = setTimeout(() => playing && ctl.classList.add('idle'), 2200); };
-    addEventListener('pointermove', wake);
-    addEventListener('keydown', wake);
-    wake();
-    if (reduce) { current = END; render(END); syncUi(); } // show the end card; the viewer can press play
-    else setPlaying(true);
-    requestAnimationFrame(loop);
-  }
-  function toggleFull() {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen?.().catch(() => {});
-  }
-
-  (document.fonts ? document.fonts.ready : Promise.resolve()).then(start);
+  reel.start();
 })();
 </script>
 </body>

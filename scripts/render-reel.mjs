@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Renders public/reel/index.html to an MP4 with its soundtrack, frame by frame.
+ * Renders a reel (public/reel/index.html 16:9, or vertical.html 9:16) to an MP4 with its soundtrack,
+ * frame by frame.
  *
  * The reel exposes window.__seek(t), so every frame is drawn at an exact time and
  * captured: no dropped frames, no dependence on how fast this machine is. The music is
@@ -11,6 +12,7 @@
  * and ffmpeg on PATH.
  *
  *   node scripts/render-reel.mjs                         -> gradeflow-ai-reel.mp4
+ *   node scripts/render-reel.mjs --vertical              -> gradeflow-ai-reel-vertical.mp4 (1080x1920)
  *   node scripts/render-reel.mjs out.mp4 --fps 60
  *   node scripts/render-reel.mjs --url gradeflow.example.com
  *   node scripts/render-reel.mjs --music track.mp3       (your own track instead, faded out at the end)
@@ -57,12 +59,13 @@ const still = flag('--still', null);
 const wavOnly = flag('--wav', null);
 const musicFile = flag('--music', null);
 const silent = toggle('--no-music');
-const out = path.resolve(args[0] ?? (still !== null ? 'reel-frame.png' : 'gradeflow-ai-reel.mp4'));
+const vertical = toggle('--vertical');
+const out = path.resolve(args[0] ?? (still !== null ? 'reel-frame.png' : vertical ? 'gradeflow-ai-reel-vertical.mp4' : 'gradeflow-ai-reel.mp4'));
 if (!Number.isFinite(fps) || fps < 1 || fps > 120) throw new Error(`Bad --fps: ${fps}`);
 if (musicFile && !existsSync(musicFile)) throw new Error(`Music file not found: ${musicFile}`);
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const pageUrl = pathToFileURL(path.join(root, '..', 'public', 'reel', 'index.html'));
+const pageUrl = pathToFileURL(path.join(root, '..', 'public', 'reel', vertical ? 'vertical.html' : 'index.html'));
 pageUrl.search = new URLSearchParams({ render: '1', ...(url ? { url } : {}) }).toString();
 
 const tmpWav = path.join(os.tmpdir(), `gradeflow-reel-${process.pid}.wav`);
@@ -71,7 +74,9 @@ try {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
   page.on('pageerror', (e) => { console.error('Reel error:', e.message); process.exitCode = 1; });
   await page.goto(pageUrl.href);
-  await page.waitForFunction(() => window.__ready === true, null, { timeout: 15000 });
+  await page.waitForFunction(() => window.__ready === true, null, { timeout: 30000 });
+  const size = await page.evaluate(() => window.__SIZE || { width: 1920, height: 1080 });
+  await page.setViewportSize(size); // the stage is drawn at its exact size in render mode
   const end = await page.evaluate(() => window.__END);
   const score = await page.evaluate(() => window.__SOUND);
   const synth = () => soundtrack.toWav(soundtrack.render(score, { sampleRate: 48000 }));

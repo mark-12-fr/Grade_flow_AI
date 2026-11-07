@@ -141,7 +141,7 @@ export default function Sf10Page() {
 
         <div className="sf10-list" ref={listRef} role="listbox" aria-label="Learners">
           {filtered.length === 0
-            ? <div className="sf10-list-empty">{source.length ? 'No learners match. Try another LRN, name or filter.' : 'Upload an SF10 or SF9 file first.'}</div>
+            ? <div className="sf10-list-empty">{source.length ? 'No learners match. Try another LRN, name or filter.' : 'Upload an SF10 file first.'}</div>
             : filtered.map((s) => {
               const m = metas.get(s.id)!;
               const active = current?.id === s.id;
@@ -234,7 +234,7 @@ export default function Sf10Page() {
       <article className="card sf10-sheet" aria-label="SF10 record">
         {current && visibleIndex !== -1
           ? <div key={current.id} className="swap-in"><Sf10Sheet student={current} state={state} /></div>
-          : <p className="sf10-incomplete">{source.length ? 'No learner to show. Change the search or filters.' : 'Upload an SF10 or SF9 file first.'}</p>}
+          : <p className="sf10-incomplete">{source.length ? 'No learner to show. Change the search or filters.' : 'Upload an SF10 file first.'}</p>}
       </article>
     </section>
   );

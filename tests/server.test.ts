@@ -263,3 +263,32 @@ describe('sf10 quality and bulk details', () => {
     expect(r3.changed).toBe(0); // the school year is only for grade 12
   });
 });
+
+describe('accuracy checks after the AI maps columns', () => {
+  it('flags a grade column that does not hold grades, duplicate LRNs and names with numbers', async () => {
+    const { gradeColumnWarnings, learnerColumnWarnings } = await import('@/server/checks');
+    const grid = readSheets('x.xlsx', workbook([
+      ['LRN', 'NAME', 'MATH', 'REMARKS'],
+      ['111111111111', 'CRUZ, ANA', 88, 'good'],
+      ['111111111111', 'CRUZ, ANA', 90, 'late'],
+      ['222222222222', 'REYES 12', 91, 'ok']
+    ]))[0];
+    const grades = gradeColumnWarnings(grid, 1, [{ col: 2, label: 'Math' }, { col: 3, label: 'Remarks' }]);
+    expect(grades).toHaveLength(1);
+    expect(grades[0]).toContain('Remarks');
+    const learners = learnerColumnWarnings(grid, 1, { name: 1, lrn: 0 });
+    expect(learners.some((w) => w.includes('LRN'))).toBe(true);
+    expect(learners.some((w) => w.includes('more than once'))).toBe(true);
+    expect(learners.some((w) => w.includes('contain numbers'))).toBe(true);
+  });
+
+  it('SF9 import keeps reading past a total row and reports it', async () => {
+    const { applyMapping } = await import('@/server/mapper');
+    const grid = readSheets('x.xlsx', workbook([
+      ['NAME'], ['A ONE'], ['B TWO'], ['Total'], ['C THREE']
+    ]))[0];
+    const out = applyMapping(grid, { columns: new Map([[0, 'name']]), first: 1, details: {} }, { subjects: [], months: [], coreValues: [], transferFields: [] });
+    expect(out.students.map((s) => s.name)).toEqual(['A ONE', 'B TWO', 'C THREE']);
+    expect(out.warnings.some((w) => w.includes('1 total/signature row'))).toBe(true);
+  });
+});

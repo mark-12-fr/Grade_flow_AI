@@ -5,6 +5,7 @@
  * sheet and builds one SF10 per learner, grouped by grade level and semester.
  */
 import { AiError, callAi, type Caller, type Tool } from './llm';
+import { gradeColumnWarnings, learnerColumnWarnings, listRows } from './checks';
 import { colLetter, type Grid } from './extract';
 import { lrnText, MappingError } from './mapper';
 import type { Sf10Semester, Student } from '@/lib/types';
@@ -225,9 +226,15 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
       }
     });
   }
-  const listRows = (n: number[]) => `rows ${n.slice(0, 10).join(', ')}${n.length > 10 ? ', ...' : ''}`;
   if (skipped.noGrades.length) warnings.push(`${skipped.noGrades.length} learner row${skipped.noGrades.length === 1 ? '' : 's'} skipped because no numeric grade was found (${listRows(skipped.noGrades)}).`);
   if (skipped.footer.length) warnings.push(`${skipped.footer.length} total/signature row${skipped.footer.length === 1 ? '' : 's'} ignored (${listRows(skipped.footer)}).`);
+  warnings.push(
+    ...learnerColumnWarnings(grid, first, { name: cols.name >= 0 ? cols.name : cols.last, lrn: cols.lrn }),
+    ...gradeColumnWarnings(grid, first, subjects.flatMap((s) => {
+      const periods: [string, number][] = [['Q1', s.q1], ['Q2', s.q2], ['Final', s.final]];
+      return periods.filter(([, c]) => c >= 0).map(([p, c]) => ({ col: c, label: `Grade ${s.gradeLevel} sem ${s.sem} ${s.name} ${p}` }));
+    }))
+  );
   warnings.push(`Read ${grid.rows.length - first} rows below the header: ${students.length} learners imported.`);
   if (!students.length) throw new MappingError(`Sheet "${grid.sheet}": no learners with grades were found below the header.`, 'file');
   if (cols.lrn >= 0) {

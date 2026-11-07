@@ -3,6 +3,7 @@
 import { SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from './curriculum';
 import { ageFromBirthdate } from './format';
 import { buildComment, isValidGrade, makeNextSteps, makeTraits, missingGradeCells, scaleMinimum } from './grading';
+import { setReadProgress } from './progress';
 import { getState, setState } from './store';
 import type { AppState, Student, UploadInfo } from './types';
 
@@ -16,43 +17,75 @@ export const aiSchema = () => ({
   transferFields: [...TRANSFER_FIELDS]
 });
 
-/** POST to an AI endpoint. If the server asks for an access code (401), ask once and retry. */
-async function post(url: string, body: FormData, signal: AbortSignal): Promise<Response> {
-  const send = () => {
+const UPLOAD_SHARE = 25; // the upload is the first 25% of the bar; the server's own stages fill the rest
+
+/** Sends the form with XMLHttpRequest so the upload reports real bytes; the server then streams its own progress. */
+function send(url: string, body: FormData, timeoutMs: number): Promise<{ status: number; text: string; aborted: boolean }> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.timeout = timeoutMs;
     const code = window.sessionStorage.getItem('gf-access-code');
-    return fetch(url, { method: 'POST', body, signal, headers: code ? { 'X-Access-Code': code } : {} });
-  };
-  let response = await send();
-  if (response.status === 401) {
+    if (code) xhr.setRequestHeader('X-Access-Code', code);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) setReadProgress({ percent: Math.round((e.loaded / e.total) * UPLOAD_SHARE), label: 'Uploading your file' });
+    };
+    let seen = 0;
+    xhr.onprogress = () => {
+      if (xhr.status !== 200) return;
+      const lines = xhr.responseText.slice(seen).split('\n');
+      lines.slice(0, -1).forEach((line) => {
+        seen += line.length + 1;
+        try {
+          const ev = JSON.parse(line) as { p?: number; l?: string };
+          if (typeof ev.p === 'number') setReadProgress({ percent: Math.min(99, UPLOAD_SHARE + Math.round((ev.p / 100) * (100 - UPLOAD_SHARE))), label: ev.l ?? '' });
+        } catch { /* partial line */ }
+      });
+    };
+    xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText, aborted: false });
+    xhr.onerror = () => resolve({ status: 0, text: '', aborted: false });
+    xhr.ontimeout = () => resolve({ status: 0, text: '', aborted: true });
+    xhr.send(body);
+  });
+}
+
+/** POST to an AI endpoint. If the server asks for an access code (401), ask once and retry. */
+async function post(url: string, make: () => FormData, timeoutMs: number) {
+  let res = await send(url, make(), timeoutMs);
+  if (res.status === 401) {
     const entered = window.prompt('Enter the access code to use the AI import:');
     if (entered) {
       window.sessionStorage.setItem('gf-access-code', entered);
-      response = await send();
-      if (response.status === 401) window.sessionStorage.removeItem('gf-access-code');
+      res = await send(url, make(), timeoutMs);
+      if (res.status === 401) window.sessionStorage.removeItem('gf-access-code');
     }
   }
-  return response;
+  return res;
 }
 
 async function callApi<T>(url: string, file: File, extra: Record<string, string> = {}, timeoutMs = 120_000): Promise<{ data?: T; error?: string }> {
-  const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
-  try {
+  setReadProgress({ percent: 0, label: 'Uploading your file' });
+  const make = () => {
     const body = new FormData();
     body.append('file', file);
     Object.entries(extra).forEach(([k, v]) => body.append(k, v));
-    const response = await post(url, body, controller.signal);
-    if (!response.ok) {
-      let detail = `HTTP ${response.status}`;
-      try { detail = (await response.json()).detail || detail; } catch { /* not JSON */ }
-      return { error: detail };
-    }
-    return { data: (await response.json()) as T };
-  } catch (error) {
-    return { error: (error as Error).name === 'AbortError' ? 'The AI import took too long.' : 'The server is not reachable.' };
-  } finally {
-    window.clearTimeout(timer);
+    return body;
+  };
+  const res = await post(url, make, timeoutMs);
+  if (res.aborted) return { error: 'The AI import took too long.' };
+  if (!res.status) return { error: 'The server is not reachable.' };
+  if (res.status !== 200) {
+    let detail = `HTTP ${res.status}`;
+    try { detail = (JSON.parse(res.text) as { detail?: string }).detail || detail; } catch { /* not JSON */ }
+    return { error: detail };
   }
+  const last = res.text.trim().split('\n').pop() ?? '';
+  try {
+    const ev = JSON.parse(last) as { done?: T; error?: string };
+    if (ev.error) return { error: ev.error };
+    if (ev.done !== undefined) { setReadProgress({ percent: 100, label: 'Done' }); return { data: ev.done }; }
+  } catch { /* fall through */ }
+  return { error: 'The server stopped before the file was read. Try again.' };
 }
 
 interface Sf9Response {

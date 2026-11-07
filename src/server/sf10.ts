@@ -131,8 +131,8 @@ export function normalize(raw: Raw, grid: Grid, index: number): { student: Stude
 
 export interface Sf10Result { students: Student[]; warnings: string[]; sheets: number }
 
-export async function runImportSf10(grids: Grid[], opts: { caller?: Caller; spend?: () => void; maxChars?: number } = {}): Promise<Sf10Result> {
-  const { caller = callAi, spend, maxChars = 0 } = opts;
+export async function runImportSf10(grids: Grid[], opts: { caller?: Caller; spend?: () => void; maxChars?: number; onProgress?: (done: number, total: number) => void } = {}): Promise<Sf10Result> {
+  const { caller = callAi, spend, maxChars = 0, onProgress } = opts;
   const one = async (grid: Grid, i: number): Promise<{ student: Student | null; warnings: string[] }> => {
     if (maxChars && fullText(grid).length > maxChars) {
       return { student: null, warnings: [`Sheet "${grid.sheet}" is too large to be one learner's SF10; skipped (no AI call).`] };
@@ -151,6 +151,7 @@ export async function runImportSf10(grids: Grid[], opts: { caller?: Caller; spen
   const results: { student: Student | null; warnings: string[] }[] = [];
   for (let i = 0; i < grids.length; i += 4) {
     results.push(...(await Promise.all(grids.slice(i, i + 4).map((g, k) => one(g, i + k)))));
+    onProgress?.(results.length, grids.length);
   }
   const students = results.map((r) => r.student).filter((x): x is Student => Boolean(x));
   const warnings = results.flatMap((r) => r.warnings);

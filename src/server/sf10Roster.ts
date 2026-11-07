@@ -237,15 +237,17 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
   return { students, warnings };
 }
 
-export async function runRosterImport(grid: Grid, caller: Caller = callAi, spend?: () => void) {
+export async function runRosterImport(grid: Grid, caller: Caller = callAi, spend?: () => void, emit?: (percent: number, label: string) => void) {
   let raw: Record<string, unknown>;
   try {
     spend?.();
+    emit?.(10, 'AI is mapping the columns');
     raw = await caller(buildRosterPrompt(grid), ROSTER_TOOL, 8000);
   } catch (error) {
     if (error instanceof AiError) throw new MappingError(error.message, error.kind === 'config' ? 'config' : 'ai');
     throw error;
   }
+  emit?.(80, 'Copying each learner\'s grades');
   const { students, warnings } = buildRoster(raw, grid);
   return { students, warnings, sheets: 1, mode: 'roster' as const };
 }

@@ -13,7 +13,7 @@ export default function HistoryPage() {
       <div className="page-heading">
         <div>
           <h1 id="history-title">Report history</h1>
-          <p>Pick up where you left off.</p>
+          <p>Reports you have generated before.</p>
         </div>
         <span className="pill pill-blue">Your workspace</span>
       </div>

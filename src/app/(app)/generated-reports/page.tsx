@@ -216,7 +216,7 @@ export default function GeneratedReportsPage() {
             <p className="helper-text center">This is an estimate only. Choose one-sided or two-sided printing in your printer settings.</p>
           </article>
           <div className="info-card">
-            <Icon name="sparkles" className="info-card-icon" />
+            <Icon name="info" className="info-card-icon" />
             <div><h3>Try one report first</h3><p>Print a single student&apos;s report to check alignment. Choose Actual size or 100% in your printer settings.</p></div>
           </div>
         </aside>

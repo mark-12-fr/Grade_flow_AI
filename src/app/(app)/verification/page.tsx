@@ -162,7 +162,7 @@ export default function VerificationPage() {
     <section className="page active" aria-labelledby="verification-title">
       <div className="page-heading">
         <div>
-          <h1 id="verification-title">A quick check. Your final say.</h1>
+          <h1 id="verification-title">Grade verification</h1>
           <p>Review the grades and correct anything that needs a second look.</p>
         </div>
         <span className="pill pill-green"><Icon name="check-circle" /> Changes saved</span>

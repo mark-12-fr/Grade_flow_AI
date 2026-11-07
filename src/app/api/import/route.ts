@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       const grid = readGrid(name, data);
       limiter.takeCall();
       try {
-        emit(15, 'AI is finding the learners and subjects');
+        emit(15, 'Finding the learners and subjects');
         const result = await runImport(grid, schema);
         emit(95, 'Copying the grades into the report cards');
         return { ...result, schoolLogo: extractLogo(name, data) };

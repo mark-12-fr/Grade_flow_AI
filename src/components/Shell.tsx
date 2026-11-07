@@ -70,7 +70,7 @@ export function Shell({ children }: { children: ReactNode }) {
     items.push({ icon: 'alert-triangle', title: `${missing.length} grade${missing.length === 1 ? '' : 's'} need review`, text: `${missing[0].student.name} · ${missing[0].subject.name}`, link: '/verification', linkLabel: 'Review grades' });
   }
   if (readyToGenerate(state.students) && !state.generated) {
-    items.push({ icon: 'sparkles', title: 'Ready to generate', text: `All grades are approved for ${state.className}.`, link: '/report-card', linkLabel: 'Preview reports' });
+    items.push({ icon: 'check-circle', title: 'Ready to generate', text: `All grades are approved for ${state.className}.`, link: '/report-card', linkLabel: 'Preview reports' });
   }
   if (!items.length) items.push({ icon: 'check-circle', title: 'You are all caught up', text: 'There are no grade checks waiting for you right now.' });
   const showDot = missing.length > 0 || (state.students.length > 0 && !allCommentsReviewed(state.students));
@@ -81,7 +81,6 @@ export function Shell({ children }: { children: ReactNode }) {
         <Link className="brand" href="/upload" aria-label="GradeFlow AI home">
           <span className="brand-mark"><Icon name="layers" /></span>
           <span className="brand-name">GradeFlow</span>
-          <span className="brand-ai">AI</span>
         </Link>
         <nav className="nav-links">
           {NAV.map((item) => (
@@ -92,15 +91,15 @@ export function Shell({ children }: { children: ReactNode }) {
         </nav>
         <div className="sidebar-bottom">
           <Link className="help-card" href="/help">
-            <span className="help-icon"><Icon name="heart" /></span>
-            <strong>A little help, anytime.</strong>
-            <span>Your first report card? We&apos;ll guide you through it.</span>
-            <span className="help-link">View quick-start guide <Icon name="arrow-right" /></span>
+            <span className="help-icon"><Icon name="help" /></span>
+            <strong>Help</strong>
+            <span>Steps for preparing and printing report cards.</span>
+            <span className="help-link">Open the guide <Icon name="arrow-right" /></span>
           </Link>
           <Link className="teacher-card" href="/settings" aria-label="Open workspace settings">
-            <span className="avatar avatar-sm">SC</span>
-            <span className="teacher-text"><strong>Sarah Collins</strong><span>Class teacher</span></span>
-            <Icon name="chevron-down" />
+            <span className="avatar avatar-sm"><Icon name="settings" /></span>
+            <span className="teacher-text"><strong>Settings</strong><span>Class and report details</span></span>
+            <Icon name="chevron-right" />
           </Link>
         </div>
       </aside>
@@ -163,8 +162,8 @@ export function Shell({ children }: { children: ReactNode }) {
           )}
           {children}
           <footer className="app-footer">
-            <span><Icon name="shield-check" /> Your student data stays private and secure.</span>
-            <span>GradeFlow AI · Made for teachers</span>
+            <span><Icon name="shield-check" /> Learner data stays in your browser except for the file you upload.</span>
+            <span>GradeFlow</span>
           </footer>
         </main>
       </div>

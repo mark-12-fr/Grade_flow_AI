@@ -70,7 +70,7 @@ export default function ReportCardPage() {
     <section className="page active" aria-labelledby="report-preview-title">
       <div className="page-heading">
         <div>
-          <h1 id="report-preview-title">{total ? 'Looking good, ready to share.' : 'No report cards yet'}</h1>
+          <h1 id="report-preview-title">{total ? 'SF9 report cards' : 'No report cards yet'}</h1>
           <p>Review the report card before creating the final PDF.</p>
         </div>
         <span className={`pill ${approved === total ? 'pill-green' : 'pill-blue'}`}><Icon name="check-circle" /> <span>{approved} of {total} approved</span></span>

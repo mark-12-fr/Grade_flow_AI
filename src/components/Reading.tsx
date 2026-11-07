@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useReadProgress } from '@/lib/progress';
 
 const STEPS: Record<'sf9' | 'sf10' | 'sheet', string[]> = {
-  sf9: ['Uploading your file', 'Reading the sheet', 'AI is finding the learners and subjects', 'Copying the grades into the report cards'],
-  sf10: ['Uploading your file', 'Reading the sheets', 'AI is reading the SF10 details', 'Building the permanent records'],
-  sheet: ['Opening the sheet', 'AI is mapping the columns', 'Copying each learner\'s grades', 'Building one SF10 per learner']
+  sf9: ['Uploading your file', 'Reading the sheet', 'Finding the learners and subjects', 'Copying the grades into the report cards'],
+  sf10: ['Uploading your file', 'Reading the sheets', 'Reading the SF10 details', 'Building the permanent records'],
+  sheet: ['Opening the sheet', 'Mapping the columns', 'Copying each learner\'s grades', 'Building one SF10 per learner']
 };
 const STARTS = [0, 25, 40, 90]; // percent at which each step begins; the percent itself is real (see lib/progress.ts)
 
@@ -49,7 +49,7 @@ export function Reading({ fileName, kind }: { fileName: string; kind: 'sf9' | 's
       </div>
       <ol className="reading-steps" aria-hidden="true">
         {steps.map((text, i) => (
-          <li key={text} className={i < stage ? 'done' : i === stage ? 'current' : ''}>{text.replace(/^AI is /, '')}</li>
+          <li key={text} className={i < stage ? 'done' : i === stage ? 'current' : ''}>{text}</li>
         ))}
       </ol>
     </div>

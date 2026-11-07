@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       if (cfg.maxSheets && forms.length > cfg.maxSheets) {
         throw new HttpError(422, `This workbook has ${forms.length} SF10 sheets; the AI reads one learner per sheet and the limit is ${cfg.maxSheets}.`);
       }
-      emit(10, `AI is reading ${forms.length} SF10 sheet${forms.length === 1 ? '' : 's'}`);
+      emit(10, `Reading ${forms.length} SF10 sheet${forms.length === 1 ? '' : 's'}`);
       const result = await runImportSf10(forms, {
         spend: () => limiter.takeCall(), maxChars: cfg.maxSheetChars,
         onProgress: (done, total) => emit(10 + Math.round((done / total) * 80), `Read ${done} of ${total} sheets`)

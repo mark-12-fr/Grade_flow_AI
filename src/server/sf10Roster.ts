@@ -241,7 +241,7 @@ export async function runRosterImport(grid: Grid, caller: Caller = callAi, spend
   let raw: Record<string, unknown>;
   try {
     spend?.();
-    emit?.(10, 'AI is mapping the columns');
+    emit?.(10, 'Mapping the columns');
     raw = await caller(buildRosterPrompt(grid), ROSTER_TOOL, 8000);
   } catch (error) {
     if (error instanceof AiError) throw new MappingError(error.message, error.kind === 'config' ? 'config' : 'ai');

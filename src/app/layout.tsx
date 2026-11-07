@@ -5,7 +5,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'GradeFlow AI',
-  description: 'GradeFlow AI reads your SF9 and SF10 grade sheets with AI and builds report cards and permanent records.',
+  description: 'Build SF9 report cards and SF10 permanent records from your grade sheets.',
   icons: { icon: '/assets/favicon.svg' }
 };
 

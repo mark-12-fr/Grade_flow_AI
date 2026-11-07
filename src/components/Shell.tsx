@@ -17,7 +17,7 @@ const NAV: { page: PageId; icon: IconName; label: string }[] = [
 
 const STEPS: { page: PageId; label: string }[] = [
   { page: 'upload', label: 'Upload' }, { page: 'report-card', label: 'SF9' },
-  { page: 'sf10', label: 'SF10' }, { page: 'generated-reports', label: 'Print' }
+  { page: 'sf10', label: 'SF10' }
 ];
 
 function useTheme() {
@@ -45,7 +45,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
   const page = (pathname.replace(/^\//, '') || 'upload') as PageId;
   const meta = PAGE_META[page] ?? PAGE_META.upload;
-  const stepPage = page === 'verification' ? 'report-card' : page;
+  const stepPage = page === 'verification' ? 'report-card' : page === 'generated-reports' ? 'sf10' : page;
   const stepIndex = STEP_ORDER.indexOf(stepPage);
 
   useEffect(() => {

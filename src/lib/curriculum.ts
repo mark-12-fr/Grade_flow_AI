@@ -84,7 +84,7 @@ export const PAGE_META: Record<PageId, { label: string; breadcrumb: string; nav:
   help: { label: 'Help', breadcrumb: 'Help', nav: 'help' }
 };
 
-export const STEP_ORDER: PageId[] = ['upload', 'report-card', 'sf10', 'generated-reports'];
+export const STEP_ORDER: PageId[] = ['upload', 'report-card', 'sf10'];
 export const PASSING_GRADE = 75;
 
 export const STRAND_TRACK: Record<string, string> = {

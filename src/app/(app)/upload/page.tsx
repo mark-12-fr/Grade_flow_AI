@@ -76,7 +76,7 @@ export default function UploadPage() {
     <section className="page active" aria-labelledby="upload-title">
       <div className="page-heading">
         <div><h1 id="upload-title">Upload your grade sheet</h1></div>
-        <span className="pill pill-blue">Step 1 of 4</span>
+        <span className="pill pill-blue">Step 1 of 3</span>
       </div>
 
       <div className="upload-layout">

@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "reel": "node scripts/render-reel.mjs"
+    "reel": "node scripts/render-reel.mjs",
+    "reel:capture": "node scripts/capture-reel.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",

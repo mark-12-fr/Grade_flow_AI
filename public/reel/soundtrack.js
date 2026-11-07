@@ -295,21 +295,24 @@
     }
 
     /* ---------- arrangement ---------- */
+    // one chord per 2 s bar, cycling through `names` until the section is full
+    const bars = (names, len) => Array.from({ length: Math.max(1, Math.ceil(len / 2 - 1e-6)) }, (_, i) => [i * 2, names[i % names.length]]);
     // 1 identity: dark pad opening up, sub drone, riser into the first cut
     pad(CH.Am.pad, 0, T.s2, { gain: 0.03, cut: [260, 1500], attack: 1.8, release: 0.25, rev: 0.5 });
     drone(0, T.s2, 33, 0.1, 1.5);
     riser(T.s2, 0.9, 0.55);
     // 2 promise: the beat drops on the cut
     impact(T.s2, 1);
-    section(T.s2, T.s3, [[0, 'F'], [2, 'G'], [4, 'C']], { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pad: { gain: 0.026, cut: [1400, 2600] } });
+    section(T.s2, T.s3, bars(['F', 'G', 'C'], T.s3 - T.s2), { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pad: { gain: 0.026, cut: [1400, 2600] } });
     riser(T.s3, 0.5, 0.35);
-    // 3 how to use: same groove plus a plucked arpeggio
+    // 3 how to use: same groove plus a plucked arpeggio; a lighter hit marks step 2
     impact(T.s3, 0.55);
-    section(T.s3, T.s4, [[0, 'Am'], [2, 'F'], [4, 'C'], [6, 'G']], { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pluck: 0.8, pad: { gain: 0.022, cut: [1800, 2400] } });
+    section(T.s3, T.s4, bars(['Am', 'F', 'C', 'G'], T.s4 - T.s3), { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pluck: 0.8, pad: { gain: 0.022, cut: [1800, 2400] } });
+    if (T.s3b) { riser(T.s3b, 0.4, 0.25); impact(T.s3b, 0.4); }
     riser(T.s4, 0.7, 0.5);
-    // 4 why it matters: darker, half time
+    // 4 the forms: darker, half time
     impact(T.s4, 1);
-    section(T.s4, T.s5, [[0, 'Am'], [2, 'F'], [4, 'G']], { kick: 'half', snare: 0.8, hats8: 0.45, bass: 'sustain', pad: { gain: 0.028, cut: [700, 1400] } });
+    section(T.s4, T.s5, bars(['Am', 'F', 'G', 'Am'], T.s5 - T.s4), { kick: 'half', snare: 0.8, hats8: 0.45, bass: 'sustain', pad: { gain: 0.028, cut: [700, 1400] } });
     riser(T.s5, 0.8, 0.45);
     // 5 no guessing: everything drops out to a low pulse, then a snare roll into the end card
     impact(T.s5, 1.2);

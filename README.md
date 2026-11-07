@@ -39,14 +39,18 @@ src/components/     Shell, Providers (toast + modal), ReportCard (SF9), Sf10Shee
 src/lib/            curriculum, grading, store, actions, sf10Record, pdf/ (jsPDF drawing for SF9 and SF10)
 src/server/         llm (free AI providers), mapper, sf10, template, extract, guard
 tests/              vitest tests for the server code
-samples/            fictional sample workbook and the script that builds it
+samples/            fictional sample workbooks (messy, and the standard template) and the scripts that build them
 public/reel/        27-second promo reel (plain HTML/CSS/JS) and its synthesized soundtrack
-scripts/            render-reel.mjs (turns the reel into an MP4)
+scripts/            capture-reel.mjs (films the real app for the reel), render-reel.mjs (turns the reel into an MP4)
 ```
 
 ## Promo reel
 
-`public/reel/index.html` is a 27-second, 1920×1080 promo with six scenes: identity, promise, how to use, why it matters, no guessing, and the closing card. It uses only fictional learners.
+`public/reel/index.html` is a 34-second, 1920×1080 promo with six scenes: identity, promise, how to use, SF9 and SF10, no guessing, and the closing card. It uses only fictional learners.
+
+- **The app scenes are real.** Scenes 3 to 5 show screenshots of the running app, not mockups: the Upload page, the progress indicator frame by frame, the LRN search one key at a time, the SF9 page, the download toast, the SF10 page, and a blank grade flagged "2 to check". They also show the SF9 and SF10 PDFs the app downloads, page for page. The cursor and camera are animated on top of the captures.
+- **After a UI change, film it again:** run `npm run build`, then `npm run reel:capture`. `scripts/capture-reel.mjs` starts the built app with no AI key, uploads `samples/template_class.xlsx` (fictional learners, read by the built-in template reader, so no data leaves the machine), and writes the captures, element positions and PDF pages to `public/reel/shots/`. It needs Playwright, ffmpeg and `pdftoppm` (poppler-utils). `python3 samples/make_template_class.py` rebuilds the sample.
+- The captures show what the app shows, including the school name and seal set in `src/lib/store.ts` and `public/assets/`.
 
 - **Watch it:** run `npm run dev` and open http://localhost:3000/reel/index.html, or just open the file in a browser. Keys: Space play/pause, ← → seek, R restart, M sound, F fullscreen.
 - **Options:** `?url=your-app.vercel.app` puts your address in the closing pill. `?once` plays it once instead of looping.

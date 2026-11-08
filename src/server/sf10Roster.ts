@@ -7,7 +7,7 @@
 import { AiError, callAi, type Caller, type Tool } from './llm';
 import { gradeColumnWarnings, learnerColumnWarnings, listRows } from './checks';
 import { colLetter, type Grid } from './extract';
-import { lrnText, MappingError } from './mapper';
+import { lrnText, MappingError, type ImportCounts } from './mapper';
 import type { Sf10Semester, Student } from '@/lib/types';
 
 const COL = { type: 'string', description: 'Spreadsheet column LETTER such as H or AB, or empty string when the sheet has no such column' };
@@ -145,7 +145,7 @@ function jhsEligibility(row: unknown[], cols: { jhsSchool: number; jhsAverage: n
   return school || ave ? { jhsCompleter: true, jhsGenAve: ave, schoolName: school } : {};
 }
 
-export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnings: string[] } {
+export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnings: string[]; counts: ImportCounts } {
   const width = grid.rows[0]?.length ?? 0;
   const warnings: string[] = ((raw.warnings as unknown[]) ?? []).map(String).filter((w) => w.trim());
   const L: Raw = raw.learner ?? {};
@@ -184,13 +184,16 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
   });
 
   const students: Student[] = [];
-  const skipped = { footer: [] as number[], noGrades: [] as number[] };
+  const skipped = { footer: [] as number[], noGrades: [] as number[], nameless: [] as number[], blank: 0 };
   for (let r = first; r < grid.rows.length; r += 1) {
     const row = grid.rows[r];
     const full = cell(row, cols.name);
     const lrn = lrnText(cell(row, cols.lrn));
     const named = cols.last >= 0 ? { last: cell(row, cols.last), first: cell(row, cols.first), middle: cell(row, cols.middle) } : splitName(full);
-    if (!named.last && !named.first && !lrn) continue;
+    if (!named.last && !named.first && !lrn) {
+      if (row.some((c) => String(c ?? '').trim() !== '')) skipped.nameless.push(r + 1); else skipped.blank += 1;
+      continue;
+    }
     const footer = FOOTER.test(named.last || full);
     if (footer && !lrn) { skipped.footer.push(r + 1); continue; } // a subtotal or signature row, not the end of the list
 
@@ -235,13 +238,16 @@ export function buildRoster(raw: Raw, grid: Grid): { students: Student[]; warnin
       return periods.filter(([, c]) => c >= 0).map(([p, c]) => ({ col: c, label: `Grade ${s.gradeLevel} sem ${s.sem} ${s.name} ${p}` }));
     }))
   );
-  warnings.push(`Read ${grid.rows.length - first} rows below the header: ${students.length} learners imported.`);
+  if (skipped.nameless.length) warnings.push(`${skipped.nameless.length} row${skipped.nameless.length === 1 ? ' has' : 's have'} data but no learner name or LRN, so ${skipped.nameless.length === 1 ? 'it was' : 'they were'} skipped (${listRows(skipped.nameless)}).`);
+  const skippedCount = skipped.noGrades.length + skipped.footer.length + skipped.nameless.length;
+  const counts = { found: students.length + skippedCount, imported: students.length, skipped: skippedCount, blank: skipped.blank };
+  warnings.unshift(`${counts.found} row${counts.found === 1 ? '' : 's'} with content found below the header (${skipped.blank} empty row${skipped.blank === 1 ? '' : 's'} ignored): ${students.length} learners imported, ${skippedCount} skipped.`);
   if (!students.length) throw new MappingError(`Sheet "${grid.sheet}": no learners with grades were found below the header.`, 'file');
   if (cols.lrn >= 0) {
     const ok = students.filter((x) => /^\d{10,13}$/.test(x.lrn)).length;
     if (ok / students.length < 0.5) warnings.push(`Most values in the column read as LRN do not look like LRNs (${ok} of ${students.length}). Check that the right column was used.`);
   }
-  return { students, warnings };
+  return { students, warnings, counts };
 }
 
 export async function runRosterImport(grid: Grid, caller: Caller = callAi, spend?: () => void, emit?: (percent: number, label: string) => void) {
@@ -255,6 +261,6 @@ export async function runRosterImport(grid: Grid, caller: Caller = callAi, spend
     throw error;
   }
   emit?.(80, 'Copying each learner\'s grades');
-  const { students, warnings } = buildRoster(raw, grid);
-  return { students, warnings, sheets: 1, mode: 'roster' as const };
+  const { students, warnings, counts } = buildRoster(raw, grid);
+  return { students, warnings, counts, sheets: 1, mode: 'roster' as const };
 }

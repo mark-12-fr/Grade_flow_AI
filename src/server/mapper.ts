@@ -170,17 +170,22 @@ export function newStudent(id: number, name: string, schema: Pick<ImportSchema, 
   };
 }
 
-export function applyMapping(grid: Grid, mapping: Mapping, schema: ImportSchema): { students: Student[]; warnings: string[] } {
+export function applyMapping(grid: Grid, mapping: Mapping, schema: ImportSchema): { students: Student[]; warnings: string[]; counts: ImportCounts } {
   const cols = mapping.columns;
   const nameCol = [...cols.entries()].find(([, f]) => f === 'name')![0];
   const warnings: string[] = [];
   const students: Student[] = [];
   const seenRolls = new Set<string>();
   const footers: number[] = [];
+  const nameless: number[] = [];
+  let blank = 0;
   for (let r = mapping.first; r < grid.rows.length; r += 1) {
     const row = grid.rows[r];
     const name = nameCol < row.length ? String(row[nameCol]).trim() : '';
-    if (!name) continue;
+    if (!name) {
+      if (row.some((c) => String(c ?? '').trim() !== '')) nameless.push(r + 1); else blank += 1;
+      continue;
+    }
     if (FOOTER.test(name)) { footers.push(r + 1); continue; } // a total or signature row, not the end of the list
     const stu = newStudent(students.length + 1, name, schema);
     for (const [c, f] of cols) {
@@ -223,8 +228,11 @@ export function applyMapping(grid: Grid, mapping: Mapping, schema: ImportSchema)
   }
   if (!students.length) throw new MappingError('No learner rows were found below the header.', 'file');
   if (footers.length) warnings.push(`${footers.length} total/signature row${footers.length === 1 ? '' : 's'} ignored (${listRows(footers)}).`);
-  warnings.push(`Read ${grid.rows.length - mapping.first} rows below the header: ${students.length} learners imported.`);
-  return { students, warnings };
+  if (nameless.length) warnings.push(`${nameless.length} row${nameless.length === 1 ? ' has' : 's have'} data but no learner name, so ${nameless.length === 1 ? 'it was' : 'they were'} skipped (${listRows(nameless)}).`);
+  const skipped = footers.length + nameless.length;
+  const counts = { found: students.length + skipped, imported: students.length, skipped, blank };
+  warnings.unshift(`${counts.found} row${counts.found === 1 ? '' : 's'} with content found below the header (${blank} empty row${blank === 1 ? '' : 's'} ignored): ${students.length} learners imported, ${skipped} skipped.`);
+  return { students, warnings, counts };
 }
 
 /** Human label per mapped column: the up-to-2 header rows above the data, joined. */
@@ -248,7 +256,11 @@ export function headerLabels(grid: Grid, firstDataRow: number, columns: Map<numb
   return out;
 }
 
+/** Row accounting for one import: every row with content is either imported or skipped (and listed in the warnings). */
+export interface ImportCounts { found: number; imported: number; skipped: number; blank: number }
+
 export interface ImportResult {
+  counts?: ImportCounts;
   students: Student[];
   classDetails: Record<string, string>;
   mapping: { col: number; header: string; field: string }[];
@@ -266,7 +278,7 @@ export async function runImport(grid: Grid, schema: ImportSchema, caller: Caller
     throw error;
   }
   const { mapping, warnings } = validateMapping(raw, schema, grid.rows[0].length, grid.rows.length);
-  const { students, warnings: applyWarnings } = applyMapping(grid, mapping, schema);
+  const { students, warnings: applyWarnings, counts } = applyMapping(grid, mapping, schema);
   const labels = headerLabels(grid, mapping.first, mapping.columns);
   const colOf = (field: string) => [...mapping.columns.entries()].find(([, f]) => f === field)?.[0];
   warnings.push(
@@ -275,7 +287,7 @@ export async function runImport(grid: Grid, schema: ImportSchema, caller: Caller
   );
   if (grid.skippedSheets.length) warnings.push(`Other sheets were not read: ${grid.skippedSheets.join(', ')}.`);
   return {
-    students, classDetails: mapping.details, sheet: grid.sheet,
+    students, counts, classDetails: mapping.details, sheet: grid.sheet,
     mapping: [...mapping.columns.entries()].sort((a, b) => a[0] - b[0]).map(([col, field]) => ({ col, header: labels.get(col) ?? '', field })),
     warnings: [...warnings, ...applyWarnings.slice(0, 50)]
   };

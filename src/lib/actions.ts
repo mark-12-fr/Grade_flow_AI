@@ -92,7 +92,16 @@ async function callApi<T>(url: string, file: File, extra: Record<string, string>
   return { error: 'The server stopped before the file was read. Try again.' };
 }
 
+interface RowCounts { found: number; imported: number; skipped: number; blank: number }
+
+/** Plain-language row accounting shown after an upload, so the numbers can be matched against the Excel file. */
+function countNote(c?: RowCounts): string {
+  if (!c) return '';
+  return ` ${c.found} row${c.found === 1 ? '' : 's'} with content: ${c.imported} imported${c.skipped ? `, ${c.skipped} skipped (see the notes)` : ''}.`;
+}
+
 interface Sf9Response {
+  counts?: RowCounts;
   students: Student[];
   classDetails: Record<string, string>;
   mapping: { col: number; header: string; field: string }[];
@@ -178,13 +187,13 @@ export async function importSf9(file: File): Promise<ImportOutcome> {
     ? ` AI import unavailable${data.aiError ? ` (${data.aiError})` : ''}; used the standard template reader.`
     : ` AI mapped ${data.mapping.length} columns${data.warnings.length ? ` (${data.warnings.length} note${data.warnings.length === 1 ? '' : 's'} to check).` : '.'}`;
   return {
-    ok: true, type: missing ? 'info' : 'success',
-    message: `1 class file read.${aiNote} ${students.length} learner${students.length === 1 ? '' : 's'} found. ` +
+    ok: true, type: missing || data.counts?.skipped ? 'info' : 'success',
+    message: `1 class file read.${aiNote} ${students.length} learner${students.length === 1 ? '' : 's'} found.${countNote(data.counts)} ` +
       (missing ? `${missing} grade${missing === 1 ? '' : 's'} need review.` : 'All grades are complete.')
   };
 }
 
-interface Sf10Response { students?: Student[]; warnings?: string[]; sheets?: number | { name: string; rows: number; cols: number; label?: string }[]; schoolLogo?: string; mode?: 'pick' | 'roster' }
+interface Sf10Response { counts?: RowCounts; students?: Student[]; warnings?: string[]; sheets?: number | { name: string; rows: number; cols: number; label?: string }[]; schoolLogo?: string; mode?: 'pick' | 'roster' }
 
 export interface Sf10Outcome extends ImportOutcome { pick?: { name: string; rows: number; cols: number; label?: string }[] }
 
@@ -209,7 +218,7 @@ export async function importSf10(file: File, sheet?: string): Promise<Sf10Outcom
     school: data.schoolLogo ? { ...s.school, logo: data.schoolLogo } : s.school
   }));
   const n = students.length;
-  return { ok: true, type: 'success', message: `${n} SF10 record${n === 1 ? '' : 's'} read.` };
+  return { ok: true, type: data.counts?.skipped ? 'info' : 'success', message: `${n} SF10 record${n === 1 ? '' : 's'} read.${countNote(data.counts)}` };
 }
 
 export function removeSf10() {

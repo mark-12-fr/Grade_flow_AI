@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Icon, type IconName } from './Icon';
-import { PAGE_META, STEP_ORDER } from '@/lib/curriculum';
-import { formatDate } from '@/lib/format';
-import { allCommentsReviewed, missingGradeCells, readyToGenerate } from '@/lib/grading';
-import { useAppState } from '@/lib/store';
-import type { PageId } from '@/lib/types';
+import { Icon, type IconName } from '@/components/ui/Icon';
+import { PAGE_META, STEP_ORDER } from '@/lib/domain/curriculum';
+import { formatDate } from '@/lib/domain/format';
+import { allCommentsReviewed, missingGradeCells, readyToGenerate } from '@/lib/domain/grading';
+import { useAppState } from '@/lib/state/store';
+import type { PageId } from '@/lib/domain/types';
 
 const NAV: { page: PageId; icon: IconName; label: string }[] = [
   { page: 'upload', icon: 'upload', label: 'Uploads' },

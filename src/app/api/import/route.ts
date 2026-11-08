@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { extractLogo, readGrid } from '@/server/extract';
-import { guard, HttpError, limiter } from '@/server/guard';
-import { readUpload, toResponse } from '@/server/http';
-import { streamJob } from '@/server/stream';
-import { MappingError, parseSchema, runImport } from '@/server/mapper';
-import { readTemplate, TemplateError } from '@/server/template';
+import { extractLogo, readGrid } from '@/server/import/extract';
+import { guard, HttpError, limiter } from '@/server/core/guard';
+import { readUpload, toResponse } from '@/server/core/http';
+import { streamJob } from '@/server/core/stream';
+import { MappingError, parseSchema, runImport } from '@/server/import/mapper';
+import { readTemplate, TemplateError } from '@/server/import/template';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;

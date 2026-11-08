@@ -1,5 +1,5 @@
-import { recordFor } from './sf10Record';
-import type { AppState, Sf10Semester, Student } from './types';
+import { recordFor } from '@/lib/sf10/record';
+import type { AppState, Sf10Semester, Student } from '@/lib/domain/types';
 
 export interface Issue { kind: 'lrn' | 'grade' | 'semester' | 'details'; text: string }
 

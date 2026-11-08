@@ -3,7 +3,7 @@
  * checks look at the real cells under each mapped column, so a wrong mapping is reported instead of
  * silently producing wrong report cards.
  */
-import type { Grid } from './extract';
+import type { Grid } from '@/server/import/extract';
 
 const text = (row: unknown[], c: number) => (c >= 0 && c < row.length ? String(row[c] ?? '').trim() : '');
 const rowsFrom = (grid: Grid, first: number) => grid.rows.slice(first).filter((r) => r.some((c) => String(c).trim() !== ''));

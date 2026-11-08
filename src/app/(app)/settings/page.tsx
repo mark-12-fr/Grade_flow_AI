@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Icon } from '@/components/Icon';
-import { useTheme } from '@/components/Shell';
-import { prettyYear } from '@/lib/format';
-import { useAppState } from '@/lib/store';
+import { Icon } from '@/components/ui/Icon';
+import { useTheme } from '@/components/layout/Shell';
+import { prettyYear } from '@/lib/domain/format';
+import { useAppState } from '@/lib/state/store';
 
 function Details({ rows }: { rows: [string, string][] }) {
   return (

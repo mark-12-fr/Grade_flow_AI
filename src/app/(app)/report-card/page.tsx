@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { useUi } from '@/components/Providers';
-import { ReportCard } from '@/components/ReportCard';
+import { Icon } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { ReportCard } from '@/components/report/ReportCard';
 import { downloadReportCards } from '@/lib/pdf/sf9';
-import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/grading';
-import { learnerMeta } from '@/lib/sf10Record';
-import { setState, useAppState } from '@/lib/store';
-import type { Student } from '@/lib/types';
+import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
+import { learnerMeta } from '@/lib/sf10/record';
+import { setState, useAppState } from '@/lib/state/store';
+import type { Student } from '@/lib/domain/types';
 
 export default function ReportCardPage() {
   const router = useRouter();

@@ -1,4 +1,4 @@
-import type { PageId } from './types';
+import type { PageId } from '@/lib/domain/types';
 
 export const ATTENDANCE_MONTHS = [
   { key: 'jun', label: 'JUN' }, { key: 'jul', label: 'JUL' }, { key: 'aug', label: 'AUG' },

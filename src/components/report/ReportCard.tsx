@@ -1,8 +1,8 @@
 import { Fragment } from 'react';
-import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/curriculum';
-import { prettyYear } from '@/lib/format';
-import { remarkFor, semesterAverage, type ReportContext } from '@/lib/grading';
-import type { SchoolInfo, Student } from '@/lib/types';
+import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/domain/curriculum';
+import { prettyYear } from '@/lib/domain/format';
+import { remarkFor, semesterAverage, type ReportContext } from '@/lib/domain/grading';
+import type { SchoolInfo, Student } from '@/lib/domain/types';
 
 const VALUE_LABELS: [string, string][] = [
   ['makaDiyos', '1. Maka-Diyos'], ['makatao', '2. Makatao'], ['makakalikasan', '3. Maka kalikasan'], ['makabansa', '4. Makabansa']

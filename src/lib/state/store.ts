@@ -1,7 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import type { AppState } from './types';
+import type { AppState } from '@/lib/domain/types';
 
 export const initialState: AppState = {
   school: {

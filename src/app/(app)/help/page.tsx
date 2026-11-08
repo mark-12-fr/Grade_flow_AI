@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Icon } from '@/components/Icon';
+import { Icon } from '@/components/ui/Icon';
 
 const STEPS = [
   ['Upload your grade sheet', 'Upload your SF9 class grade sheet, your SF10 record, or both. CSV and Excel files are supported. The columns are mapped automatically and every grade is copied from your file.'],

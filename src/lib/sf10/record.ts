@@ -1,7 +1,7 @@
-import { SEMESTERS } from './curriculum';
-import { formatLongDate, prettyYear } from './format';
-import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from './grading';
-import type { AppState, Sf10Remedial, Student } from './types';
+import { SEMESTERS } from '@/lib/domain/curriculum';
+import { formatLongDate, prettyYear } from '@/lib/domain/format';
+import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from '@/lib/domain/grading';
+import type { AppState, Sf10Remedial, Student } from '@/lib/domain/types';
 
 export interface Sf10Rec {
   last: string; first: string; middle: string; lrn: string; sex: string; birth: string;

@@ -35,9 +35,10 @@ Free AI keys (pick one provider in `.env`): Gemini https://aistudio.google.com/a
 ```
 src/app/(app)/      pages: upload, verification, report-card, generated-reports, sf10, summary, history, settings, help
 src/app/api/        import, import-sf10, health
-src/components/     Shell, Providers (toast + modal), ReportCard (SF9), Sf10Sheet (SF10), Icon
-src/lib/            curriculum, grading, store, actions, sf10Record, pdf/ (jsPDF drawing for SF9 and SF10)
-src/server/         llm (free AI providers), mapper, sf10, template, extract, guard
+src/components/     layout/ (Shell, Providers), report/ (ReportCard SF9, Sf10Sheet SF10), ui/ (Icon, Reading)
+src/lib/            domain/ (types, curriculum, grading, format), state/ (store, actions, progress),
+                    sf10/ (record, quality), pdf/ (jsPDF drawing for SF9 and SF10)
+src/server/         core/ (llm, guard, http, stream), import/ (extract, mapper, template, sf10, sf10Roster, checks)
 tests/              vitest tests for the server code
 samples/            fictional sample workbook and the script that builds it
 ```

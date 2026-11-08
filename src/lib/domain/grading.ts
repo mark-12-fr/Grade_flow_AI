@@ -1,6 +1,6 @@
-import { PASSING_GRADE, STRAND_TRACK, SUBJECTS, type Subject } from './curriculum';
-import { formatDate, formatLongDate, prettyYear } from './format';
-import type { AppState, GradeValue, Period, Student } from './types';
+import { PASSING_GRADE, STRAND_TRACK, SUBJECTS, type Subject } from '@/lib/domain/curriculum';
+import { formatDate, formatLongDate, prettyYear } from '@/lib/domain/format';
+import type { AppState, GradeValue, Period, Student } from '@/lib/domain/types';
 
 export function isGradeValue(value: GradeValue): boolean {
   return value !== null && value !== undefined && value !== '' && !Number.isNaN(Number(value));

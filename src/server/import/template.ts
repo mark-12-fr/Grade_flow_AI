@@ -2,10 +2,10 @@
  * Built-in reader for the standard template ("<Subject> Q1", "Semester 1 Final"... headers).
  * Used when the AI service is not available, so the app keeps working. No grade is ever invented.
  */
-import { ATTENDANCE_MONTHS, CORE_VALUE_KEYS, SUBJECTS, TRANSFER_FIELDS, type Subject } from '@/lib/curriculum';
-import type { Student } from '@/lib/types';
-import type { Grid } from './extract';
-import { newStudent, type ImportResult, type ImportSchema } from './mapper';
+import { ATTENDANCE_MONTHS, CORE_VALUE_KEYS, SUBJECTS, TRANSFER_FIELDS, type Subject } from '@/lib/domain/curriculum';
+import type { Student } from '@/lib/domain/types';
+import type { Grid } from '@/server/import/extract';
+import { newStudent, type ImportResult, type ImportSchema } from '@/server/import/mapper';
 
 const HEADER_ALIASES = {
   roll: ['roll', 'rollno', 'rollnumber', 'no', 'number', 'id', 'studentid'],

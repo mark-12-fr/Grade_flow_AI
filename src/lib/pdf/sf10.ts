@@ -1,6 +1,6 @@
 import type { jsPDF } from 'jspdf';
-import { recordFor } from '../sf10Record';
-import type { AppState, Student } from '../types';
+import { recordFor } from '@/lib/sf10/record';
+import type { AppState, Student } from '@/lib/domain/types';
 
 let logos: { seal: string | null; deped: string | null } = { seal: null, deped: null };
 

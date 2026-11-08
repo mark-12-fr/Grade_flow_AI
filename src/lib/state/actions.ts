@@ -1,11 +1,11 @@
 'use client';
 
-import { SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from './curriculum';
-import { ageFromBirthdate } from './format';
-import { buildComment, isValidGrade, makeNextSteps, makeTraits, missingGradeCells, scaleMinimum } from './grading';
-import { setReadProgress } from './progress';
-import { getState, setState } from './store';
-import type { AppState, Student, UploadInfo } from './types';
+import { SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from '@/lib/domain/curriculum';
+import { ageFromBirthdate } from '@/lib/domain/format';
+import { buildComment, isValidGrade, makeNextSteps, makeTraits, missingGradeCells, scaleMinimum } from '@/lib/domain/grading';
+import { setReadProgress } from '@/lib/state/progress';
+import { getState, setState } from '@/lib/state/store';
+import type { AppState, Student, UploadInfo } from '@/lib/domain/types';
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_LEARNERS = 2000; // sanity cap only; a whole-school workbook can list several hundred learners

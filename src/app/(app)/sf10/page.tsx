@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { useUi } from '@/components/Providers';
-import { Sf10Sheet } from '@/components/Sf10Sheet';
+import { Icon } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { Sf10Sheet } from '@/components/report/Sf10Sheet';
 import { downloadSf10 } from '@/lib/pdf/sf10';
-import { learnerMeta, sf10Source } from '@/lib/sf10Record';
-import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10Quality';
-import { setState, useAppState } from '@/lib/store';
-import type { Student } from '@/lib/types';
+import { learnerMeta, sf10Source } from '@/lib/sf10/record';
+import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10/quality';
+import { setState, useAppState } from '@/lib/state/store';
+import type { Student } from '@/lib/domain/types';
 
 const slug = (value: string) => value.replace(/[^\x20-\x7E]/g, '?').replace(/\W+/g, '_').replace(/^_+|_+$/g, '') || 'SF10';
 

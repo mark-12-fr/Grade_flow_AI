@@ -3,15 +3,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { useUi } from '@/components/Providers';
-import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/curriculum';
-import { initials, prettyYear } from '@/lib/format';
+import { Icon } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/domain/curriculum';
+import { initials, prettyYear } from '@/lib/domain/format';
 import {
   approvedCount, averageGrade, averageLabel, gradeScaleDescription, isValidGrade, missingGradeCells, reviewedCommentCount, scaleMinimum, studentStatus
-} from '@/lib/grading';
-import { setState, useAppState } from '@/lib/store';
-import type { AppState, Student } from '@/lib/types';
+} from '@/lib/domain/grading';
+import { setState, useAppState } from '@/lib/state/store';
+import type { AppState, Student } from '@/lib/domain/types';
 
 const PAGE_SIZE = 6;
 type Tab = 'grades' | 'attendance' | 'values';

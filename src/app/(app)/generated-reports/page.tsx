@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { useUi } from '@/components/Providers';
-import { ReportCard } from '@/components/ReportCard';
-import { prettyYear } from '@/lib/format';
-import { averageLabel, reportContext } from '@/lib/grading';
+import { Icon } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { ReportCard } from '@/components/report/ReportCard';
+import { prettyYear } from '@/lib/domain/format';
+import { averageLabel, reportContext } from '@/lib/domain/grading';
 import { downloadReportCards } from '@/lib/pdf/sf9';
-import { setState, useAppState } from '@/lib/store';
-import type { AppState, Student } from '@/lib/types';
+import { setState, useAppState } from '@/lib/state/store';
+import type { AppState, Student } from '@/lib/domain/types';
 
 const PAGE_SIZE = 6;
 

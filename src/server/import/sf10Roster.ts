@@ -4,11 +4,11 @@
  * The AI only maps the columns (looking at the top rows); code then copies every grade from the
  * sheet and builds one SF10 per learner, grouped by grade level and semester.
  */
-import { AiError, callAi, type Caller, type Tool } from './llm';
-import { gradeColumnWarnings, learnerColumnWarnings, listRows } from './checks';
-import { colLetter, type Grid } from './extract';
-import { lrnText, MappingError, type ImportCounts } from './mapper';
-import type { Sf10Semester, Student } from '@/lib/types';
+import { AiError, callAi, type Caller, type Tool } from '@/server/core/llm';
+import { gradeColumnWarnings, learnerColumnWarnings, listRows } from '@/server/import/checks';
+import { colLetter, type Grid } from '@/server/import/extract';
+import { lrnText, MappingError, type ImportCounts } from '@/server/import/mapper';
+import type { Sf10Semester, Student } from '@/lib/domain/types';
 
 const COL = { type: 'string', description: 'Spreadsheet column LETTER such as H or AB, or empty string when the sheet has no such column' };
 const ROSTER_TOOL: Tool = {

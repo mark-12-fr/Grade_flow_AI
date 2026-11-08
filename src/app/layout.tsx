@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { IconSprite } from '@/components/Icon';
-import { Providers } from '@/components/Providers';
+import { IconSprite } from '@/components/ui/Icon';
+import { Providers } from '@/components/layout/Providers';
 import './globals.css';
 
 export const metadata: Metadata = {

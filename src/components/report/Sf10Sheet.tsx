@@ -1,5 +1,5 @@
-import { recordFor } from '@/lib/sf10Record';
-import type { AppState, Student } from '@/lib/types';
+import { recordFor } from '@/lib/sf10/record';
+import type { AppState, Student } from '@/lib/domain/types';
 
 const box = (on: unknown) => (on ? '☒' : '☐');
 const line = (value: unknown) => (value ? String(value) : '________');

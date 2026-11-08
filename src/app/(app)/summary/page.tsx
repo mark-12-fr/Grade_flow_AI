@@ -1,9 +1,9 @@
 'use client';
 
-import { SUBJECTS } from '@/lib/curriculum';
-import { computeRanks, remarkFor, semesterAverage } from '@/lib/grading';
-import { useAppState } from '@/lib/store';
-import type { Student } from '@/lib/types';
+import { SUBJECTS } from '@/lib/domain/curriculum';
+import { computeRanks, remarkFor, semesterAverage } from '@/lib/domain/grading';
+import { useAppState } from '@/lib/state/store';
+import type { Student } from '@/lib/domain/types';
 
 const failedSubjects = (s: Student) => SUBJECTS.filter((subject) => remarkFor((s.grades[subject.key] || {}).final) === 'Failed').length;
 

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Draws the SF9 report card PDF with jsPDF (ported from the original printing module).
 import type { jsPDF } from 'jspdf';
-import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '../curriculum';
-import { prettyYear } from '../format';
-import { remarkFor, semesterAverage as semAvg, type ReportContext } from '../grading';
-import type { AppState, Student } from '../types';
+import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/domain/curriculum';
+import { prettyYear } from '@/lib/domain/format';
+import { remarkFor, semesterAverage as semAvg, type ReportContext } from '@/lib/domain/grading';
+import type { AppState, Student } from '@/lib/domain/types';
 
 function pdfSafe(value: unknown): string {
   return String(value == null ? '' : value)

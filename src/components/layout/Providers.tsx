@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Icon } from './Icon';
+import { Icon } from '@/components/ui/Icon';
 
 type ToastType = 'success' | 'error' | 'info';
 interface ModalOptions {

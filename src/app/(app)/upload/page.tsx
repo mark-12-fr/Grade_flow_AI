@@ -2,12 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { Reading } from '@/components/Reading';
-import { useUi } from '@/components/Providers';
-import { importSf10, importSf9, removeSf10, removeSf9, validateBeforeProcessing } from '@/lib/actions';
-import { formatFileSize } from '@/lib/format';
-import { getState, setState, useAppState } from '@/lib/store';
+import { Icon } from '@/components/ui/Icon';
+import { Reading } from '@/components/ui/Reading';
+import { useUi } from '@/components/layout/Providers';
+import { importSf10, importSf9, removeSf10, removeSf9, validateBeforeProcessing } from '@/lib/state/actions';
+import { formatFileSize } from '@/lib/domain/format';
+import { getState, setState, useAppState } from '@/lib/state/store';
 
 // Preselect the sheet that most likely lists the learners: the biggest one with many columns.
 const guessSheet = (sheets: { name: string; rows: number; cols: number; label?: string }[]) =>

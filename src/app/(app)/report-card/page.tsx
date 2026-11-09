@@ -32,6 +32,7 @@ export default function ReportCardPage() {
   const [quality, setQuality] = useState<'all' | 'check' | 'complete'>('all');
   const listRef = useRef<HTMLDivElement>(null);
   const selectAll = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const metas = useMemo(() => new Map(students.map((s) => [s.id, learnerMeta(s, state)])), [students, state]);
   const issuesBy = useMemo(() => new Map(students.map((s) => [s.id, sf9Issues(s, state)])), [students, state]);
@@ -61,6 +62,11 @@ export default function ReportCardPage() {
   const filtersOn = Boolean(q || strand || section || level || quality !== 'all');
   const visibleIndex = student ? filtered.findIndex((s) => s.id === student.id) : -1;
   const show = (st: Student | undefined) => { if (st) setState({ previewIndex: students.findIndex((x) => x.id === st.id) }); };
+  // Tapping a learner in the list shows that report card and scrolls down to it.
+  const open = (st: Student) => {
+    show(st);
+    window.setTimeout(() => previewRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 60);
+  };
   const move = (offset: number) => show(filtered[Math.min(Math.max(0, visibleIndex + offset), filtered.length - 1)]);
 
   // When the filters hide the learner on screen, show the first match instead.
@@ -227,7 +233,7 @@ export default function ReportCardPage() {
               return (
                 <div key={s.id} className={`sf10-row${active ? ' active' : ''}${picked.has(s.id) ? ' picked' : ''}`} role="option" aria-selected={active} aria-current={active ? 'true' : undefined}>
                   <input type="checkbox" checked={picked.has(s.id)} aria-label={`Select ${s.name}`} onChange={(e) => toggle(s.id, e.target.checked)} />
-                  <button type="button" className="sf10-row-main" onClick={() => show(s)}>
+                  <button type="button" className="sf10-row-main" onClick={() => open(s)}>
                     <strong>{s.lrn || s.roll || '—'}</strong>
                     <span>{s.name}</span>
                     <em>{[m.strand, m.section].filter(Boolean).join(' · ')}</em>
@@ -309,7 +315,7 @@ export default function ReportCardPage() {
         </div>
       )}
 
-      <div className="preview-canvas">
+      <div className="preview-canvas" ref={previewRef} style={{ scrollMarginTop: 'calc(var(--header-height, 60px) + 12px)' }}>
         <div className="preview-column">
           <div className="preview-tabs" role="group" aria-label="Report card side">
             <button type="button" className={`btn btn-sm ${side === 'front' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'front'} onClick={() => setSide('front')}>Front Preview</button>

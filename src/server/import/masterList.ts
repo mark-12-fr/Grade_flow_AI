@@ -1,0 +1,146 @@
+/**
+ * Reader for a school-wide master list (one row per learner, many "<code> - <Subject>" column groups of Q1/Q2/FINAL,
+ * several strands and grade levels). The teacher picks one section; grades are copied by code, never generated.
+ */
+import type { Student } from '@/lib/domain/types';
+import type { Grid } from '@/server/import/extract';
+import { lrnText, newStudent, type ImportResult, type ImportSchema, MappingError } from '@/server/import/mapper';
+
+const norm = (v: unknown) => String(v ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const cell = (row: unknown[], i: number) => (i >= 0 && i < row.length ? String(row[i] ?? '').trim() : '');
+const STOP = new Set(['the', 'of', 'to', 'and', 'in', 'for', 'sa', 'ng', 'at', 'a', 'shs']);
+
+const tokens = (text: string) => text.toLowerCase().replace(/^\W*[a-z]{3}\s*\d{3}\s*-\s*/, '').split(/[^a-z0-9]+/).filter((t) => t && !STOP.has(t));
+const oneEdit = (a: string, b: string) => {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i += 1;
+  return a.slice(i + (a.length >= b.length ? 1 : 0)) === b.slice(i + (b.length >= a.length ? 1 : 0));
+};
+/** Same word, allowing one typo or a longer form ("Larang" / "Larangan"). */
+const sameWord = (a: string, b: string) => {
+  if (a === b) return true;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return short.length >= 5 && long.startsWith(short) || short.length >= 4 && oneEdit(a, b);
+};
+const overlap = (a: string[], b: string[]) => a.filter((x) => b.some((y) => sameWord(x, y))).length;
+
+interface Group { start: number; name: string; grade: number }
+interface Layout {
+  qRow: number; first: number; groups: Group[];
+  col: { name: number; lrn: number; age: number; sex: number; section: number; strand: number; adviser: number; birth: number };
+}
+
+export function layoutOf(grid: Grid): Layout | null {
+  const rows = grid.rows;
+  const qRow = rows.slice(0, 8).findIndex((r) => r.filter((c) => norm(c) === 'final').length > 30);
+  if (qRow < 1) return null;
+  const headerRow = rows.slice(0, qRow + 1).findIndex((r) => r.some((c) => norm(c) === 'lrn'));
+  if (headerRow < 0) return null;
+  const head = rows[headerRow];
+  const find = (test: (h: string) => boolean) => head.findIndex((c) => test(norm(c)));
+  const col = {
+    name: find((h) => h === 'name'), lrn: find((h) => h === 'lrn'), age: find((h) => h === 'age'),
+    sex: find((h) => h === 'gender' || h === 'sex'), section: find((h) => h.includes('section')),
+    strand: find((h) => h.includes('strand')), adviser: find((h) => h === 'adviser'), birth: find((h) => h.includes('birthdate'))
+  };
+  if (col.name < 0 || col.section < 0) return null;
+  const groups: Group[] = [];
+  rows[qRow].forEach((c, i) => {
+    if (norm(c) !== 'q1') return;
+    const name = cell(rows[qRow - 1], i);
+    const grade = Number(/grade\s*(\d+)/i.exec(cell(rows[qRow - 2] ?? [], i))?.[1] ?? 0);
+    if (name) groups.push({ start: i, name, grade });
+  });
+  return { qRow, first: qRow + 1, groups, col };
+}
+
+export function listSections(grid: Grid): { name: string; learners: number }[] {
+  const lay = layoutOf(grid);
+  if (!lay) return [];
+  const counts = new Map<string, number>();
+  grid.rows.slice(lay.first).forEach((r) => {
+    const section = cell(r, lay.col.section);
+    if (section && cell(r, lay.col.name)) counts.set(section, (counts.get(section) ?? 0) + 1);
+  });
+  return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })).map(([name, learners]) => ({ name, learners }));
+}
+
+function matchGroups(subjectName: string, groups: Group[], strand: string): Group[] {
+  const parts = subjectName.split(/[/:]/).map(tokens).filter((p) => p.length);
+  const strandTokens = tokens(strand);
+  const out: { group: Group; score: number }[] = [];
+  groups.forEach((group) => {
+    const g = tokens(group.name);
+    let best = 0;
+    parts.forEach((p) => {
+      const o = overlap(p, g);
+      const jac = o / (p.length + g.length - o);
+      if (jac >= 0.6) best = Math.max(best, jac);
+      else if (o === p.length && p.length >= 2) {
+        // The subject is a shorter form of a strand-specific title (e.g. "Culminating Activity in Criminology").
+        const extra = g.filter((t) => !p.some((x) => sameWord(x, t)));
+        if (overlap(extra, strandTokens) > 0) best = Math.max(best, 0.65);
+      }
+    });
+    if (best) out.push({ group, score: best });
+  });
+  const top = Math.max(0, ...out.map((m) => m.score));
+  return out.filter((m) => m.score === top).map((m) => m.group);
+}
+
+export function readMasterList(grid: Grid, schema: ImportSchema, section: string): ImportResult {
+  const lay = layoutOf(grid);
+  if (!lay) throw new MappingError('This list could not be read: the learner name, section and Q1/Q2/Final columns were not found.', 'file');
+  const level = Math.max(0, ...lay.groups.map((g) => g.grade));
+  const groups = lay.groups.filter((g) => g.grade === level);
+  const rows = grid.rows.slice(lay.first).filter((r) => cell(r, lay.col.section) === section && cell(r, lay.col.name));
+  if (!rows.length) throw new MappingError(`No learners were found in section "${section}".`, 'file');
+
+  const strand = cell(rows[0], lay.col.strand);
+  const warnings: string[] = [];
+  const mapping: { col: number; header: string; field: string }[] = [];
+  const cols = new Map<string, Group>();
+  schema.subjects.forEach((subject) => {
+    const hits = matchGroups(subject.name, groups, strand);
+    const pick = subject.semester === 'first' ? hits[0] : hits[hits.length - 1];
+    if (!pick) { warnings.push(`${subject.name}: no Grade ${level} column in this list; left blank.`); return; }
+    cols.set(subject.key, pick);
+    const periods = subject.semester === 'first' ? ['q1', 'q2'] : ['q3', 'q4'];
+    [...periods, 'final'].forEach((p, k) => mapping.push({ col: pick.start + k, header: `${pick.name} · ${['Q1', 'Q2', 'FINAL'][k]}`, field: `grade:${subject.key}:${p}` }));
+  });
+
+  const grade = (raw: unknown) => {
+    const n = Number(String(raw ?? '').trim());
+    return Number.isFinite(n) && n > 0 && n <= 100 ? n : null; // 0 is the sheet's placeholder for "not taken"
+  };
+  const students: Student[] = rows.map((row, i) => {
+    const stu = newStudent(i + 1, cell(row, lay.col.name), schema);
+    stu.roll = String(i + 1).padStart(2, '0');
+    stu.age = cell(row, lay.col.age).replace(/\.0+$/, '');
+    const sex = cell(row, lay.col.sex).toLowerCase();
+    stu.sex = sex.startsWith('m') ? 'Male' : sex.startsWith('f') ? 'Female' : cell(row, lay.col.sex);
+    stu.lrn = lrnText(row[lay.col.lrn]);
+    const birth = cell(row, lay.col.birth);
+    stu.birthdate = /^\d{4}-\d{2}-\d{2}/.test(birth) ? birth.slice(0, 10) : birth;
+    schema.subjects.forEach((subject) => {
+      const g: Record<string, number | null> = {};
+      const pick = cols.get(subject.key);
+      const periods = subject.semester === 'first' ? ['q1', 'q2'] : ['q3', 'q4'];
+      [...periods, 'final'].forEach((p, k) => { g[p] = pick ? grade(row[pick.start + k]) : null; });
+      stu.grades[subject.key] = g;
+    });
+    return stu;
+  });
+
+  const advisers = new Map<string, number>();
+  rows.forEach((r) => { const a = cell(r, lay.col.adviser); if (a) advisers.set(a, (advisers.get(a) ?? 0) + 1); });
+  const details: Record<string, string> = { section, gradeLevel: String(level || 12), strand };
+  const adviser = [...advisers.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (adviser) details.teacher = adviser;
+  warnings.unshift(`Read section ${section} from the school-wide list "${grid.sheet}": ${students.length} learners, ${cols.size} of ${schema.subjects.length} subjects found. Attendance and observed values are not in this list.`);
+  return {
+    students, classDetails: details, mapping, warnings, sheet: grid.sheet,
+    counts: { found: students.length, imported: students.length, skipped: 0, blank: 0 }
+  };
+}

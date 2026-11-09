@@ -25,6 +25,8 @@ export default function UploadPage() {
   const [dragging, setDragging] = useState(false);
   const [pick, setPick] = useState<{ file: File; sheets: { name: string; rows: number; cols: number; label?: string }[]; selected: string } | null>(null);
 
+  const [sectionPick, setSectionPick] = useState<{ file: File; sections: { name: string; learners: number }[]; selected: string } | null>(null);
+
   const hasFiles = Boolean(state.upload) || state.sf10Students.length > 0;
   const upload = state.upload;
 
@@ -33,10 +35,24 @@ export default function UploadPage() {
     if (!file) return;
     if ((files?.length ?? 0) > 1) { setError('Upload one complete class gradebook at a time.'); toast('Choose one class grade file.', 'error'); return; }
     setError('');
+    setSectionPick(null);
     setSf9Busy(file.name);
     const result = await importSf9(file);
     setSf9Busy('');
     if (sf9Input.current) sf9Input.current.value = '';
+    if (!result.ok) setError(result.error ?? '');
+    if (result.pick) setSectionPick({ file, sections: result.pick, selected: result.pick[0]?.name ?? '' });
+    toast(result.message ?? '', result.type);
+  }
+
+  async function readPickedSection() {
+    if (!sectionPick) return;
+    const { file, selected } = sectionPick;
+    setError('');
+    setSf9Busy(`${file.name} · ${selected}`);
+    const result = await importSf9(file, selected);
+    setSf9Busy('');
+    if (result.ok && !result.pick) setSectionPick(null);
     if (!result.ok) setError(result.error ?? '');
     toast(result.message ?? '', result.type);
   }
@@ -108,6 +124,20 @@ export default function UploadPage() {
                     </div>
                     {sf9Busy && <Reading fileName={sf9Busy} kind="sf9" />}
                   </div>
+                  {!sf9Busy && sectionPick && (
+                    <div className="sf10-file-row sf10-pick">
+                      <span className="file-type-icon"><Icon name="file-sheet" /></span>
+                      <span className="sf10-file-name">{sectionPick.file.name}: choose the section to import</span>
+                      <div className="select-wrap">
+                        <select aria-label="Section to import" value={sectionPick.selected} onChange={(e) => setSectionPick({ ...sectionPick, selected: e.target.value })}>
+                          {sectionPick.sections.map((x) => <option key={x.name} value={x.name}>{x.name} ({x.learners} learners)</option>)}
+                        </select>
+                        <Icon name="chevron-down" className="select-chevron" />
+                      </div>
+                      <button type="button" className="btn btn-primary btn-sm" onClick={() => void readPickedSection()}>Import section</button>
+                      <button type="button" className="icon-btn" aria-label="Cancel" onClick={() => setSectionPick(null)}><Icon name="x" /></button>
+                    </div>
+                  )}
                   {error && <div className="form-error" role="alert" style={{ whiteSpace: 'pre-line' }}>{error}</div>}
                   {upload && (
                     <div className="uploaded-file" id="file-info">

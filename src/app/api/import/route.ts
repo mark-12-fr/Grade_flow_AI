@@ -3,6 +3,7 @@ import { extractLogo, masterListSize, readGrid } from '@/server/import/extract';
 import { guard, HttpError, limiter } from '@/server/core/guard';
 import { readUpload, toResponse } from '@/server/core/http';
 import { streamJob } from '@/server/core/stream';
+import { listSections, readMasterList } from '@/server/import/masterList';
 import { MappingError, parseSchema, runImport } from '@/server/import/mapper';
 import { readTemplate, TemplateError } from '@/server/import/template';
 
@@ -20,11 +21,15 @@ export async function POST(request: Request) {
     return streamJob(async (emit) => {
       emit(5, 'Reading the sheet');
       const grid = readGrid(name, data);
-      const subjectCount = masterListSize(grid);
-      if (subjectCount) {
-        throw new MappingError(
-          `${name}: sheet "${grid.sheet}" is a school-wide list (about ${subjectCount} subjects, several strands and grade levels), not one class. ` +
-          'Upload a file for a single class: one section, Student Name plus the Q1, Q2 and Final columns of that class\'s subjects.', 'file');
+      if (masterListSize(grid)) {
+        const section = form.get('section');
+        if (typeof section !== 'string' || !section) {
+          const sections = listSections(grid);
+          if (!sections.length) throw new MappingError(`${name}: sheet "${grid.sheet}" is a school-wide list but no sections were found in it.`, 'file');
+          return { mode: 'pick-section', sections, sheet: grid.sheet };
+        }
+        emit(40, `Reading section ${section}`);
+        return { ...readMasterList(grid, schema, section), roster: true, schoolLogo: extractLogo(name, data) };
       }
       limiter.takeCall();
       try {

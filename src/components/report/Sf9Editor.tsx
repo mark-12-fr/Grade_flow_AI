@@ -61,7 +61,8 @@ export function Sf9Editor({ student, state, side }: { student: Student; state: A
         </div>
         {semestersFor(student.strand || state.strand).map((semester) => (
           <div key={semester.key} className="grade-editor-scroll">
-            <table className="grade-editor-table">
+            <table className="grade-editor-table sf9-grades">
+              <colgroup><col /><col className="sf9-grade-col" /><col className="sf9-grade-col" /><col className="sf9-grade-col" /></colgroup>
               <thead><tr><th scope="col">{semester.label}</th>{semester.quarterLabels.map((l) => <th key={l} scope="col">Quarter {l}</th>)}<th scope="col">Semester final</th></tr></thead>
               <tbody>
                 {semester.groups.flatMap((group) => [

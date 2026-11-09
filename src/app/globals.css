@@ -1841,3 +1841,6 @@ html { scroll-behavior: smooth; }
 
 .sf10-target { margin-right: auto; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .sf9-editor { gap: 12px; } .sf9-editor select.sf9-sel, .sf10-field select { height: 36px; padding: 0 10px; font: inherit; font-size: 12.5px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); color: var(--navy); }
+.sf9-editor .sf9-grades { table-layout: fixed; min-width: 560px; }
+.sf9-editor .sf9-grades .sf9-grade-col { width: 130px; }
+.sf9-editor .sf9-grades .grade-input { display: block; margin-inline: auto; }

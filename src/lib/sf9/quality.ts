@@ -31,8 +31,14 @@ export function sf9Issues(student: Student, state: AppState): Issue[] {
 
 export interface Sf9Details {
   schoolName: string; year: string; principal: string; adviser: string; section: string; strand: string; value: string;
+  /** Certificate of Transfer entries, keyed like Student.transfer. */
+  transfer: Record<string, string>;
 }
-export const emptySf9Details: Sf9Details = { schoolName: '', year: '', principal: '', adviser: '', section: '', strand: '', value: '' };
+export const emptySf9Details: Sf9Details = { schoolName: '', year: '', principal: '', adviser: '', section: '', strand: '', value: '', transfer: {} };
+export const TRANSFER_DETAILS: [string, string][] = [
+  ['admittedTo', 'Transfer: admitted to'], ['eligibilityForGrade', 'Transfer: eligibility for admission to grade'], ['approvedBy', 'Transfer: approved by'],
+  ['admittedIn', 'Transfer: admitted in'], ['transferDate', 'Transfer: date'], ['cancellationOfEligibility', 'Transfer: cancellation of eligibility, approved by']
+];
 
 /** Fills the same details into many learners at once. Only blanks are filled unless `overwrite` is set. */
 export function applySf9Details(students: Student[], ids: Set<number>, v: Sf9Details, overwrite: boolean): { students: Student[]; changed: number } {
@@ -41,6 +47,9 @@ export function applySf9Details(students: Student[], ids: Set<number>, v: Sf9Det
   const out = students.map((student) => {
     if (!ids.has(student.id)) return student;
     const next: Student = { ...student, adviser: put(student.adviser, v.adviser), section: put(student.section, v.section), strand: put(student.strand, v.strand) };
+    const transfer = { ...student.transfer };
+    TRANSFER_DETAILS.forEach(([key]) => { const next = put(transfer[key], v.transfer[key] ?? ''); if (next) transfer[key] = next; });
+    next.transfer = transfer;
     if (v.value) {
       const values: Student['observedValues'] = {};
       CORE_VALUE_KEYS.forEach((key) => {

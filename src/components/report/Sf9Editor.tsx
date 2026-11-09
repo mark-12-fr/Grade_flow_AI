@@ -10,10 +10,6 @@ const update = (id: number, change: (s: Student) => Student) =>
   setState((s) => ({ students: s.students.map((x) => (x.id === id ? change(x) : x)) }));
 
 const VALUE_LABELS: Record<string, string> = { makaDiyos: 'Maka-Diyos', makatao: 'Makatao', makakalikasan: 'Maka-kalikasan', makabansa: 'Makabansa' };
-const TRANSFER: [string, string][] = [
-  ['admittedTo', 'Admitted to'], ['section', 'Section (transfer)'], ['eligibilityForGrade', 'Eligibility for admission to grade'], ['approvedBy', 'Approved by'],
-  ['admittedIn', 'Admitted in'], ['transferDate', 'Date'], ['cancellationOfEligibility', 'Cancellation of eligibility: approved by']
-];
 
 /** Edits what is printed on the chosen side of one learner's SF9. Every change updates the PDF preview right away. */
 export function Sf9Editor({ student, state, side }: { student: Student; state: AppState; side: 'front' | 'back' }) {
@@ -101,16 +97,6 @@ export function Sf9Editor({ student, state, side }: { student: Student; state: A
   return (
     <div className="sf10-edit-body sf9-editor">
       {error && <p className="sf10-incomplete" role="alert">{error}</p>}
-      <strong>Certificate of Transfer</strong>
-      <div className="sf10-edit-grid">
-        {TRANSFER.map(([key, label]) => (
-          <label className="sf10-field" key={key}>
-            <span>{label}</span>
-            <input type="text" value={student.transfer?.[key] ?? ''} placeholder={key === 'section' ? student.section || state.section : ''}
-              onChange={(e) => edit((s) => ({ ...s, transfer: { ...s.transfer, [key]: e.target.value } }))} />
-          </label>
-        ))}
-      </div>
       <strong>Report of Attendance</strong>
       <div className="grade-editor-scroll">
         <table className="grade-editor-table">

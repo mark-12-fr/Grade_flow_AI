@@ -10,7 +10,7 @@ import { Sf9Editor } from '@/components/report/Sf9Editor';
 import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
 import { STRAND_TRACK } from '@/lib/domain/curriculum';
-import { applySf9Details, emptySf9Details, sf9Issues, type Sf9Details } from '@/lib/sf9/quality';
+import { applySf9Details, emptySf9Details, sf9Issues, TRANSFER_DETAILS, type Sf9Details } from '@/lib/sf9/quality';
 import { learnerMeta } from '@/lib/sf10/record';
 import { setState, useAppState } from '@/lib/state/store';
 import type { Student } from '@/lib/domain/types';
@@ -223,18 +223,24 @@ export default function ReportCardPage() {
       </div>
 
       <details className="card sf10-edit" open={editOpen} onToggle={(e) => setEditOpen((e.target as HTMLDetailsElement).open)}>
-        <summary><strong>Fill in missing details</strong> <span>School, school year, principal, adviser, section and more, for one learner or many at once</span></summary>
+        <summary><strong>Fill in missing details</strong> <span>School, school year, principal, adviser, section, certificate of transfer and more, for one learner or many at once</span></summary>
         {!total ? <p className="muted">This is available after you upload an SF9 file.</p> : (
           <div className="sf10-edit-body">
             <div className="sf10-edit-grid">
               {([
                 ['schoolName', 'School name (everyone)'], ['year', 'School year, e.g. 2025-2026 (everyone)'], ['principal', 'Principal (everyone)'],
                 ['adviser', 'Adviser'], ['section', 'Section']
-              ] as [keyof Sf9Details, string][]).map(([key, label]) => (
+              ] as [Exclude<keyof Sf9Details, 'transfer'>, string][]).map(([key, label]) => (
                 <label key={key} className="sf10-field">
                   <span>{label}</span>
                   <input type="text" value={details[key]} placeholder={key === 'schoolName' ? state.school.name : key === 'year' ? state.year : key === 'principal' ? state.school.principal : ''}
                     onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+                </label>
+              ))}
+              {TRANSFER_DETAILS.map(([key, label]) => (
+                <label key={key} className="sf10-field">
+                  <span>{label}</span>
+                  <input type="text" value={details.transfer[key] ?? ''} onChange={(e) => setDetails({ ...details, transfer: { ...details.transfer, [key]: e.target.value } })} />
                 </label>
               ))}
               <label className="sf10-field">
@@ -309,7 +315,7 @@ export default function ReportCardPage() {
       </div>
       {student && (
         <details className="card sf10-edit" open>
-          <summary><strong>Edit {side === 'front' ? 'front' : 'back'}</strong> <span>{side === 'front' ? 'Learner details and grades' : 'Certificate of transfer, attendance and observed values'} for {student.name}. The preview updates as you type.</span></summary>
+          <summary><strong>Edit {side === 'front' ? 'front' : 'back'}</strong> <span>{side === 'front' ? 'Learner details and grades' : 'Attendance and observed values'} for {student.name}. The preview updates as you type.</span></summary>
           <Sf9Editor key={`${student.id}-${side}`} student={student} state={state} side={side} />
         </details>
       )}

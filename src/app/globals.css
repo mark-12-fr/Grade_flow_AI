@@ -1840,3 +1840,4 @@ html { scroll-behavior: smooth; }
 .sf10-edit-actions .select-wrap { flex: 0 1 200px; }
 
 .sf10-target { margin-right: auto; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.sf9-editor { gap: 12px; } .sf9-editor select.sf9-sel, .sf10-field select { height: 36px; padding: 0 10px; font: inherit; font-size: 12.5px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); color: var(--navy); }

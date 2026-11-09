@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
 import { PdfPreview } from '@/components/report/PdfPreview';
+import { Sf9Editor } from '@/components/report/Sf9Editor';
 import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
 import { STRAND_TRACK } from '@/lib/domain/curriculum';
@@ -306,6 +307,12 @@ export default function ReportCardPage() {
             : <p className="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>}
         </div>
       </div>
+      {student && (
+        <details className="card sf10-edit" open>
+          <summary><strong>Edit {side === 'front' ? 'front' : 'back'}</strong> <span>{side === 'front' ? 'Learner details and grades' : 'Certificate of transfer, attendance and observed values'} for {student.name}. The preview updates as you type.</span></summary>
+          <Sf9Editor key={`${student.id}-${side}`} student={student} state={state} side={side} />
+        </details>
+      )}
       <p className="preview-hint"><Icon name="info" /> This preview is the real PDF (A4, front and back). In the print dialog choose Actual size (100%) and two-sided (flip on long edge).</p>
 
       <div className="page-actions">

@@ -190,7 +190,7 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   const panelWidth = leftWidth / 2;
   const headingHeight = 4.6;
   const transferRowHeight = 4.7;
-  const signatureHeight = 7.2;
+  const signatureHeight = 10.8; // room to sign above the line
   function transferPanel(x: any, title: any, fields: any, signatureLabel: any) {
     cell(x, leftY, panelWidth, headingHeight, { fill: tan, stroke: line });
     setFont('bold', 4.4, ink);
@@ -211,10 +211,10 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
     setDrawColor(doc, line);
     doc.setLineWidth(S(0.22));
     const signatureCenter = x + panelWidth / 2;
-    doc.line(X(signatureCenter - signatureWidth / 2), Y(rowY + 2.0),
-      X(signatureCenter + signatureWidth / 2), Y(rowY + 2.0));
+    doc.line(X(signatureCenter - signatureWidth / 2), Y(rowY + 7.4),
+      X(signatureCenter + signatureWidth / 2), Y(rowY + 7.4));
     setFont('normal', 3.8, soft);
-    centeredText(signatureLabel, x, rowY + 4.3, panelWidth);
+    centeredText(signatureLabel, x, rowY + 9.4, panelWidth);
   }
 
   const transfer = student.transfer || {};
@@ -260,10 +260,10 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   cell(left + panelWidth, rightRowY, panelWidth, signatureHeight, { stroke: line });
   const rightSignatureCenter = left + panelWidth + panelWidth / 2;
   const rightSignatureWidth = panelWidth * 0.55;
-  doc.line(X(rightSignatureCenter - rightSignatureWidth / 2), Y(rightRowY + 2.0),
-    X(rightSignatureCenter + rightSignatureWidth / 2), Y(rightRowY + 2.0));
+  doc.line(X(rightSignatureCenter - rightSignatureWidth / 2), Y(rightRowY + 7.4),
+    X(rightSignatureCenter + rightSignatureWidth / 2), Y(rightRowY + 7.4));
   setFont('normal', 3.8, soft);
-  centeredText('Principal', left + panelWidth, rightRowY + 4.3, panelWidth);
+  centeredText('Principal', left + panelWidth, rightRowY + 9.4, panelWidth);
   leftY += headingHeight + 4 * transferRowHeight + signatureHeight + 1.6;
 
   /* ---------- Attendance ---------- */

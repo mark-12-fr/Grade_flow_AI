@@ -32,8 +32,7 @@ export default function UploadPage() {
     const result = await importSf9(file);
     setSf9Busy('');
     if (sf9Input.current) sf9Input.current.value = '';
-    if (!result.ok) setError(result.error ?? '');
-    toast(result.message ?? '', result.type);
+    if (!result.ok) { setError(result.error ?? ''); toast(result.message ?? '', result.type); }
   }
 
   async function onSf10(files: FileList | null) {

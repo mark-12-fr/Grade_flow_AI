@@ -88,6 +88,8 @@ export default function ReportCardPage() {
   const [busy, setBusy] = useState(false);
   const picked = new Set(state.selectedReportIds);
   const selectedStudents = students.filter((s) => picked.has(s.id));
+  // One learner by default; when learners are checked in the list (or Select all is ticked), the buttons apply to all of them.
+  const target = selectedStudents.length ? selectedStudents : student ? [student] : [];
   const pickedShown = filtered.filter((s) => picked.has(s.id)).length;
   useEffect(() => { if (selectAll.current) selectAll.current.indeterminate = pickedShown > 0 && pickedShown < filtered.length; });
   const toggle = (id: number, on: boolean) => setState((s) => ({ selectedReportIds: on ? [...new Set([...s.selectedReportIds, id])] : s.selectedReportIds.filter((x) => x !== id) }));
@@ -200,17 +202,12 @@ export default function ReportCardPage() {
         </div>
 
         <div className="sf10-actions">
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!student || busy} onClick={() => student && void download([student], true)}>
-            <Icon name="download" /> This learner (PDF)
+          <span className="sf10-target">{target.length > 1 ? `${target.length} learners checked` : target.length === 1 ? (selectedStudents.length ? '1 learner checked' : student?.name) : ''}</span>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length || busy} onClick={() => void download(target, target.length === 1)}>
+            <Icon name="download" /> Download PDF{target.length > 1 ? ` (${target.length})` : ''}
           </button>
-          <button type="button" className="btn btn-primary btn-sm" disabled={!student || busy} onClick={() => student && setPrinting([student])}>
-            <Icon name="printer" /> Print report card
-          </button>
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!selectedStudents.length || busy} onClick={() => void download(selectedStudents)}>
-            <Icon name="download" /> Selected ({selectedStudents.length})
-          </button>
-          <button type="button" className="btn btn-primary btn-sm" disabled={!filtered.length || busy} onClick={() => void download(filtered)}>
-            <Icon name="download" /> {filtersOn ? `All shown (${filtered.length})` : `Everyone (${filtered.length})`}
+          <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => setPrinting(target)}>
+            <Icon name="printer" /> Print{target.length > 1 ? ` (${target.length})` : ''}
           </button>
         </div>
       </div>

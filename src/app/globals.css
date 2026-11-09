@@ -1878,3 +1878,5 @@ html { scroll-behavior: smooth; }
 .sf10-field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18); }
 .sf10-edit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .sf10-edit-actions .select-wrap { flex: 0 1 200px; }
+
+.sf10-target { margin-right: auto; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }

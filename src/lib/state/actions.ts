@@ -169,7 +169,7 @@ export async function importSf9(file: File): Promise<ImportOutcome> {
       students,
       selectedStudentId: (students.find((x) => missingGradeCells([x]).length) ?? students[0]).id,
       previewIndex: 0, verificationPage: 1, verificationSearch: '', verificationFilter: 'all', reportsPage: 1, reportsSearch: '',
-      selectedReportIds: students.map((x) => x.id),
+      selectedReportIds: [],
       processed: false, processing: false, progress: 0, generated: false, generatedAt: null,
       upload,
       strand: details.strand || s.strand,

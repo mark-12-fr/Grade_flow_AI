@@ -165,7 +165,6 @@ export function Shell({ children }: { children: ReactNode }) {
           )}
           {children}
           <footer className="app-footer">
-            <span><Icon name="shield-check" /> Learner data stays in your browser except for the file you upload.</span>
             <span>GradeFlow</span>
           </footer>
         </main>

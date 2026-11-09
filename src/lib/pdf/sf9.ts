@@ -214,8 +214,10 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
     setDrawColor(doc, line);
     doc.setLineWidth(S(0.22));
     doc.line(X(signature[1] + 1), Y(leftY + 1.5), X(signature[1] + signature[2] - 1), Y(leftY + 1.5));
+    setFont('normal', 4.2, soft);
+    centeredText(signature[3], signature[1], leftY + 3.6, signature[2]);
   });
-  leftY += 3.6;
+  leftY += 5.4;
 
   /* ---------- Certificate panels ---------- */
   const panelWidth = leftWidth / 2;

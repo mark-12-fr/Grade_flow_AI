@@ -1879,7 +1879,6 @@ html { scroll-behavior: smooth; }
 
 /* SF9 page you can type on (the Real PDF view shows the exact print). */
 .sf9-scroll { overflow-x: auto; padding-bottom: 6px; }
-.preview-view { margin-left: 6px; }
 .sf9-sheet { width: 794px; min-height: 1123px; margin: 0 auto; padding: 36px 40px; color: #1c1c1c; background: #fff; font: 11px/1.35 Arial, "Liberation Sans", sans-serif; box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25); }
 .sf9-sheet table { width: 100%; border-collapse: collapse; }
 .sf9-sheet th, .sf9-sheet td { border: 1px solid #55504a; padding: 3px 6px; text-align: center; vertical-align: middle; font-size: 10.5px; }

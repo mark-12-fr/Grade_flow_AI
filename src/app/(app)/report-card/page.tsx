@@ -12,7 +12,7 @@ import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from
 import { applySf9Details, emptySf9Details, sf9Issues, TRANSFER_DETAILS, type Sf9Details } from '@/lib/sf9/quality';
 import { applyObservedValues, askObservedValues } from '@/lib/sf9/observed';
 import { learnerMeta } from '@/lib/sf10/record';
-import { setState, useAppState } from '@/lib/state/store';
+import { getState, setState, useAppState } from '@/lib/state/store';
 import type { Student } from '@/lib/domain/types';
 
 export default function ReportCardPage() {
@@ -38,7 +38,7 @@ export default function ReportCardPage() {
   const [details, setDetails] = useState<Sf9Details>(emptySf9Details);
   const [scope, setScope] = useState<'one' | 'shown' | 'all'>('shown');
   const [overwrite, setOverwrite] = useState(false);
-  const [deciding, setDeciding] = useState(false);
+  const [deciding, setDeciding] = useState<{ done: number; total: number } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [side, setSide] = useState<'front' | 'back'>('front');
   const options = useMemo(() => {
@@ -94,19 +94,23 @@ export default function ReportCardPage() {
   useEffect(() => { if (selectAll.current) selectAll.current.indeterminate = pickedShown > 0 && pickedShown < filtered.length; });
   const toggle = (id: number, on: boolean) => setState((s) => ({ selectedReportIds: on ? [...new Set([...s.selectedReportIds, id])] : s.selectedReportIds.filter((x) => x !== id) }));
 
+  const decideCount = (scope === 'one' ? (student ? 1 : 0) : scope === 'shown' ? filtered.length : total);
   async function decideValues() {
     const ids = new Set((scope === 'one' ? (student ? [student] : []) : scope === 'shown' ? filtered : students).map((x) => x.id));
     const list = state.students.filter((s) => ids.has(s.id));
     if (!list.length) return;
-    setDeciding(true);
+    setDeciding({ done: 0, total: list.length });
     try {
-      const decided = await askObservedValues(list);
-      const result = applyObservedValues(state.students, decided, overwrite);
+      const { values, error } = await askObservedValues(list, (done, all) => setDeciding({ done, total: all }));
+      // Read the state again: the teacher may have kept editing while the AI worked.
+      const result = applyObservedValues(getState().students, values, overwrite);
       setState({ students: result.students });
-      toast(result.changed ? `The AI filled the observed values of ${result.changed} learner${result.changed === 1 ? '' : 's'}. Please review them in Edit back.` : 'Nothing to change. The observed values are already filled in (turn on "Replace values already filled in").', result.changed ? 'success' : 'info');
+      const asked = list.length;
+      if (error) toast(`The AI filled ${result.changed} of ${asked} learners, then stopped. ${error.message} Press the button again to finish the rest.`, result.changed ? 'info' : 'error');
+      else toast(result.changed ? `The AI filled the observed values of ${result.changed} learner${result.changed === 1 ? '' : 's'}. Please review them in Edit back.` : 'Nothing to change. The observed values are already filled in (turn on "Replace values already filled in").', result.changed ? 'success' : 'info');
     } catch (error) {
       toast(`The AI could not decide the observed values. ${(error as Error).message}`, 'error');
-    } finally { setDeciding(false); }
+    } finally { setDeciding(null); }
   }
 
   async function download(list: Student[], single = false) {
@@ -277,10 +281,10 @@ export default function ReportCardPage() {
                 setState({ students: result.students, school, year: details.year.trim() || state.year });
                 toast(result.changed || globalChange ? `Updated ${result.changed} learner${result.changed === 1 ? '' : 's'}${globalChange ? ' and the school details' : ''}.` : 'Nothing to change. The fields were empty, or already filled in (turn on "Replace values already filled in").', result.changed || globalChange ? 'success' : 'info');
               }}>Apply</button>
-              <button type="button" className={`btn btn-secondary btn-sm btn-ai${deciding ? ' working' : ''}`} disabled={deciding} aria-busy={deciding} onClick={() => void decideValues()}
+              <button type="button" className={`btn btn-secondary btn-sm btn-ai${deciding ? ' working' : ''}`} disabled={Boolean(deciding) || !decideCount} aria-busy={Boolean(deciding)} onClick={() => void decideValues()}
                 title="The AI drafts the observed values (AO, SO, RO, NO) from each learner's grades. Attendance is not changed.">
                 <Icon name="sparkles" className="ai-sparkle" />
-                {deciding ? <span>The AI is deciding<span className="ai-dots" aria-hidden="true" /></span> : 'Decide observed values with AI'}
+                {deciding ? <span>The AI is deciding{deciding.total > 1 ? ` · ${deciding.done} of ${deciding.total}` : ''}<span className="ai-dots" aria-hidden="true" /></span> : `Decide observed values with AI (${decideCount})`}
               </button>
             </div>
           </div>

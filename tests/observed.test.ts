@@ -20,8 +20,24 @@ describe('observed values by AI', () => {
 
   it('asks in batches of 25', async () => {
     let calls = 0;
-    await decideObservedValues(Array.from({ length: 60 }, (_, i) => learner(i + 1)), async () => { calls += 1; return { learners: [] }; });
+    await decideObservedValues(Array.from({ length: 60 }, (_, i) => learner(i + 1)), async (promptText) => {
+      calls += 1;
+      const ids = JSON.parse(promptText.split('\n').pop()!).map((l: { id: number }) => l.id) as number[];
+      return { learners: ids.map((id) => ({ id, values: all('SO') })) };
+    });
     expect(calls).toBe(3);
+  });
+
+  it('asks again for learners the AI skipped', async () => {
+    let calls = 0;
+    const caller = async (promptText: string) => {
+      calls += 1;
+      const ids = JSON.parse(promptText.split('\n').pop()!).map((l: { id: number }) => l.id) as number[];
+      return { learners: (calls === 1 ? ids.slice(0, 1) : ids).map((id) => ({ id, values: all('AO') })) };
+    };
+    const out = await decideObservedValues([learner(1), learner(2), learner(3)], caller);
+    expect(calls).toBe(2);
+    expect([...out.keys()].sort()).toEqual([1, 2, 3]);
   });
 
   it('fills only blanks unless told to replace', () => {

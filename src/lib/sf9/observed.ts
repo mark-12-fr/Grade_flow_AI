@@ -38,8 +38,9 @@ export function applyObservedValues(students: Student[], decided: Record<string,
   return { students: out, changed };
 }
 
-/** Asks the server (and so the AI) for a draft of the observed values. If the server wants an access code, asks once and retries. */
-export async function askObservedValues(students: Student[]): Promise<Record<string, Record<string, Record<string, string>>>> {
+const CHUNK = 50;
+
+async function postChunk(students: Student[]): Promise<Record<string, Record<string, Record<string, string>>>> {
   const body = JSON.stringify({ learners: students.map(gradeSummary) });
   const send = () => fetch('/api/observed-values', {
     method: 'POST', body,
@@ -60,4 +61,22 @@ export async function askObservedValues(students: Student[]): Promise<Record<str
     throw new Error(detail);
   }
   return ((await res.json()) as { values: Record<string, Record<string, Record<string, string>>> }).values;
+}
+
+/**
+ * Asks the server (and so the AI) for a draft of the observed values of any number of learners, 50 per request,
+ * so a whole school fits. `onProgress` reports how many learners are done. If a request fails part-way, the
+ * learners already done are kept and returned together with the error.
+ */
+export async function askObservedValues(students: Student[], onProgress: (done: number, total: number) => void = () => {}) {
+  const values: Record<string, Record<string, Record<string, string>>> = {};
+  let error: Error | null = null;
+  onProgress(0, students.length);
+  for (let i = 0; i < students.length; i += CHUNK) {
+    try {
+      Object.assign(values, await postChunk(students.slice(i, i + CHUNK)));
+    } catch (e) { error = e as Error; break; }
+    onProgress(Math.min(i + CHUNK, students.length), students.length);
+  }
+  return { values, error };
 }

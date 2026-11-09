@@ -56,8 +56,7 @@ function prompt(batch: LearnerSummary[]): string {
 /** Asks the AI for a draft of the observed values of many learners, 25 at a time. Anything invalid in the answer is dropped. */
 export async function decideObservedValues(learners: LearnerSummary[], caller: Caller, spend: () => void = () => {}): Promise<Map<number, ObservedValues>> {
   const out = new Map<number, ObservedValues>();
-  for (let i = 0; i < learners.length; i += BATCH) {
-    const batch = learners.slice(i, i + BATCH);
+  const ask = async (batch: LearnerSummary[]) => {
     const wanted = new Set(batch.map((l) => l.id));
     spend();
     const answer = await caller(prompt(batch), tool, 8192);
@@ -76,6 +75,10 @@ export async function decideObservedValues(learners: LearnerSummary[], caller: C
       }
       if (complete) out.set(id, values);
     }
-  }
+  };
+  for (let i = 0; i < learners.length; i += BATCH) await ask(learners.slice(i, i + BATCH));
+  // Learners the AI skipped or answered badly get one more try, so nobody is left out.
+  const missed = learners.filter((l) => !out.has(l.id));
+  for (let i = 0; i < missed.length; i += BATCH) await ask(missed.slice(i, i + BATCH));
   return out;
 }

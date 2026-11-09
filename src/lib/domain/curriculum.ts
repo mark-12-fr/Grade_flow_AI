@@ -96,6 +96,13 @@ export const STRAND_TRACK: Record<string, string> = {
   HEALTH: 'TECHNICAL-VOCATIONAL: HEALTH'
 };
 
+const STRAND_KEYS: [RegExp, string][] = [
+  [/criminology/i, 'GASCRIM'], [/health/i, 'HEALTH'], [/accountancy|\babm\b/i, 'ABM'], [/humanities|humss/i, 'HUMSS'],
+  [/general academic|\bgas\b/i, 'GAS'], [/science|stem/i, 'STEM']
+];
+/** Short strand name (ABM, STEM, HUMSS, GAS, GASCRIM, HEALTH) from a long track/strand text; the text itself when it is not recognised. */
+export const strandKey = (text: string): string => STRAND_KEYS.find(([re]) => re.test(text))?.[1] ?? text;
+
 // ---- Per-strand curricula -------------------------------------------------------------------------
 // SUBJECTS / SEMESTERS above are the default (HUMSS-style) list used when a learner has no strand.
 // Each strand's report card lists its own subjects, as printed on the DepEd SF9 for that strand.

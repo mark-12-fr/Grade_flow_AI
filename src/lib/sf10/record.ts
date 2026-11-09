@@ -1,4 +1,4 @@
-import { semestersFor } from '@/lib/domain/curriculum';
+import { semestersFor, strandKey } from '@/lib/domain/curriculum';
 import { formatLongDate, prettyYear } from '@/lib/domain/format';
 import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from '@/lib/domain/grading';
 import type { AppState, Sf10Remedial, Student } from '@/lib/domain/types';
@@ -76,7 +76,7 @@ export const sf10Source = (state: AppState): Student[] => (state.sf10Students.le
 /** Strand, section and grade levels of a learner, used to filter the SF10 list. */
 export function learnerMeta(student: Student, state: AppState): { strand: string; section: string; levels: string[] } {
   const sems = student.sf10?.semesters ?? [];
-  if (!sems.length) return { strand: student.strand || state.strand, section: student.section || state.section, levels: [state.gradeLevel] };
+  if (!sems.length) return { strand: strandKey(student.strand || state.strand), section: student.section || state.section, levels: [state.gradeLevel] };
   const last = [...sems].reverse().find((s) => s.section || s.track) ?? sems[sems.length - 1];
-  return { strand: last.track || '', section: last.section || '', levels: [...new Set(sems.map((x) => x.gradeLevel).filter(Boolean))] };
+  return { strand: strandKey(last.track || ''), section: last.section || '', levels: [...new Set(sems.map((x) => x.gradeLevel).filter(Boolean))] };
 }

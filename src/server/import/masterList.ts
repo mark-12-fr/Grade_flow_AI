@@ -2,7 +2,7 @@
  * Reader for a school-wide master list (one row per learner, many "<code> - <Subject>" column groups of Q1/Q2/FINAL,
  * several strands and grade levels). The teacher picks one section; grades are copied by code, never generated.
  */
-import { ALL_SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, subjectsFor } from '@/lib/domain/curriculum';
+import { ALL_SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, strandKey, subjectsFor } from '@/lib/domain/curriculum';
 import type { Student } from '@/lib/domain/types';
 import type { Grid } from '@/server/import/extract';
 import { lrnText, newStudent, type ImportResult, type ImportSchema, MappingError } from '@/server/import/mapper';
@@ -98,12 +98,6 @@ function matchGroups(subjectName: string, groups: Group[], strand: string): Grou
   const top = Math.max(0, ...out.map((m) => m.score));
   return out.filter((m) => m.score === top).map((m) => m.group);
 }
-
-const STRAND_KEYS: [RegExp, string][] = [
-  [/criminology/i, 'GASCRIM'], [/health/i, 'HEALTH'], [/accountancy|\babm\b/i, 'ABM'], [/humanities|humss/i, 'HUMSS'],
-  [/general academic|\bgas\b/i, 'GAS'], [/science|stem/i, 'STEM']
-];
-const strandKey = (text: string) => STRAND_KEYS.find(([re]) => re.test(text))?.[1] ?? text;
 
 /** section = one section's name, or null to read every section in the list. */
 export interface CardDefaults { schoolDays: Record<string, number>; values: Record<string, Record<string, string>>; year?: string; principal?: string }

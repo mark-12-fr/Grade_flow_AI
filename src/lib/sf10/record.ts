@@ -1,7 +1,7 @@
 import { semestersFor, strandKey } from '@/lib/domain/curriculum';
 import { formatLongDate, prettyYear } from '@/lib/domain/format';
 import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from '@/lib/domain/grading';
-import type { AppState, Sf10Remedial, Student } from '@/lib/domain/types';
+import type { AppState, Sf10Data, Sf10Remedial, Student } from '@/lib/domain/types';
 
 export interface Sf10Rec {
   last: string; first: string; middle: string; lrn: string; sex: string; birth: string;
@@ -79,4 +79,14 @@ export function learnerMeta(student: Student, state: AppState): { strand: string
   if (!sems.length) return { strand: strandKey(student.strand || state.strand), section: student.section || state.section, levels: [state.gradeLevel] };
   const last = [...sems].reverse().find((s) => s.section || s.track) ?? sems[sems.length - 1];
   return { strand: strandKey(last.track || ''), section: last.section || '', levels: [...new Set(sems.map((x) => x.gradeLevel).filter(Boolean))] };
+}
+
+/** The editable copy of a learner's SF10: what is stored when it was read from a file, otherwise what is built from the class grades. */
+export function toSf10Data(student: Student, state: AppState): Sf10Data {
+  if (student.sf10) return student.sf10;
+  const rec = recordFor(student, state);
+  return {
+    eligibility: { ...rec.eligibility }, completion: { ...rec.completion },
+    semesters: rec.semesters.map(({ semLabel, quarters: _quarters, ...sem }) => ({ ...sem, sem: semLabel === '2ND' ? '2' : '1' }))
+  };
 }

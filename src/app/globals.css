@@ -1861,3 +1861,14 @@ html { scroll-behavior: smooth; }
 .btn-ai > * { position: relative; z-index: 1; }
 .btn-ai.working::before { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--ai-progress, 0%); background: rgba(59, 130, 246, 0.22); border-right: 2px solid var(--blue); transition: width 0.6s var(--ease-soft); pointer-events: none; }
 .ai-percent { font-variant-numeric: tabular-nums; }
+
+/* SF10 editor */
+.sf10-sem-edit { border: 1px solid var(--border); border-radius: 10px; }
+.sf10-sem-edit > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding: 10px 14px; cursor: pointer; }
+.sf10-sem-edit > summary span { color: var(--muted-light); font-size: 11.5px; }
+.sf10-sem-edit > .sf10-edit-body { padding-top: 6px; }
+.sf10-cell-input { width: 100%; min-width: 64px; height: 28px; padding: 0 6px; color: var(--navy); background: transparent; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; }
+.sf10-cell-input.wide { min-width: 220px; }
+.sf10-cell-input:focus { outline: none; border-color: var(--blue); box-shadow: var(--focus-ring); }
+.sf10-rows { min-width: 760px; }
+.sf10-edit-actions .sf10-field { min-width: 150px; }

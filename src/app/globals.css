@@ -1112,7 +1112,7 @@ img { max-width: 100%; display: block; }
 .rc-official-legends tr:last-child > * { border-bottom: 0; }
 .rc-official-legends th { font-weight: 700; text-align: left; }
 .rc-official-legends caption { padding: 0.24em 0.12em; background: #c8c0a0; border-bottom: 1px solid #555; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 0.84em; font-weight: 700; line-height: 1.08; text-align: center; }
-.rc-parent-signatures td { min-width: 2em; height: 1.9em; }
+.rc-parent-signatures td { min-width: 2em; height: 3.2em; }
 
 .preview-hint { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 9px; color: var(--muted-light); font-size: 9.3px; }
 .preview-hint .icon { width: 12px; height: 12px; }

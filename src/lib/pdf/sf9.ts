@@ -522,10 +522,10 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
 
   const strandSemesters = semestersFor(student.strand);
   drawSemester(strandSemesters[0], 27.0, 105.0);
-  drawSemester(strandSemesters[1], 107.4, 184.4);
+  drawSemester(strandSemesters[1], 107.4, 176.4);
 
   /* ---------- Joined legend strip ---------- */
-  const legendTop = 186.0;
+  const legendTop = 178.0; // tall enough for the parent/guardian to sign each quarter
   const legendHeight = bodyBottom - legendTop;
   const legendGap = 0;
   const firstLegendWidth = rightWidth * (0.9 / 3.7);

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import type { AppState } from '@/lib/domain/types';
+import { loadSaved, save } from '@/lib/state/persist';
 
 export const initialState: AppState = {
   school: {
@@ -44,12 +45,37 @@ export const initialState: AppState = {
 
 let state: AppState = initialState;
 const listeners = new Set<() => void>();
+let hydrated = false; // never save before the saved data was loaded, or the empty start-up state would overwrite it
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const getState = () => state;
+
+function scheduleSave() {
+  if (!hydrated || typeof window === 'undefined') return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { void save(state); }, 500);
+}
 
 export function setState(patch: Partial<AppState> | ((s: AppState) => Partial<AppState>)): void {
   state = { ...state, ...(typeof patch === 'function' ? patch(state) : patch) };
   listeners.forEach((l) => l());
+  scheduleSave();
+}
+
+/** Brings back what was uploaded before the page was refreshed. Called once when the app starts. */
+export async function hydrate(): Promise<void> {
+  if (hydrated) return;
+  const saved = await loadSaved();
+  hydrated = true;
+  if (saved) {
+    const clean: Partial<AppState> = { ...saved };
+    if (clean.upload) clean.upload = { ...clean.upload, parsedAt: new Date(clean.upload.parsedAt) };
+    if (clean.generatedAt) clean.generatedAt = new Date(clean.generatedAt);
+    // Do not overwrite anything the user already did while the saved data was loading.
+    state = { ...state, ...(state.students.length || state.sf10Students.length ? {} : clean) };
+    listeners.forEach((l) => l());
+  }
+  scheduleSave();
 }
 
 const subscribe = (listener: () => void) => {

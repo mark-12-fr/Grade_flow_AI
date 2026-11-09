@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
-import { Sf10Editor } from '@/components/report/Sf10Editor';
 import { Sf10Sheet } from '@/components/report/Sf10Sheet';
 import { downloadSf10, printSf10 } from '@/lib/pdf/sf10';
 import { sf10Edits } from '@/lib/sf10/edit';
@@ -247,13 +246,6 @@ export default function Sf10Page() {
           ? <div key={current.id} className="swap-in"><Sf10Sheet student={current} state={state} edits={sf10Edits(current, state)} /></div>
           : <p className="sf10-incomplete">{source.length ? 'No learner to show. Change the search or filters.' : 'Upload an SF10 file first.'}</p>}
       </article>
-
-      {current && visibleIndex !== -1 && (
-        <details className="card sf10-edit" open>
-          <summary><strong>Edit this SF10</strong> <span>Learner information, eligibility, grades, remarks and completion for {current.name}. The record above updates as you type.</span></summary>
-          <Sf10Editor key={current.id} student={current} state={state} />
-        </details>
-      )}
     </section>
   );
 }

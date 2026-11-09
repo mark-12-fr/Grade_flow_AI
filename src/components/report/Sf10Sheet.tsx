@@ -77,7 +77,7 @@ export function Sf10Sheet({ student, state, edits }: { student: Student; state: 
                   <tr key={k}>
                     <td>{ed(r.category, (v) => edits!.row(i, k, { category: v }))}</td>
                     <td className="sf10-subject">{ed(r.subject, (v) => edits!.row(i, k, { subject: v }))}{edits && <button type="button" className="sf10-remove" aria-label={`Remove ${r.subject || 'this subject'}`} title="Remove this subject" onClick={() => edits.removeRow(i, k)}>×</button>}</td>
-                    <td>{ed(r.q1, (v) => edits!.row(i, k, { q1: v }))}</td><td>{ed(r.q2, (v) => edits!.row(i, k, { q2: v }))}</td><td>{ed(r.final, (v) => edits!.row(i, k, { final: v }))}</td>
+                    <td>{ed(r.q1, (v) => edits!.row(i, k, { q1: v }), r.q1 ? '' : 'sf10-missing')}</td><td>{ed(r.q2, (v) => edits!.row(i, k, { q2: v }), r.q2 ? '' : 'sf10-missing')}</td><td>{ed(r.final, (v) => edits!.row(i, k, { final: v }), r.final ? '' : 'sf10-missing')}</td>
                     <td className={r.action === 'FAILED' ? 'sf10-failed' : ''}>{ed(r.action, (v) => edits!.row(i, k, { action: v }))}</td>
                   </tr>
                 ))}

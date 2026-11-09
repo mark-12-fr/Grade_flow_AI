@@ -245,6 +245,16 @@ export default function Sf10Page() {
         </div>
       )}
 
+      {current && visibleIndex !== -1 && (
+        <div className="preview-bar preview-bar-two">
+          <div className="preview-who" title={current.name}><strong>{current.name}</strong><span>{current.lrn}</span></div>
+          <div className="student-pager">
+            <button type="button" className="icon-btn" aria-label="Previous learner" disabled={visibleIndex <= 0} onClick={() => show(filtered[visibleIndex - 1])}><Icon name="chevron-left" /></button>
+            <span>{`${visibleIndex + 1} of ${filtered.length}`}</span>
+            <button type="button" className="icon-btn" aria-label="Next learner" disabled={visibleIndex >= filtered.length - 1} onClick={() => show(filtered[visibleIndex + 1])}><Icon name="chevron-right" /></button>
+          </div>
+        </div>
+      )}
       {current && visibleIndex !== -1 && <p className="preview-hint"><Icon name="pencil" /> Tap any value on the record to edit it. Press Enter to save, or Esc to cancel. Hover a subject to remove it.</p>}
 
       <article className="card sf10-sheet" aria-label="SF10 record" ref={sheetRef} style={{ scrollMarginTop: 'calc(var(--header-height, 60px) + 12px)' }}>

@@ -65,7 +65,7 @@ export function Sf9Sheet({ student, context, state, side }: { student: Student; 
                           <td className="sf9-subject">{name}</td>
                           {[...semester.quarters, 'final'].map((period) => (
                             <td key={period} className={period === 'final' ? 'sf9-final' : ''}>
-                              {ed(gradeText(g[period as 'q1']), (v) => grade(key, period, v), '', `${name} ${period === 'final' ? 'semester final' : `quarter ${period.slice(1)}`}`)}
+                              {ed(gradeText(g[period as 'q1']), (v) => grade(key, period, v), gradeText(g[period as 'q1']) === '' ? 'sf10-missing' : '', `${name} ${period === 'final' ? 'semester final' : `quarter ${period.slice(1)}`}`)}
                             </td>
                           ))}
                           <td className={remark === 'Failed' ? 'sf9-failed' : ''}>{remark}</td>

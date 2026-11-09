@@ -291,9 +291,17 @@ export default function ReportCardPage() {
 
       <div className="preview-canvas" ref={previewRef} style={{ scrollMarginTop: 'calc(var(--header-height, 60px) + 12px)' }}>
         <div className="preview-column">
-          <div className="preview-tabs" role="group" aria-label="Report card side">
-            <button type="button" className={`btn btn-sm ${side === 'front' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'front'} onClick={() => setSide('front')}>Front Preview</button>
-            <button type="button" className={`btn btn-sm ${side === 'back' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'back'} onClick={() => setSide('back')}>Back Preview</button>
+          <div className="preview-bar">
+            <div className="preview-who" title={student?.name}>{student ? <><strong>{student.name}</strong><span>{student.lrn}</span></> : null}</div>
+            <div className="preview-tabs" role="group" aria-label="Report card side">
+              <button type="button" className={`btn btn-sm ${side === 'front' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'front'} onClick={() => setSide('front')}>Front Preview</button>
+              <button type="button" className={`btn btn-sm ${side === 'back' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'back'} onClick={() => setSide('back')}>Back Preview</button>
+            </div>
+            <div className="student-pager">
+              <button type="button" className="icon-btn" aria-label="Previous learner" disabled={visibleIndex <= 0} onClick={() => move(-1)}><Icon name="chevron-left" /></button>
+              <span>{filtered.length ? `${visibleIndex + 1} of ${filtered.length}` : '0 of 0'}</span>
+              <button type="button" className="icon-btn" aria-label="Next learner" disabled={visibleIndex < 0 || visibleIndex >= filtered.length - 1} onClick={() => move(1)}><Icon name="chevron-right" /></button>
+            </div>
           </div>
           <div className="preview-label"><strong>{side === 'front' ? 'Front' : 'Back'}</strong><span>{side === 'front' ? 'Grades and learning progress' : 'Learner details, transfer, attendance and observed values'}</span><span>A4 portrait · page {side === 'front' ? 1 : 2} of 2</span></div>
           {student

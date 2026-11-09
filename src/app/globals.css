@@ -1795,8 +1795,8 @@ html { scroll-behavior: smooth; }
 /* SF10 browser: search, filters, selectable learner list */
 .sf10-browser { display: grid; gap: 12px; padding: 14px 16px; }
 .sf10-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.sf10-search { flex: 1 1 240px; min-width: 200px; }
-.sf10-filters .select-wrap { flex: 0 1 190px; min-width: 130px; }
+.sf10-search { flex: 1 1 200px; min-width: 180px; }
+.sf10-filters .select-wrap { flex: 0 1 160px; min-width: 120px; }
 .sf10-list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .sf10-check { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11.5px; cursor: pointer; }
 .sf10-list { max-height: 252px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--white); scrollbar-width: thin; }
@@ -1952,3 +1952,24 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .sf10-edit::details-content, .sf10-edit summary::after { transition: none; }
 }
+
+/* Easier editing on the SF9 page and the SF10 record: the whole cell is the click target and empty grades stand out. */
+.sf9-semester td, .sf9-attendance td { padding: 0; }
+.sf9-semester td.sf9-subject, .sf9-attendance td.sf9-subject { padding: 3px 6px; }
+.sf9-semester td > .sf10-ed { display: flex; align-items: center; justify-content: center; width: 100%; height: 27px; padding: 0; border-radius: 0; }
+.sf9-attendance td > .sf10-ed { display: flex; align-items: center; justify-content: center; width: 100%; height: 24px; padding: 0; border-radius: 0; }
+.sf10-grades td:has(> .sf10-ed) { padding: 0; }
+.sf10-grades td > .sf10-ed { display: block; width: 100%; min-height: 1.5em; padding: 0.22rem 0.4rem; border-radius: 0; }
+.sf10-ed.sf10-missing { background: rgba(245, 158, 11, 0.2); }
+.sf10-ed.sf10-missing:hover { background: rgba(59, 130, 246, 0.16); }
+.sf10-ed.sf10-missing:focus { background: #fff8d6; }
+
+/* The learner, the side and the previous/next buttons stay in view while editing a long page. */
+.preview-bar { position: sticky; top: calc(var(--header-height) + 6px); z-index: 6; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin: 0 0 10px; padding: 8px 12px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+.preview-bar .preview-tabs { margin: 0; }
+.preview-bar .student-pager { justify-self: end; }
+.preview-who { display: flex; flex-direction: column; min-width: 0; }
+.preview-who strong { overflow: hidden; color: var(--navy); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.preview-who span { color: var(--muted); font-size: 10px; }
+@media (max-width: 760px) { .preview-bar { grid-template-columns: 1fr; justify-items: center; } .preview-bar .student-pager { justify-self: center; } }
+.preview-bar-two { grid-template-columns: 1fr auto; max-width: 900px; margin-inline: auto; }

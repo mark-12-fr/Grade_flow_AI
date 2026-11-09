@@ -135,6 +135,11 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
       baseline: 'middle',
       maxWidth: S(width - labelWidth - 2.4)
     });
+    // A thin line under the value, like the printed form.
+    const gap = width < leftWidth ? 4 : 0; // keeps the two columns of a row apart
+    setDrawColor(doc, line);
+    doc.setLineWidth(S(0.2));
+    doc.line(X(x + labelWidth + 1), Y(y + 1.9), X(x + width - gap), Y(y + 1.9));
   }
 
   /* ---------- Header ---------- */

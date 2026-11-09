@@ -1574,47 +1574,10 @@ img { max-width: 100%; display: block; }
   @page { size: A4 portrait; margin: 0; }
 }
 
-/* ---------- A4 portrait report card: page 1 = front, page 2 = back (double-sided) ---------- */
-.a4-page {
-  display: flex; flex-direction: column; box-sizing: border-box; width: 210mm; height: 297mm; padding: 10mm; overflow: hidden;
-  color: #222; background: #fff; font-family: Arial, "Liberation Sans", sans-serif; font-size: 9pt; line-height: 1.15;
-  -webkit-print-color-adjust: exact; print-color-adjust: exact;
-}
-.a4-page .rc-page-front, .a4-page .rc-page-back { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.a4-page .rc-official-school { margin-bottom: 1em; }
-.a4-page .rc-official-fields { gap: 0 2em; }
-.a4-page .rc-official-field { padding: 0.5em 0 0.1em; }
-.a4-page .rc-official-note { margin-top: 0.8em; }
-.a4-page .rc-cert-signatories { margin-top: 1.2em; padding-bottom: 0.7em; }
-.a4-page .rc-cert-signatories > div { padding: 0 0.8em; border-bottom: 0; }
-.a4-page .rc-cert-signatories strong { padding-bottom: 0.25em; border-bottom: 1px solid #444; }
-.a4-page .rc-official-title { margin: 0 0 0.6em; font-size: 1.6em; }
-.a4-page .rc-official-grades { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.a4-page .rc-semester { flex: 1 1 0; max-height: 112mm; }
-.a4-page .rc-semester + .rc-semester { margin-top: 0.8em; }
-.a4-page .rc-semester h4 { margin-bottom: 0.3em; font-size: 1.1em; text-align: center; }
-.a4-page .rc-official-grade-table .rc-grade-spacer td { height: 0.2em; }
-.a4-page .rc-official-legends { flex: 0 0 auto; margin-top: 0.9em; }
-.a4-page .rc-official-legends table { height: auto; }
-.a4-page .rc-parent-signatures td { height: 3.6em; }
-.a4-page .rc-transfer { margin-top: 0; }
-.a4-page .rc-transfer-panel { border-top: 1px solid #555; }
-.a4-page .rc-transfer-panel:first-child { border-right: 0; }
-.a4-page .rc-transfer-grid { margin-bottom: 0.8em; }
-.a4-page .rc-attendance-wrap { margin-top: 0.8em; }
-.a4-page .rc-official-values-wrap { margin-top: 0.8em; }
-
-.a4-preview { position: relative; width: 100%; max-width: 780px; margin-inline: auto; overflow: hidden; background: #fff; border: 1px solid #aebdce; box-shadow: 0 5px 18px rgba(20, 44, 78, 0.12); }
-.a4-preview-inner { width: 210mm; height: 297mm; transform-origin: top left; }
+.pdf-preview { width: 100%; max-width: 780px; aspect-ratio: 210 / 297; margin-inline: auto; background: #525659; border: 1px solid #aebdce; box-shadow: 0 5px 18px rgba(20, 44, 78, 0.12); }
+.pdf-preview iframe { display: block; width: 100%; height: 100%; border: 0; }
+.pdf-preview p { padding: 1rem; color: #fff; }
 .preview-tabs { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-
-@media print {
-  html, body { width: 210mm; }
-  #print-area { display: block !important; }
-  .print-page { width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; break-after: page; }
-  .print-page:last-child { page-break-after: auto; break-after: auto; }
-  .print-page .a4-page { margin: 0; border: 0; box-shadow: none; }
-}
 
 .dropzone.is-busy { opacity: 0.7; pointer-events: none; cursor: progress; }
 

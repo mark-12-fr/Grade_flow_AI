@@ -664,23 +664,57 @@ export function loadLogoData(source: string): Promise<string> {
 
 export { pdfSafe, safeFilename };
 
-/** Builds the report-card PDF for the given learners and downloads it. */
-export async function downloadReportCards(
-  reports: Student[], context: ReportContext, state: AppState, options: { single?: boolean } = {}
-): Promise<string> {
+/** Builds the report-card PDF (A4 portrait, front and back for every learner) without saving it. */
+async function buildReportCardsPdf(reports: Student[], context: ReportContext, state: AppState, single: boolean) {
   const { jsPDF: PDF } = await import('jspdf');
   const logoData = await loadLogoData(state.school.logo || '/assets/ui-logo.png');
-  const doc = new PDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true }); // A4 portrait, front and back for every learner
+  const doc = new PDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   const first = reports[0];
-  const title = options.single ? `${context.term} report card for ${first.name}` : `${context.term} report cards for ${context.className}`;
+  const title = single ? `${context.term} report card for ${first.name}` : `${context.term} report cards for ${context.className}`;
   doc.setProperties({ title: pdfSafe(title), subject: 'GradeFlow AI report card', author: state.teacher, creator: 'GradeFlow AI' });
   reports.forEach((student, index) => {
     if (index > 0) doc.addPage();
     drawFront(doc, student, context, logoData, 'portrait');
   });
-  const filename = options.single
+  const filename = single
     ? `GradeFlow_${safeFilename(first.name)}_${safeFilename(context.term)}.pdf`
     : `GradeFlow_${safeFilename(context.term)}_${safeFilename(context.className)}_${reports.length}-Reports.pdf`;
+  return { doc, filename };
+}
+
+/** Builds the report-card PDF for the given learners and downloads it. */
+export async function downloadReportCards(
+  reports: Student[], context: ReportContext, state: AppState, options: { single?: boolean } = {}
+): Promise<string> {
+  const { doc, filename } = await buildReportCardsPdf(reports, context, state, Boolean(options.single));
   doc.save(filename);
   return filename;
+}
+
+/** A temporary address of the PDF, for showing it on screen. Release it with URL.revokeObjectURL. */
+export async function reportCardsPdfUrl(reports: Student[], context: ReportContext, state: AppState, onlyPage?: 1 | 2): Promise<string> {
+  const { doc } = await buildReportCardsPdf(reports, context, state, reports.length === 1);
+  if (onlyPage && reports.length === 1) doc.deletePage(onlyPage === 1 ? 2 : 1); // preview one side at a time
+  return URL.createObjectURL(doc.output('blob'));
+}
+
+/** Prints exactly the pages that the PDF download contains, so the preview, the print and the file always match. */
+export async function printReportCards(reports: Student[], context: ReportContext, state: AppState): Promise<void> {
+  const url = await reportCardsPdfUrl(reports, context, state);
+  const frame = document.createElement('iframe');
+  frame.setAttribute('aria-hidden', 'true');
+  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  const cleanup = () => { frame.remove(); URL.revokeObjectURL(url); };
+  frame.onload = () => {
+    try {
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+      window.setTimeout(cleanup, 120_000);
+    } catch {
+      window.open(url, '_blank'); // the browser would not print inside the page: open the PDF so it can be printed from there
+      window.setTimeout(cleanup, 120_000);
+    }
+  };
+  frame.src = url;
+  document.body.appendChild(frame);
 }

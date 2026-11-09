@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
-import { ReportCardBack, ReportCardFront } from '@/components/report/ReportCard';
-import { A4Preview, PrintSheets, usePrint } from '@/components/report/PrintSheets';
-import { downloadReportCards } from '@/lib/pdf/sf9';
+import { PdfPreview } from '@/components/report/PdfPreview';
+import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
 import { STRAND_TRACK } from '@/lib/domain/curriculum';
 import { applySf9Details, emptySf9Details, sf9Issues, type Sf9Details } from '@/lib/sf9/quality';
@@ -40,7 +39,6 @@ export default function ReportCardPage() {
   const [overwrite, setOverwrite] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [side, setSide] = useState<'front' | 'back'>('front');
-  const [printing, setPrinting] = usePrint();
   const options = useMemo(() => {
     const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
     const all = [...metas.values()];
@@ -102,6 +100,17 @@ export default function ReportCardPage() {
       toast(single ? `Downloaded ${list[0].name}'s report card as a PDF.` : `Downloaded ${list.length} report card${list.length === 1 ? '' : 's'} as one PDF.`);
     } catch (error) {
       toast(`The PDF could not be prepared. ${(error as Error).message}`, 'error');
+    } finally { setBusy(false); }
+  }
+
+  async function print(list: Student[]) {
+    if (!list.length) return;
+    setBusy(true);
+    try {
+      await printReportCards(list, context, state);
+      toast(`Opening the print dialog for ${list.length} report card${list.length === 1 ? '' : 's'} (A4, both sides).`, 'info');
+    } catch (error) {
+      toast(`Printing could not start. ${(error as Error).message}`, 'error');
     } finally { setBusy(false); }
   }
 
@@ -206,7 +215,7 @@ export default function ReportCardPage() {
           <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length || busy} onClick={() => void download(target, target.length === 1)}>
             <Icon name="download" /> Download PDF{target.length > 1 ? ` (${target.length})` : ''}
           </button>
-          <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => setPrinting(target)}>
+          <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => void print(target)}>
             <Icon name="printer" /> Print{target.length > 1 ? ` (${target.length})` : ''}
           </button>
         </div>
@@ -292,19 +301,12 @@ export default function ReportCardPage() {
           <div className="preview-label"><strong>{side === 'front' ? 'Front' : 'Back'}</strong><span>{side === 'front' ? 'Grades and learning progress' : 'Learner details, transfer, attendance and observed values'}</span><span>A4 portrait · page {side === 'front' ? 1 : 2} of 2</span></div>
           {student
             ? (
-              <A4Preview label={`Report card ${side}`}>
-                <article key={`${student.id}-${side}`} className="a4-page">
-                  {side === 'front'
-                    ? <ReportCardFront student={student} context={context} school={state.school} />
-                    : <ReportCardBack student={student} context={context} school={state.school} />}
-                </article>
-              </A4Preview>
+              <PdfPreview student={student} context={context} state={state} side={side} />
             )
             : <p className="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>}
         </div>
       </div>
-      <p className="preview-hint"><Icon name="info" /> This preview is live and shows the real A4 pages. Print double-sided at 100% (Actual size).</p>
-      {printing && <PrintSheets students={printing} context={context} school={state.school} />}
+      <p className="preview-hint"><Icon name="info" /> This preview is the real PDF (A4, front and back). In the print dialog choose Actual size (100%) and two-sided (flip on long edge).</p>
 
       <div className="page-actions">
         <Link className="btn btn-secondary" href="/verification"><Icon name="arrow-left" /> Back to verification</Link>

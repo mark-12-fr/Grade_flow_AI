@@ -4,10 +4,9 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
-import { PrintSheets, usePrint } from '@/components/report/PrintSheets';
 import { prettyYear } from '@/lib/domain/format';
 import { averageLabel, reportContext } from '@/lib/domain/grading';
-import { downloadReportCards } from '@/lib/pdf/sf9';
+import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { setState, useAppState } from '@/lib/state/store';
 import type { AppState, Student } from '@/lib/domain/types';
 
@@ -17,7 +16,6 @@ export default function GeneratedReportsPage() {
   const { toast } = useUi();
   const state = useAppState();
   const [scope, setScope] = useState<'all' | 'selected'>('all');
-  const [printing, setPrinting] = usePrint();
   const selectAll = useRef<HTMLInputElement>(null);
 
   const reports = state.students;
@@ -51,10 +49,14 @@ export default function GeneratedReportsPage() {
     }
   }
 
-  function print(list: Student[]) {
+  async function print(list: Student[]) {
     if (!list.length) { toast('Choose at least one report to print.', 'error'); return; }
     toast(`Opening the print dialog for ${list.length} report${list.length === 1 ? '' : 's'}.`, 'info');
-    setPrinting(list);
+    try {
+      await printReportCards(list, context, state);
+    } catch (error) {
+      toast(`Printing could not start. ${(error as Error).message}`, 'error');
+    }
   }
 
   if (!state.generated) {
@@ -185,7 +187,6 @@ export default function GeneratedReportsPage() {
         </aside>
       </div>
 
-      {printing && <PrintSheets students={printing} context={context} school={state.school} />}
     </section>
   );
 }

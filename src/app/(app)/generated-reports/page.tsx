@@ -70,7 +70,7 @@ export default function GeneratedReportsPage() {
     );
   }
 
-  const sheets = inScope.length;
+  const sheets = inScope.length; // front and back share one sheet when printing double-sided
   const printLabel = scope === 'selected' ? `Print selected ${inScope.length} report${inScope.length === 1 ? '' : 's'}` : `Print all ${inScope.length} report${inScope.length === 1 ? '' : 's'}`;
 
   return (
@@ -123,7 +123,7 @@ export default function GeneratedReportsPage() {
                       <tr key={student.id} className={selectedIds.has(student.id) ? 'selected' : ''}>
                         <td className="check-col"><input type="checkbox" checked={selectedIds.has(student.id)} aria-label={`Select ${student.name}'s report`} onChange={(e) => toggle(student.id, e.target.checked)} /></td>
                         <td><div className="report-student"><strong>{student.name}</strong><span>Roll {student.roll} · {averageLabel(student)} average</span></div></td>
-                        <td>1 page</td>
+                        <td>2 pages (front and back)</td>
                         <td><span className="status-badge status-approved"><Icon name="check" /> Ready</span></td>
                         <td className="align-right"><div className="report-actions">
                           <button type="button" className="icon-btn" aria-label={`Download ${student.name}'s report as PDF`} title="Download PDF" onClick={() => void download([student], true)}><Icon name="download" /></button>
@@ -156,7 +156,7 @@ export default function GeneratedReportsPage() {
             <div className="card-heading"><h2>Ready, set, print.</h2><p>A few simple settings for a great result.</p></div>
             <div className="info-strip">
               <Icon name="info" />
-              <div><strong>A4 · Landscape</strong><p>One page per report card, as designed. In the print dialog choose A4, Landscape, Actual size (100%) and margins None.</p></div>
+              <div><strong>A4 · Portrait · Double-sided</strong><p>Page 1 is the front and page 2 is the back of each report card. In the print dialog choose A4, Actual size (100%), margins None, and two-sided (flip on long edge).</p></div>
             </div>
             <div className="form-group">
               <label htmlFor="reports-selector">Reports to print</label>
@@ -170,7 +170,7 @@ export default function GeneratedReportsPage() {
             </div>
             <div className="print-summary">
               <div><span>Report cards</span><strong>{inScope.length}</strong></div>
-              <div><span>PDF pages</span><strong>{inScope.length}</strong></div>
+              <div><span>PDF pages</span><strong>{inScope.length * 2}</strong></div>
               <div><span>Estimated sheets</span><strong>{sheets}</strong></div>
             </div>
             <button type="button" className="btn btn-primary btn-full" title={inScope.length ? printLabel : 'Choose at least one report to print'} onClick={() => print(inScope)}>

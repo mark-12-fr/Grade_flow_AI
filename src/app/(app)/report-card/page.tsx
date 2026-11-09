@@ -10,6 +10,7 @@ import { Sf9Editor } from '@/components/report/Sf9Editor';
 import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
 import { applySf9Details, emptySf9Details, sf9Issues, TRANSFER_DETAILS, type Sf9Details } from '@/lib/sf9/quality';
+import { applyObservedValues, askObservedValues } from '@/lib/sf9/observed';
 import { learnerMeta } from '@/lib/sf10/record';
 import { setState, useAppState } from '@/lib/state/store';
 import type { Student } from '@/lib/domain/types';
@@ -37,6 +38,7 @@ export default function ReportCardPage() {
   const [details, setDetails] = useState<Sf9Details>(emptySf9Details);
   const [scope, setScope] = useState<'one' | 'shown' | 'all'>('shown');
   const [overwrite, setOverwrite] = useState(false);
+  const [deciding, setDeciding] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [side, setSide] = useState<'front' | 'back'>('front');
   const options = useMemo(() => {
@@ -91,6 +93,21 @@ export default function ReportCardPage() {
   const pickedShown = filtered.filter((s) => picked.has(s.id)).length;
   useEffect(() => { if (selectAll.current) selectAll.current.indeterminate = pickedShown > 0 && pickedShown < filtered.length; });
   const toggle = (id: number, on: boolean) => setState((s) => ({ selectedReportIds: on ? [...new Set([...s.selectedReportIds, id])] : s.selectedReportIds.filter((x) => x !== id) }));
+
+  async function decideValues() {
+    const ids = new Set((scope === 'one' ? (student ? [student] : []) : scope === 'shown' ? filtered : students).map((x) => x.id));
+    const list = state.students.filter((s) => ids.has(s.id));
+    if (!list.length) return;
+    setDeciding(true);
+    try {
+      const decided = await askObservedValues(list);
+      const result = applyObservedValues(state.students, decided, overwrite);
+      setState({ students: result.students });
+      toast(result.changed ? `The AI filled the observed values of ${result.changed} learner${result.changed === 1 ? '' : 's'}. Please review them in Edit back.` : 'Nothing to change. The observed values are already filled in (turn on "Replace values already filled in").', result.changed ? 'success' : 'info');
+    } catch (error) {
+      toast(`The AI could not decide the observed values. ${(error as Error).message}`, 'error');
+    } finally { setDeciding(false); }
+  }
 
   async function download(list: Student[], single = false) {
     if (!list.length) { toast('Choose at least one learner first.', 'error'); return; }
@@ -260,6 +277,10 @@ export default function ReportCardPage() {
                 setState({ students: result.students, school, year: details.year.trim() || state.year });
                 toast(result.changed || globalChange ? `Updated ${result.changed} learner${result.changed === 1 ? '' : 's'}${globalChange ? ' and the school details' : ''}.` : 'Nothing to change. The fields were empty, or already filled in (turn on "Replace values already filled in").', result.changed || globalChange ? 'success' : 'info');
               }}>Apply</button>
+              <button type="button" className="btn btn-secondary btn-sm" disabled={deciding} onClick={() => void decideValues()}
+                title="The AI drafts the observed values (AO, SO, RO, NO) from each learner's grades. Attendance is not changed.">
+                {deciding ? 'Deciding…' : 'Decide observed values with AI'}
+              </button>
             </div>
           </div>
         )}

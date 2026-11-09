@@ -30,6 +30,7 @@ export default function Sf10Page() {
   const [editOpen, setEditOpen] = useState(false);
   const selectAll = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
 
   const metas = useMemo(() => new Map(source.map((s) => [s.id, learnerMeta(s, state)])), [source, state]);
   const options = useMemo(() => {
@@ -56,6 +57,11 @@ export default function Sf10Page() {
   const current = source[Math.min(Math.max(0, state.sf10Index), Math.max(0, source.length - 1))] ?? null;
   const visibleIndex = current ? filtered.findIndex((s) => s.id === current.id) : -1;
   const show = (student: Student | undefined) => { if (student) setState({ sf10Index: source.findIndex((s) => s.id === student.id) }); };
+  // Tapping a learner in the list shows that record and scrolls down to it.
+  const open = (student: Student) => {
+    show(student);
+    window.setTimeout(() => sheetRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 60);
+  };
 
   // When the filters hide the learner on screen, show the first match instead.
   useEffect(() => {
@@ -159,7 +165,7 @@ export default function Sf10Page() {
               return (
                 <div key={s.id} className={`sf10-row${active ? ' active' : ''}${pickedSet.has(s.id) ? ' picked' : ''}`} role="option" aria-selected={active} aria-current={active ? 'true' : undefined}>
                   <input type="checkbox" checked={pickedSet.has(s.id)} aria-label={`Select ${s.name}`} onChange={(e) => toggle(s.id, e.target.checked)} />
-                  <button type="button" className="sf10-row-main" onClick={() => show(s)}>
+                  <button type="button" className="sf10-row-main" onClick={() => open(s)}>
                     <strong>{s.lrn || '—'}</strong>
                     <span>{s.name}</span>
                     <em>{[m.strand, m.section].filter(Boolean).join(' · ')}</em>
@@ -241,7 +247,7 @@ export default function Sf10Page() {
 
       {current && visibleIndex !== -1 && <p className="preview-hint"><Icon name="pencil" /> Tap any value on the record to edit it. Press Enter to save, or Esc to cancel. Hover a subject to remove it.</p>}
 
-      <article className="card sf10-sheet" aria-label="SF10 record">
+      <article className="card sf10-sheet" aria-label="SF10 record" ref={sheetRef} style={{ scrollMarginTop: 'calc(var(--header-height, 60px) + 12px)' }}>
         {current && visibleIndex !== -1
           ? <div key={current.id} className="swap-in"><Sf10Sheet student={current} state={state} edits={sf10Edits(current, state)} /></div>
           : <p className="sf10-incomplete">{source.length ? 'No learner to show. Change the search or filters.' : 'Upload an SF10 file first.'}</p>}

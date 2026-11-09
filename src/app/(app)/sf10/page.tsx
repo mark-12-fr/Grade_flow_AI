@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
 import { Sf10Sheet } from '@/components/report/Sf10Sheet';
-import { downloadSf10 } from '@/lib/pdf/sf10';
+import { downloadSf10, printSf10 } from '@/lib/pdf/sf10';
 import { learnerMeta, sf10Source } from '@/lib/sf10/record';
 import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10/quality';
 import { setState, useAppState } from '@/lib/state/store';
@@ -85,7 +85,16 @@ export default function Sf10Page() {
     finally { setBusy(false); }
   }
 
-  const scopeName = slug([strand, section, level && `G${level}`].filter(Boolean).join('-') || 'class');
+  // One learner by default; when learners are checked in the list (or Select all is ticked), the buttons apply to all of them.
+  const target = selectedStudents.length ? selectedStudents : current ? [current] : [];
+
+  async function print(students: Student[]) {
+    if (!students.length) return;
+    setBusy(true);
+    try { await printSf10(students, state); toast(`Opening the print dialog for ${students.length} SF10 record${students.length === 1 ? '' : 's'} (A4).`, 'info'); }
+    catch { toast('Printing could not start. Reload the page and try again.', 'error'); }
+    finally { setBusy(false); }
+  }
 
   return (
     <section className="page active" aria-labelledby="sf10-page-title">
@@ -163,16 +172,14 @@ export default function Sf10Page() {
         </div>
 
         <div className="sf10-actions">
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!current || busy} onClick={() => current && void download([current], slug(current.lrn || current.name))}>
-            <Icon name="download" /> This learner (PDF)
+          <span className="sf10-target">{target.length > 1 ? `${target.length} learners checked` : target.length === 1 ? (selectedStudents.length ? '1 learner checked' : current?.name) : ''}</span>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length || busy}
+            onClick={() => void download(target, target.length === 1 ? slug(target[0].lrn || target[0].name) : selectedStudents.length ? 'selected' : 'class')}>
+            <Icon name="download" /> {target.length > 1 ? `Download PDF (${target.length})` : 'Download PDF'}
           </button>
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!picked.length || busy} onClick={() => void download(selectedStudents, 'selected')}>
-            <Icon name="download" /> Selected ({picked.length})
+          <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => void print(target)}>
+            <Icon name="printer" /> Print{target.length > 1 ? ` (${target.length})` : ''}
           </button>
-          <button type="button" className="btn btn-primary btn-sm" disabled={!filtered.length || busy} onClick={() => void download(filtered, scopeName)}>
-            <Icon name="download" /> {filtersOn ? `All shown (${filtered.length})` : `Everyone (${filtered.length})`}
-          </button>
-          {busy && <span className="sf10-busy" role="status">Preparing the PDF...</span>}
         </div>
       </div>
 

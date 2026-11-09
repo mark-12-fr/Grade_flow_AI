@@ -733,8 +733,8 @@ export async function reportCardsPdfUrl(reports: Student[], context: ReportConte
 }
 
 /** Prints exactly the pages that the PDF download contains, so the preview, the print and the file always match. */
-export async function printReportCards(reports: Student[], context: ReportContext, state: AppState): Promise<void> {
-  const url = await reportCardsPdfUrl(reports, context, state);
+/** Opens the browser's print dialog for a PDF at `url` (through a hidden frame); the URL is released afterwards. */
+export function printPdfUrl(url: string): void {
   const frame = document.createElement('iframe');
   frame.setAttribute('aria-hidden', 'true');
   frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
@@ -751,4 +751,8 @@ export async function printReportCards(reports: Student[], context: ReportContex
   };
   frame.src = url;
   document.body.appendChild(frame);
+}
+
+export async function printReportCards(reports: Student[], context: ReportContext, state: AppState): Promise<void> {
+  printPdfUrl(await reportCardsPdfUrl(reports, context, state));
 }

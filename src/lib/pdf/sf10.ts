@@ -1,4 +1,5 @@
 import type { jsPDF } from 'jspdf';
+import { printPdfUrl } from '@/lib/pdf/sf9';
 import { recordFor } from '@/lib/sf10/record';
 import type { AppState, Student } from '@/lib/domain/types';
 
@@ -151,8 +152,7 @@ export function drawSf10Page(doc: jsPDF, student: Student, state: AppState) {
   text(`REMARKS: ${[c.remarks, c.purpose].filter(Boolean).join(' - ')}    Date Issued (MM/DD/YYYY): ${c.dateIssued || ''}`, left, y + 3);
 }
 
-/** Builds the SF10 PDF for the given learners and downloads it. */
-export async function downloadSf10(students: Student[], state: AppState, filename: string) {
+async function buildSf10(students: Student[], state: AppState) {
   const { jsPDF } = await import('jspdf');
   await loadLogos();
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -160,5 +160,16 @@ export async function downloadSf10(students: Student[], state: AppState, filenam
     if (i > 0) doc.addPage();
     drawSf10Page(doc, student, state);
   });
-  doc.save(filename);
+  return doc;
+}
+
+/** Builds the SF10 PDF for the given learners and downloads it. */
+export async function downloadSf10(students: Student[], state: AppState, filename: string) {
+  (await buildSf10(students, state)).save(filename);
+}
+
+/** Builds the SF10 PDF for the given learners and opens the print dialog. */
+export async function printSf10(students: Student[], state: AppState) {
+  const doc = await buildSf10(students, state);
+  printPdfUrl(URL.createObjectURL(doc.output('blob')));
 }

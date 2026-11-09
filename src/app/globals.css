@@ -1940,3 +1940,15 @@ html { scroll-behavior: smooth; }
 .sf9-rating:focus-visible { outline: 2px solid var(--blue); }
 .sf9-sheet .sf10-ed { min-width: 2.2em; }
 .sf9-sheet .sf10-ed.sf9-grow { min-width: 20em; }
+
+/* "Fill in missing details" (SF9 and SF10) opens and closes smoothly. Browsers without ::details-content just open at once. */
+.sf10-edit { interpolate-size: allow-keywords; }
+.sf10-edit::details-content { block-size: 0; overflow: hidden; opacity: 0; transition: block-size 0.35s var(--ease-soft), opacity 0.3s var(--ease-soft), content-visibility 0.35s allow-discrete; }
+.sf10-edit[open]::details-content { block-size: auto; opacity: 1; }
+.sf10-edit summary { position: relative; padding-right: 40px; }
+.sf10-edit summary::after { content: ''; position: absolute; top: 50%; right: 18px; width: 7px; height: 7px; border-right: 2px solid var(--muted-light); border-bottom: 2px solid var(--muted-light); transform: translateY(-70%) rotate(45deg); transition: transform 0.3s var(--ease-soft), border-color 0.2s; }
+.sf10-edit[open] summary::after { transform: translateY(-30%) rotate(225deg); }
+.sf10-edit summary:hover::after { border-color: var(--blue); }
+@media (prefers-reduced-motion: reduce) {
+  .sf10-edit::details-content, .sf10-edit summary::after { transition: none; }
+}

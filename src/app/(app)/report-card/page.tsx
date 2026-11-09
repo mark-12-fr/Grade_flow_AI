@@ -1,14 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
 import { PdfPreview } from '@/components/report/PdfPreview';
 import { Sf9Editor } from '@/components/report/Sf9Editor';
 import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
-import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
+import { approvedCount, reportContext } from '@/lib/domain/grading';
 import { applySf9Details, emptySf9Details, sf9Issues, TRANSFER_DETAILS, type Sf9Details } from '@/lib/sf9/quality';
 import { applyObservedValues, askObservedValues } from '@/lib/sf9/observed';
 import { learnerMeta } from '@/lib/sf10/record';
@@ -16,8 +15,7 @@ import { getState, setState, useAppState } from '@/lib/state/store';
 import type { Student } from '@/lib/domain/types';
 
 export default function ReportCardPage() {
-  const router = useRouter();
-  const { toast, openModal } = useUi();
+  const { toast } = useUi();
   const state = useAppState();
   const students = state.students;
   const total = students.length;
@@ -87,9 +85,6 @@ export default function ReportCardPage() {
   });
 
   const approved = approvedCount(students);
-  const missing = missingGradeCells(students).length;
-  const ready = readyToGenerate(students);
-  const label = total === 1 ? 'report card' : 'report cards';
 
   const [busy, setBusy] = useState(false);
   const picked = new Set(state.selectedReportIds);
@@ -148,26 +143,6 @@ export default function ReportCardPage() {
     } catch (error) {
       toast(`Printing could not start. ${(error as Error).message}`, 'error');
     } finally { setBusy(false); }
-  }
-
-  function generate() {
-    if (!ready) { toast('Finish grade corrections before generating.', 'error'); return; }
-    openModal({
-      title: `Generate ${total} ${label}?`,
-      body: (
-        <>
-          <p>Each student gets a one-page landscape report card with learner details, attendance, observations, and grades.</p>
-          <p><strong>{total} {label} · {total} pages</strong></p>
-          <p>The final set will appear in Generated Reports, ready to download or print.</p>
-        </>
-      ),
-      confirmLabel: 'Generate reports', cancelLabel: 'Not yet',
-      onConfirm: () => {
-        setState((s) => ({ generated: true, generatedAt: new Date(), selectedReportIds: s.students.map((x) => x.id), reportsPage: 1, reportsSearch: '' }));
-        router.push('/generated-reports');
-        toast(`${total} ${label} generated for ${state.className}.`);
-      }
-    });
   }
 
   return (
@@ -339,12 +314,6 @@ export default function ReportCardPage() {
 
       <div className="page-actions">
         <Link className="btn btn-secondary" href="/verification"><Icon name="arrow-left" /> Back to verification</Link>
-        <div className="action-end">
-          <span className="action-note">{ready ? `${total} students · ${total} pages` : `${missing ? `${missing} grade${missing === 1 ? '' : 's'} missing` : ''} · Preview only`}</span>
-          <button type="button" className="btn btn-primary" disabled={!ready} title={ready ? 'Create the final PDF-ready report set' : 'Finish verification before generating reports'} onClick={generate}>
-            {state.generated ? 'Regenerate' : 'Generate'} {total} report{total === 1 ? '' : 's'} <Icon name="arrow-right" />
-          </button>
-        </div>
       </div>
     </section>
   );

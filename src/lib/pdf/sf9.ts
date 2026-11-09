@@ -37,6 +37,7 @@ function setDrawColor(doc: any, color: any) {
  */
 export function drawFront(doc: jsPDF, student: Student, classContext: ReportContext, logoData: string | null, mode: 'landscape' | 'portrait' = 'landscape') {
   const portrait = mode === 'portrait';
+  const FONT = portrait ? 1.22 : 1; // larger type on the portrait pages, where there is room
   const context = studentContext(classContext, student);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -85,7 +86,7 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
 
   function setFont(style: any, size: any, color: any) {
     doc.setFont('helvetica', style || 'normal');
-    doc.setFontSize(S(size));
+    doc.setFontSize(S(size * FONT));
     setTextColor(doc, color || ink);
   }
 
@@ -118,10 +119,10 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   function fitFont(text: any, style: any, size: any, width: any) {
     let current = size;
     doc.setFont('helvetica', style || 'normal');
-    doc.setFontSize(S(current));
+    doc.setFontSize(S(current * FONT));
     while (current > 3.2 && doc.getTextWidth(pdfSafe(text)) > S(width)) {
       current -= 0.1;
-      doc.setFontSize(S(current));
+      doc.setFontSize(S(current * FONT));
     }
     return current;
   }
@@ -157,7 +158,7 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   stage('title');
   setFont('bold', 10.8, ink);
   doc.setFont('times', 'bold');
-  doc.setFontSize(S(10.8));
+  doc.setFontSize(S(10.8 * FONT));
   setTextColor(doc, ink);
   doc.text(pdfSafe('REPORT ON LEARNING PROGRESS AND ACHIEVEMENT'),
     X(rightX + rightWidth / 2), Y(16.2), { align: 'center', baseline: 'middle' });
@@ -455,7 +456,7 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
     const headingHeight = 3.2;
     setFont('bold', 7.4, ink);
     doc.setFont('times', 'bold');
-    doc.setFontSize(S(7.4));
+    doc.setFontSize(S(7.4 * FONT));
     setTextColor(doc, ink);
     doc.text(pdfSafe(semester.label), X(rightX + rightWidth / 2), Y(top + headingHeight * 0.55),
       { align: 'center', baseline: 'middle' });

@@ -77,13 +77,15 @@ function matchGroups(subjectName: string, groups: Group[], strand: string): Grou
     let best = 0;
     parts.forEach((p) => {
       const o = overlap(p, g);
+      const extra = g.filter((t) => !p.some((x) => sameWord(x, t))).filter((t) => /[a-z]{3}/.test(t));
+      if (o === p.length && p.length >= 2 && extra.length) {
+        // The subject is a shorter form of a strand-specific title (e.g. "Culminating Activity in Criminology"):
+        // it only matches the title of the learner's own strand.
+        if (overlap(extra, strandTokens) > 0) best = Math.max(best, 0.9);
+        return;
+      }
       const jac = o / (p.length + g.length - o);
       if (jac >= 0.6) best = Math.max(best, jac);
-      else if (o === p.length && p.length >= 2) {
-        // The subject is a shorter form of a strand-specific title (e.g. "Culminating Activity in Criminology").
-        const extra = g.filter((t) => !p.some((x) => sameWord(x, t)));
-        if (overlap(extra, strandTokens) > 0) best = Math.max(best, 0.65);
-      }
     });
     if (best) out.push({ group, score: best });
   });

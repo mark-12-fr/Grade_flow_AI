@@ -58,14 +58,14 @@ export function recordFor(student: Student, state: AppState): Sf10Rec {
     return {
       school: context.schoolName, schoolId: '', gradeLevel: state.gradeLevel, sy: prettyYear(state.year), semLabel: semester.key === 'first' ? '1ST' : '2ND',
       quarters: [ordinal(semester.quarterLabels[0]), ordinal(semester.quarterLabels[1])] as [string, string],
-      track: state.strand, section: state.section, rows, average: avg === null ? '' : String(avg), averageAction: avg === null ? '' : remarkFor(avg).toUpperCase(),
-      remarks: '', adviser: state.teacher, principal: state.school.principal, dateChecked: '', remedial: EMPTY_REMEDIAL
+      track: student.strand || state.strand, section: student.section || state.section, rows, average: avg === null ? '' : String(avg), averageAction: avg === null ? '' : remarkFor(avg).toUpperCase(),
+      remarks: '', adviser: student.adviser || state.teacher, principal: state.school.principal, dateChecked: '', remedial: EMPTY_REMEDIAL
     };
   });
   const annual = averageGrade(student);
   return {
     ...base, birth: student.birthdate ? formatLongDate(student.birthdate) : '', eligibility: {}, semesters,
-    completion: { trackAccomplished: state.strand, shsAverage: annual === null ? '' : String(annual), certifiedBy: state.school.principal },
+    completion: { trackAccomplished: student.strand || state.strand, shsAverage: annual === null ? '' : String(annual), certifiedBy: state.school.principal },
     complete: studentStatus(student) === 'approved'
   };
 }
@@ -76,7 +76,7 @@ export const sf10Source = (state: AppState): Student[] => (state.sf10Students.le
 /** Strand, section and grade levels of a learner, used to filter the SF10 list. */
 export function learnerMeta(student: Student, state: AppState): { strand: string; section: string; levels: string[] } {
   const sems = student.sf10?.semesters ?? [];
-  if (!sems.length) return { strand: state.strand, section: state.section, levels: [state.gradeLevel] };
+  if (!sems.length) return { strand: student.strand || state.strand, section: student.section || state.section, levels: [state.gradeLevel] };
   const last = [...sems].reverse().find((s) => s.section || s.track) ?? sems[sems.length - 1];
   return { strand: last.track || '', section: last.section || '', levels: [...new Set(sems.map((x) => x.gradeLevel).filter(Boolean))] };
 }

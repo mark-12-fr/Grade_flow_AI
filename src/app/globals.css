@@ -1090,21 +1090,21 @@ img { max-width: 100%; display: block; }
 .rc-semester { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; margin-top: 0; }
 .rc-semester + .rc-semester { margin-top: 1.1em; }
 .rc-semester h4 { margin: 0 0 0.18em; padding: 0; background: transparent; border: 0; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 0.92em; font-weight: 700; line-height: 1.05; text-align: left; }
-.report-front .rc-official-grade-table { width: 100%; height: 100%; margin: 0; border: 1px solid #444; border-collapse: collapse; table-layout: fixed; }
-.report-front .rc-official-grade-table col.rc-col-subject { width: 58%; }
-.report-front .rc-official-grade-table col.rc-col-score { width: 9%; }
-.report-front .rc-official-grade-table col.rc-col-final { width: 12%; }
-.report-front .rc-official-grade-table col.rc-col-remarks { width: 12%; }
-.report-front .rc-official-grade-table .rc-remarks-failed { color: #a11; font-weight: 700; }
-.report-front .rc-official-grade-table th { padding: 0.26em 0.18em; color: #222; background: #c8c0a0; border: 1px solid #555; font-size: 0.95em; font-weight: 700; letter-spacing: 0; line-height: 1.06; text-align: center; text-transform: none; }
-.report-front .rc-official-grade-table th:first-child { text-align: center; }
-.report-front .rc-official-grade-table td { padding: 0.04em 0.28em; border: 1px solid #555; font-size: 0.95em; line-height: 1.06; }
-.report-front .rc-official-grade-table td:not(:first-child) { text-align: center; }
-.report-front .rc-official-grade-table .rc-subject-group th { padding: 0.14em 0.3em; background: #fff; font-size: 0.95em; text-align: left; }
-.report-front .rc-official-grade-table .rc-grade-spacer td { height: 1.05em; padding: 0; }
-.report-front .rc-official-grade-table .rc-semester-final { font-weight: 700; }
-.report-front .rc-official-grade-table .rc-semester-average th { padding: 0.38em 0.3em; background: #fff; font-size: 0.95em; text-align: left; }
-.report-front .rc-official-grade-table .rc-semester-average td { background: #fff; font-weight: 700; }
+.rc-official-grade-table { width: 100%; height: 100%; margin: 0; border: 1px solid #444; border-collapse: collapse; table-layout: fixed; }
+.rc-official-grade-table col.rc-col-subject { width: 58%; }
+.rc-official-grade-table col.rc-col-score { width: 9%; }
+.rc-official-grade-table col.rc-col-final { width: 12%; }
+.rc-official-grade-table col.rc-col-remarks { width: 12%; }
+.rc-official-grade-table .rc-remarks-failed { color: #a11; font-weight: 700; }
+.rc-official-grade-table th { padding: 0.26em 0.18em; color: #222; background: #c8c0a0; border: 1px solid #555; font-size: 0.95em; font-weight: 700; letter-spacing: 0; line-height: 1.06; text-align: center; text-transform: none; }
+.rc-official-grade-table th:first-child { text-align: center; }
+.rc-official-grade-table td { padding: 0.04em 0.28em; border: 1px solid #555; font-size: 0.95em; line-height: 1.06; }
+.rc-official-grade-table td:not(:first-child) { text-align: center; }
+.rc-official-grade-table .rc-subject-group th { padding: 0.14em 0.3em; background: #fff; font-size: 0.95em; text-align: left; }
+.rc-official-grade-table .rc-grade-spacer td { height: 1.05em; padding: 0; }
+.rc-official-grade-table .rc-semester-final { font-weight: 700; }
+.rc-official-grade-table .rc-semester-average th { padding: 0.38em 0.3em; background: #fff; font-size: 0.95em; text-align: left; }
+.rc-official-grade-table .rc-semester-average td { background: #fff; font-weight: 700; }
 .rc-official-legends { display: grid; grid-template-columns: 23fr 44.5fr 26.5fr; gap: 2.8%; margin-top: 1.1em; border: 0; }
 .rc-official-legends table { width: 100%; height: 100%; border: 1px solid #555; border-collapse: collapse; }
 .rc-official-legends th, .rc-official-legends td { padding: 0.14em 0.26em; border-right: 1px solid #555; border-bottom: 1px solid #555; font-size: 0.88em; line-height: 1.1; }
@@ -1574,12 +1574,49 @@ img { max-width: 100%; display: block; }
   @page { size: A4 portrait; margin: 0; }
 }
 
-/* Landscape pages are wider but shorter; keep the type from crowding. */
+/* ---------- A4 portrait report card: page 1 = front, page 2 = back (double-sided) ---------- */
+.a4-page {
+  display: flex; flex-direction: column; box-sizing: border-box; width: 210mm; height: 297mm; padding: 10mm; overflow: hidden;
+  color: #222; background: #fff; font-family: Arial, "Liberation Sans", sans-serif; font-size: 9pt; line-height: 1.15;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.a4-page .rc-page-front, .a4-page .rc-page-back { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.a4-page .rc-official-school { margin-bottom: 1.2em; }
+.a4-page .rc-official-fields { gap: 0 2em; }
+.a4-page .rc-official-field { padding: 0.55em 0 0.1em; }
+.a4-page .rc-official-note { margin-top: 0.9em; }
+.a4-page .rc-cert-signatories { margin-top: 1.6em; padding-bottom: 0.9em; }
+.a4-page .rc-cert-signatories > div { padding: 0 0.8em; border-bottom: 0; }
+.a4-page .rc-cert-signatories strong { padding-bottom: 0.25em; border-bottom: 1px solid #444; }
+.a4-page .rc-official-title { margin: 0.9em 0 0.5em; font-size: 1.5em; }
+.a4-page .rc-official-grades { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.a4-page .rc-semester { flex: 1 1 0; }
+.a4-page .rc-semester + .rc-semester { margin-top: 0.8em; }
+.a4-page .rc-semester h4 { margin-bottom: 0.3em; font-size: 1.1em; text-align: center; }
+.a4-page .rc-official-grade-table .rc-grade-spacer td { height: 0.2em; }
+.rc-back-strip { flex: 0 0 auto; margin-bottom: 0.9em; padding-bottom: 0.5em; border-bottom: 1.5px solid #444; }
+.rc-back-strip strong { display: block; margin-bottom: 0.6em; font-family: "Times New Roman", "Liberation Serif", Times, serif; font-size: 1.3em; text-align: center; }
+.rc-back-strip div { display: flex; justify-content: space-between; gap: 1em; margin-top: 0.3em; font-size: 1.02em; }
+.a4-page .rc-transfer { margin-top: 0; }
+.a4-page .rc-transfer-panel { border-top: 1px solid #555; }
+.a4-page .rc-transfer-panel:first-child { border-right: 0; }
+.a4-page .rc-transfer-grid { margin-bottom: 0.9em; }
+.a4-page .rc-attendance-wrap, .a4-page .rc-official-values-wrap { margin-top: 0.9em; }
+.a4-page .rc-official-legends { flex: 0 0 auto; margin-top: 0.9em; }
+.a4-page .rc-official-legends table { height: auto; }
+.a4-page .rc-parent-signatures td { height: 4.6em; }
+
+.a4-preview { position: relative; width: 100%; max-width: 780px; margin-inline: auto; overflow: hidden; background: #fff; border: 1px solid #aebdce; box-shadow: 0 5px 18px rgba(20, 44, 78, 0.12); }
+.a4-preview-inner { width: 210mm; height: 297mm; transform-origin: top left; }
+.preview-tabs { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+.preview-tabs .btn[aria-pressed="true"] { color: #fff; background: var(--navy); border-color: var(--navy); }
+
 @media print {
-  #print-area.print-landscape .report-sheet { padding: 10mm 16mm; }
-  #print-area.print-landscape .rc-student { font-size: 1.6em; }
-  #print-area.print-landscape .rc-heading h3 { font-size: 1.35em; }
-  #print-area .report-sheet.report-front { width: 100%; margin-inline: 0; aspect-ratio: auto; height: var(--print-page-height, 208mm); padding: 7mm 8mm; font-size: 8.2pt; }
+  html, body { width: 210mm; }
+  #print-area { display: block !important; }
+  .print-page { width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; break-after: page; }
+  .print-page:last-child { page-break-after: auto; break-after: auto; }
+  .print-page .a4-page { margin: 0; border: 0; box-shadow: none; }
 }
 
 .dropzone.is-busy { opacity: 0.7; pointer-events: none; cursor: progress; }

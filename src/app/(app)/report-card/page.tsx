@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
-import { ReportCard } from '@/components/report/ReportCard';
+import { ReportCardBack, ReportCardFront } from '@/components/report/ReportCard';
+import { A4Preview, PrintSheets, usePrint } from '@/components/report/PrintSheets';
 import { downloadReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
 import { STRAND_TRACK } from '@/lib/domain/curriculum';
@@ -38,6 +39,8 @@ export default function ReportCardPage() {
   const [scope, setScope] = useState<'one' | 'shown' | 'all'>('shown');
   const [overwrite, setOverwrite] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [side, setSide] = useState<'front' | 'back'>('front');
+  const [printing, setPrinting] = usePrint();
   const options = useMemo(() => {
     const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
     const all = [...metas.values()];
@@ -200,6 +203,9 @@ export default function ReportCardPage() {
           <button type="button" className="btn btn-secondary btn-sm" disabled={!student || busy} onClick={() => student && void download([student], true)}>
             <Icon name="download" /> This learner (PDF)
           </button>
+          <button type="button" className="btn btn-primary btn-sm" disabled={!student || busy} onClick={() => student && setPrinting([student])}>
+            <Icon name="printer" /> Print report card
+          </button>
           <button type="button" className="btn btn-secondary btn-sm" disabled={!selectedStudents.length || busy} onClick={() => void download(selectedStudents)}>
             <Icon name="download" /> Selected ({selectedStudents.length})
           </button>
@@ -282,15 +288,26 @@ export default function ReportCardPage() {
 
       <div className="preview-canvas">
         <div className="preview-column">
-          <div className="preview-label"><strong>Report card</strong><span>Learning progress and achievement</span><span>1 page</span></div>
-          <article className="report-sheet report-front" aria-label="Report card">
-            {student
-              ? <div key={student.id} className="swap-in"><ReportCard student={student} context={context} school={state.school} /></div>
-              : <p className="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>}
-          </article>
+          <div className="preview-tabs" role="group" aria-label="Report card side">
+            <button type="button" className="btn btn-secondary btn-sm" aria-pressed={side === 'front'} onClick={() => setSide('front')}>Front Preview</button>
+            <button type="button" className="btn btn-secondary btn-sm" aria-pressed={side === 'back'} onClick={() => setSide('back')}>Back Preview</button>
+          </div>
+          <div className="preview-label"><strong>{side === 'front' ? 'Front' : 'Back'}</strong><span>{side === 'front' ? 'Learner details and learning progress' : 'Transfer, attendance and observed values'}</span><span>A4 portrait · page {side === 'front' ? 1 : 2} of 2</span></div>
+          {student
+            ? (
+              <A4Preview label={`Report card ${side}`}>
+                <article key={`${student.id}-${side}`} className="a4-page">
+                  {side === 'front'
+                    ? <ReportCardFront student={student} context={context} school={state.school} />
+                    : <ReportCardBack student={student} context={context} />}
+                </article>
+              </A4Preview>
+            )
+            : <p className="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>}
         </div>
       </div>
-      <p className="preview-hint"><Icon name="info" /> This preview is live. Changes you make during verification appear here immediately.</p>
+      <p className="preview-hint"><Icon name="info" /> This preview is live and shows the real A4 pages. Print double-sided at 100% (Actual size).</p>
+      {printing && <PrintSheets students={printing} context={context} school={state.school} />}
 
       <div className="page-actions">
         <Link className="btn btn-secondary" href="/verification"><Icon name="arrow-left" /> Back to verification</Link>

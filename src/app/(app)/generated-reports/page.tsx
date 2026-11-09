@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
-import { ReportCard } from '@/components/report/ReportCard';
+import { PrintSheets, usePrint } from '@/components/report/PrintSheets';
 import { prettyYear } from '@/lib/domain/format';
 import { averageLabel, reportContext } from '@/lib/domain/grading';
 import { downloadReportCards } from '@/lib/pdf/sf9';
@@ -13,16 +13,11 @@ import type { AppState, Student } from '@/lib/domain/types';
 
 const PAGE_SIZE = 6;
 
-function printHeight(state: AppState) {
-  const landscape = state.orientation === 'landscape';
-  return state.paperSize === 'letter' ? (landscape ? 214 : 278) : (landscape ? 208 : 296);
-}
-
 export default function GeneratedReportsPage() {
   const { toast } = useUi();
   const state = useAppState();
   const [scope, setScope] = useState<'all' | 'selected'>('all');
-  const [printing, setPrinting] = useState<Student[] | null>(null);
+  const [printing, setPrinting] = usePrint();
   const selectAll = useRef<HTMLInputElement>(null);
 
   const reports = state.students;
@@ -43,15 +38,6 @@ export default function GeneratedReportsPage() {
   useEffect(() => {
     if (selectAll.current) selectAll.current.indeterminate = checkedInFilter > 0 && checkedInFilter < filtered.length;
   });
-
-  // Print through a print-only area so the app interface never reaches paper.
-  useEffect(() => {
-    if (!printing) return;
-    const after = () => setPrinting(null);
-    window.addEventListener('afterprint', after, { once: true });
-    const timer = window.setTimeout(() => window.print(), 60);
-    return () => { window.clearTimeout(timer); window.removeEventListener('afterprint', after); };
-  }, [printing]);
 
   const toggle = (id: number, on: boolean) => setState((s) => ({ selectedReportIds: on ? [...new Set([...s.selectedReportIds, id])] : s.selectedReportIds.filter((x) => x !== id) }));
 
@@ -84,7 +70,7 @@ export default function GeneratedReportsPage() {
     );
   }
 
-  const sheets = state.printLayout === 'single' ? Math.ceil(inScope.length / 2) : inScope.length;
+  const sheets = inScope.length; // front and back share one sheet when printing double-sided
   const printLabel = scope === 'selected' ? `Print selected ${inScope.length} report${inScope.length === 1 ? '' : 's'}` : `Print all ${inScope.length} report${inScope.length === 1 ? '' : 's'}`;
 
   return (
@@ -137,7 +123,7 @@ export default function GeneratedReportsPage() {
                       <tr key={student.id} className={selectedIds.has(student.id) ? 'selected' : ''}>
                         <td className="check-col"><input type="checkbox" checked={selectedIds.has(student.id)} aria-label={`Select ${student.name}'s report`} onChange={(e) => toggle(student.id, e.target.checked)} /></td>
                         <td><div className="report-student"><strong>{student.name}</strong><span>Roll {student.roll} · {averageLabel(student)} average</span></div></td>
-                        <td>1 page</td>
+                        <td>2 pages (front and back)</td>
                         <td><span className="status-badge status-approved"><Icon name="check" /> Ready</span></td>
                         <td className="align-right"><div className="report-actions">
                           <button type="button" className="icon-btn" aria-label={`Download ${student.name}'s report as PDF`} title="Download PDF" onClick={() => void download([student], true)}><Icon name="download" /></button>
@@ -168,32 +154,9 @@ export default function GeneratedReportsPage() {
         <aside className="reports-side">
           <article className="card print-settings">
             <div className="card-heading"><h2>Ready, set, print.</h2><p>A few simple settings for a great result.</p></div>
-            <div className="form-group">
-              <label htmlFor="paper-size">Paper size</label>
-              <div className="select-wrap">
-                <select id="paper-size" value={state.paperSize} onChange={(e) => setState({ paperSize: e.target.value as AppState['paperSize'] })}>
-                  <option value="a4">A4 · 210 × 297 mm</option><option value="letter">Letter · 8.5 × 11 in</option>
-                </select>
-                <Icon name="chevron-down" className="select-chevron" />
-              </div>
-            </div>
-            <div className="form-group">
-              <label htmlFor="print-orientation">Orientation</label>
-              <div className="select-wrap">
-                <select id="print-orientation" value={state.orientation} onChange={(e) => setState({ orientation: e.target.value as AppState['orientation'] })}>
-                  <option value="portrait">Portrait</option><option value="landscape">Landscape</option>
-                </select>
-                <Icon name="chevron-down" className="select-chevron" />
-              </div>
-            </div>
-            <div className="form-group">
-              <label htmlFor="print-layout">Sheet estimate</label>
-              <div className="select-wrap">
-                <select id="print-layout" value={state.printLayout} onChange={(e) => setState({ printLayout: e.target.value as AppState['printLayout'] })}>
-                  <option value="double">Single-sided · One sheet per report</option><option value="single">Duplex · Two reports per sheet</option>
-                </select>
-                <Icon name="chevron-down" className="select-chevron" />
-              </div>
+            <div className="info-strip">
+              <Icon name="info" />
+              <div><strong>A4 · Portrait · Double-sided</strong><p>Page 1 is the front and page 2 is the back of each report card. In the print dialog choose A4, Actual size (100%), margins None, and two-sided (flip on long edge).</p></div>
             </div>
             <div className="form-group">
               <label htmlFor="reports-selector">Reports to print</label>
@@ -207,7 +170,7 @@ export default function GeneratedReportsPage() {
             </div>
             <div className="print-summary">
               <div><span>Report cards</span><strong>{inScope.length}</strong></div>
-              <div><span>PDF pages</span><strong>{inScope.length}</strong></div>
+              <div><span>PDF pages</span><strong>{inScope.length * 2}</strong></div>
               <div><span>Estimated sheets</span><strong>{sheets}</strong></div>
             </div>
             <button type="button" className="btn btn-primary btn-full" title={inScope.length ? printLabel : 'Choose at least one report to print'} onClick={() => print(inScope)}>
@@ -222,18 +185,7 @@ export default function GeneratedReportsPage() {
         </aside>
       </div>
 
-      {printing && (
-        <>
-          <style>{`@page { size: ${state.paperSize === 'letter' ? 'Letter' : 'A4'} ${state.orientation}; margin: 0; }`}</style>
-          <div id="print-area" aria-hidden="true" className={`${state.paperSize === 'letter' ? 'print-letter ' : ''}${state.orientation === 'landscape' ? 'print-landscape' : ''}`} style={{ ['--print-page-height' as string]: `${printHeight(state)}mm` }}>
-            {printing.map((student) => (
-              <div className="print-page" key={student.id}>
-                <article className="report-sheet report-front"><ReportCard student={student} context={context} school={state.school} /></article>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      {printing && <PrintSheets students={printing} context={context} school={state.school} />}
     </section>
   );
 }

@@ -20,28 +20,29 @@ function TransferRows({ fields }: { fields: [string, string | undefined][] }) {
   return <>{fields.map(([label, value]) => <tr key={label}><th scope="row">{label}:</th><td>{value || ''}</td></tr>)}</>;
 }
 
-type CardProps = { student: Student; context: ReportContext; school: SchoolInfo };
+/** The SF9 learner report card (front of the card), same layout as the printed form. */
+export function ReportCard({ student, context: classContext, school }: { student: Student; context: ReportContext; school: SchoolInfo }) {
+  const context = studentContext(classContext, student);
+  const transfer = student.transfer || {};
+  const addressLines = String(context.schoolAddress || '').split(' · ').filter(Boolean)
+    .filter((line) => !line.toLowerCase().includes('senior high school department'));
+  const attendance = student.attendance;
+  const attendanceRows: [string, Record<string, number | null | undefined>][] = [
+    ['No. of school days', attendance.schoolDays || {}], ['No. of days present', attendance.months || {}], ['No. of days absent', attendance.absent || {}]
+  ];
 
-const addressOf = (context: ReportContext) => String(context.schoolAddress || '').split(' · ').filter(Boolean)
-  .filter((line) => !line.toLowerCase().includes('senior high school department'));
-
-function SchoolHeader({ context, school }: Pick<CardProps, 'context' | 'school'>) {
-  const addressLines = addressOf(context);
   return (
-    <div className="rc-official-school">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="rc-logo" src={school.logo || '/assets/ui-logo.png'} alt="School seal" />
-      <div>
-        {addressLines.map((line) => <span key={line}>{line}</span>)}
-        <strong>{context.schoolName}</strong>
-        <span>Senior High School Department</span>
-      </div>
-    </div>
-  );
-}
-
-function LearnerFields({ student, context }: Pick<CardProps, 'student' | 'context'>) {
-  return (
+    <div className="rc-official-layout">
+      <section className="rc-official-learner" aria-label="Learner details and observations">
+        <div className="rc-official-school">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="rc-logo" src={school.logo || '/assets/ui-logo.png'} alt="School seal" />
+          <div>
+            {addressLines.map((line) => <span key={line}>{line}</span>)}
+            <strong>{context.schoolName}</strong>
+            <span>Senior High School Department</span>
+          </div>
+        </div>
         <div className="rc-official-fields">
           <div className="rc-official-field rc-official-name"><span>Name:</span><strong>{student.name}</strong></div>
           <div className="rc-official-field"><span>Age:</span><strong>{student.age || '—'}</strong></div>
@@ -52,31 +53,16 @@ function LearnerFields({ student, context }: Pick<CardProps, 'student' | 'contex
           <div className="rc-official-field"><span>LRN:</span><strong>{student.lrn || '—'}</strong></div>
           <div className="rc-official-field rc-official-track"><span>Track/Strand:</span><strong>{context.trackStrand || context.strand || '—'}</strong></div>
         </div>
-  );
-}
-
-function ParentNote() {
-  return (
         <div className="rc-official-note">
           <strong>Dear Parent:</strong>
           <p>This report card shows your child’s performance in the different learning areas as well as in character formation.</p>
           <p>The school welcomes you if you desire to know more about the progress of your child.</p>
         </div>
-  );
-}
-
-function Signatories({ context }: Pick<CardProps, 'context'>) {
-  return (
+        <section className="rc-transfer">
           <div className="rc-cert-signatories">
             <div><strong>{context.teacher || ''}</strong><span>Adviser</span></div>
             <div><strong>{context.principal || ''}</strong><span>Principal</span></div>
           </div>
-  );
-}
-
-function TransferGrid({ student, context }: Pick<CardProps, 'student' | 'context'>) {
-  const transfer = student.transfer || {};
-  return (
           <div className="rc-transfer-grid">
             <div className="rc-transfer-panel">
               <h4>Certificate of Transfer</h4>
@@ -94,15 +80,7 @@ function TransferGrid({ student, context }: Pick<CardProps, 'student' | 'context
               </tbody></table>
             </div>
           </div>
-  );
-}
-
-function AttendanceTable({ student }: Pick<CardProps, 'student'>) {
-  const attendance = student.attendance;
-  const attendanceRows: [string, Record<string, number | null | undefined>][] = [
-    ['No. of school days', attendance.schoolDays || {}], ['No. of days present', attendance.months || {}], ['No. of days absent', attendance.absent || {}]
-  ];
-  return (
+        </section>
         <div className="rc-attendance-wrap">
           <table className="rc-attendance-table">
             <caption>Report of attendance</caption>
@@ -124,11 +102,6 @@ function AttendanceTable({ student }: Pick<CardProps, 'student'>) {
             </tbody>
           </table>
         </div>
-  );
-}
-
-function ObservedValues({ student }: Pick<CardProps, 'student'>) {
-  return (
         <div className="rc-official-values-wrap">
           <table className="rc-official-values">
             <caption>Report on learner’s observed values</caption>
@@ -151,13 +124,11 @@ function ObservedValues({ student }: Pick<CardProps, 'student'>) {
             </tbody>
           </table>
         </div>
-  );
-}
+      </section>
 
-function GradeTables({ student }: Pick<CardProps, 'student'>) {
-  return (
-    <>
-      {semestersFor(student.strand).map((semester) => {
+      <section className="rc-official-grades" aria-label="Learning progress and achievement">
+        <div className="rc-official-title"><strong>REPORT ON LEARNING PROGRESS AND ACHIEVEMENT</strong></div>
+        {semestersFor(student.strand).map((semester) => {
           const avg = semesterAverage(student, semester.key);
           return (
             <section className="rc-semester" key={semester.key}>
@@ -200,12 +171,6 @@ function GradeTables({ student }: Pick<CardProps, 'student'>) {
             </section>
           );
         })}
-    </>
-  );
-}
-
-function Legends() {
-  return (
         <div className="rc-official-legends">
           <table><caption>Observed values</caption><tbody>
             <tr><th>AO</th><td>Always Observed</td></tr><tr><th>SO</th><td>Sometimes Observed</td></tr>
@@ -220,66 +185,7 @@ function Legends() {
             <tr><th>1st Q</th><td></td></tr><tr><th>2nd Q</th><td></td></tr><tr><th>3rd Q</th><td></td></tr><tr><th>4th Q</th><td></td></tr>
           </tbody></table>
         </div>
-  );
-}
-
-/** The SF9 learner report card on one landscape page, same layout as the printed form. */
-export function ReportCard({ student, context: classContext, school }: CardProps) {
-  const context = studentContext(classContext, student);
-  return (
-    <div className="rc-official-layout">
-      <section className="rc-official-learner" aria-label="Learner details and observations">
-        <SchoolHeader context={context} school={school} />
-        <LearnerFields student={student} context={context} />
-        <ParentNote />
-        <section className="rc-transfer">
-          <Signatories context={context} />
-          <TransferGrid student={student} context={context} />
-        </section>
-        <AttendanceTable student={student} />
-        <ObservedValues student={student} />
       </section>
-
-      <section className="rc-official-grades" aria-label="Learning progress and achievement">
-        <div className="rc-official-title"><strong>REPORT ON LEARNING PROGRESS AND ACHIEVEMENT</strong></div>
-        <GradeTables student={student} />
-        <Legends />
-      </section>
-    </div>
-  );
-}
-
-/** Page 1 of the A4 portrait report card: school, learner details, signatures and the grades. */
-export function ReportCardFront({ student, context: classContext, school }: CardProps) {
-  const context = studentContext(classContext, student);
-  return (
-    <div className="rc-page-front">
-      <SchoolHeader context={context} school={school} />
-      <LearnerFields student={student} context={context} />
-      <ParentNote />
-      <Signatories context={context} />
-      <section className="rc-official-grades" aria-label="Learning progress and achievement">
-        <div className="rc-official-title"><strong>REPORT ON LEARNING PROGRESS AND ACHIEVEMENT</strong></div>
-        <GradeTables student={student} />
-      </section>
-    </div>
-  );
-}
-
-/** Page 2 of the A4 portrait report card: certificate of transfer, attendance, observed values, legends and parent signatures. */
-export function ReportCardBack({ student, context: classContext }: Omit<CardProps, 'school'>) {
-  const context = studentContext(classContext, student);
-  return (
-    <div className="rc-page-back">
-      <div className="rc-back-strip">
-        <strong>REPORT CARD - BACK</strong>
-        <div><span>Name: {student.name}</span><span>LRN: {student.lrn || '—'}</span></div>
-        <div><span>Grade &amp; Section: {[context.gradeLevel, context.section].filter(Boolean).join(' - ')}</span><span>School Year: {prettyYear(context.year)}</span></div>
-      </div>
-      <section className="rc-transfer"><TransferGrid student={student} context={context} /></section>
-      <AttendanceTable student={student} />
-      <ObservedValues student={student} />
-      <Legends />
     </div>
   );
 }

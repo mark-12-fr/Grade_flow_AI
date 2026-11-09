@@ -28,26 +28,15 @@ function setDrawColor(doc: any, color: any) {
   doc.setDrawColor(color[0], color[1], color[2]);
 }
 
-/**
- * Draws one learner's report card.
- * 'landscape': the whole card on one landscape page (the original layout).
- * 'portrait': A4 portrait, exactly two pages: the front (school header, learner details, grades) and the back
- * (certificate of transfer, attendance, observed values, legends and the parent/guardian signature).
- * The same drawing code serves both; in portrait each block is drawn at its own scale on its own page.
- */
-export function drawFront(doc: jsPDF, student: Student, classContext: ReportContext, logoData: string | null, mode: 'landscape' | 'portrait' = 'landscape') {
-  const portrait = mode === 'portrait';
+export function drawFront(doc: jsPDF, student: Student, classContext: ReportContext, logoData: string | null) {
   const context = studentContext(classContext, student);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   // The card is designed on A4 landscape. Scale it down when the user picks
   // Letter or portrait so the same proportions still fit on one page.
-  let scale = Math.min(pageWidth / 297, pageHeight / 210);
-  let offsetX = (pageWidth - 297 * scale) / 2;
-  let offsetY = (pageHeight - 210 * scale) / 2;
-  const frontPage = doc.getNumberOfPages();
-  let backPage = frontPage;
-  if (portrait) { doc.addPage(); backPage = doc.getNumberOfPages(); doc.setPage(frontPage); }
+  const scale = Math.min(pageWidth / 297, pageHeight / 210);
+  const offsetX = (pageWidth - 297 * scale) / 2;
+  const offsetY = (pageHeight - 210 * scale) / 2;
   const X = function (value: number) { return offsetX + value * scale; };
   const Y = function (value: any) { return offsetY + value * scale; };
   const S = function (value: any) { return value * scale; };
@@ -67,22 +56,6 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   const cream = [244, 241, 228];
   const ink = [34, 34, 34];
   const soft = [85, 84, 80];
-
-  // Portrait: where each block lands on the A4 page (millimetres). The blocks are laid out on the landscape design grid
-  // and enlarged so the left column (190 mm wide) and the right column both fill the 190 mm printable width.
-  const FRONT_TOP = 10;
-  const leftScale = 190 / leftWidth;
-  const rightScale = 190 / rightWidth;
-  const BACK_HEAD = 27; // the back page starts with a one-line learner strip
-  function stage(name: 'head' | 'title' | 'grades' | 'back' | 'legends', designY = 0) {
-    if (!portrait) return;
-    if (name === 'head') { doc.setPage(frontPage); scale = leftScale; offsetX = 10 - left * scale; offsetY = FRONT_TOP - 8.4 * scale; }
-    if (name === 'title') { doc.setPage(frontPage); scale = rightScale; offsetX = 10 - rightX * scale; offsetY = FRONT_TOP + 95 - 16.2 * scale; }
-    if (name === 'grades') { doc.setPage(frontPage); scale = rightScale; offsetX = 10 - rightX * scale; offsetY = FRONT_TOP + 100 - 27 * scale; }
-    if (name === 'back') { doc.setPage(backPage); scale = leftScale; offsetX = 10 - left * scale; offsetY = BACK_HEAD - designY * scale; }
-    if (name === 'legends') { doc.setPage(backPage); scale = rightScale; offsetX = 10 - rightX * scale; offsetY = 238 - 178 * scale; }
-  }
-  stage('head');
 
   function setFont(style: any, size: any, color: any) {
     doc.setFont('helvetica', style || 'normal');
@@ -154,7 +127,6 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   setFont('normal', 4.8, soft);
   centeredText('Senior High School Department', left + 18, 22.4, leftWidth - 20);
 
-  stage('title');
   setFont('bold', 10.8, ink);
   doc.setFont('times', 'bold');
   doc.setFontSize(S(10.8));
@@ -162,12 +134,9 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   doc.text(pdfSafe('REPORT ON LEARNING PROGRESS AND ACHIEVEMENT'),
     X(rightX + rightWidth / 2), Y(16.2), { align: 'center', baseline: 'middle' });
 
-  stage('head');
-  if (!portrait) {
-    setDrawColor(doc, line);
-    doc.setLineWidth(S(0.35));
-    doc.line(X(left), Y(24.1), X(rightEdge), Y(24.1));
-  }
+  setDrawColor(doc, line);
+  doc.setLineWidth(S(0.35));
+  doc.line(X(left), Y(24.1), X(rightEdge), Y(24.1));
 
   /* ---------- Learner details ---------- */
   const fieldRows = [
@@ -218,8 +187,6 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   leftY += 3.6;
 
   /* ---------- Certificate panels ---------- */
-  stage('back', leftY);
-  const backTop = leftY;
   const panelWidth = leftWidth / 2;
   const headingHeight = 4.6;
   const transferRowHeight = 4.7;
@@ -364,7 +331,7 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
 
   /* ---------- Observed values ---------- */
   const valuesTop = leftY;
-  const valuesBottom = portrait ? backTop + (232 - BACK_HEAD) / leftScale : bodyBottom;
+  const valuesBottom = bodyBottom;
   const valuesCaptionHeight = 4.3;
   const valuesHeaderOne = 3.7;
   const valuesHeaderTwo = 3.3;
@@ -554,15 +521,8 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
   }
 
   const strandSemesters = semestersFor(student.strand);
-  stage('grades');
-  if (portrait) {
-    drawSemester(strandSemesters[0], 27.0, 92.0);
-    drawSemester(strandSemesters[1], 94.0, 161.0);
-  } else {
-    drawSemester(strandSemesters[0], 27.0, 105.0);
-    drawSemester(strandSemesters[1], 107.4, 176.4);
-  }
-  stage('legends');
+  drawSemester(strandSemesters[0], 27.0, 105.0);
+  drawSemester(strandSemesters[1], 107.4, 176.4);
 
   /* ---------- Joined legend strip ---------- */
   const legendTop = 178.0; // tall enough for the parent/guardian to sign each quarter
@@ -631,24 +591,6 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
       ['3rd Q', ''],
       ['4th Q', '']
     ], lastColumnWidths);
-
-  if (portrait) {
-    // The back of the card starts with who it belongs to, so the two sides stay together when sorted after printing.
-    doc.setPage(backPage);
-    scale = 1; offsetX = 0; offsetY = 0;
-    setFont('bold', 8.5, ink);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(S(10.5));
-    doc.text(pdfSafe('REPORT CARD - BACK'), X(105), Y(14), { align: 'center', baseline: 'middle' });
-    setFont('normal', 8.2, ink);
-    leftText('Name: ' + (student.name || '-'), 10, 20.6, 120, { inset: 0 });
-    leftText('LRN: ' + (student.lrn || '-'), 140, 20.6, 60, { inset: 0 });
-    leftText('Grade & Section: ' + [context.gradeLevel, context.section].filter(Boolean).join(' - ') + '    School Year: ' + prettyYear(context.year), 10, 25.2, 190, { inset: 0 });
-    setDrawColor(doc, line);
-    doc.setLineWidth(0.35);
-    doc.line(10, 27.4, 200, 27.4);
-    doc.setPage(backPage);
-  }
 }
 
 let logoCache: { source: string; promise: Promise<string> } | null = null;
@@ -684,13 +626,13 @@ export async function downloadReportCards(
 ): Promise<string> {
   const { jsPDF: PDF } = await import('jspdf');
   const logoData = await loadLogoData(state.school.logo || '/assets/ui-logo.png');
-  const doc = new PDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true }); // A4 portrait, front and back for every learner
+  const doc = new PDF({ orientation: state.orientation === 'landscape' ? 'landscape' : 'portrait', unit: 'mm', format: state.paperSize === 'letter' ? 'letter' : 'a4', compress: true });
   const first = reports[0];
   const title = options.single ? `${context.term} report card for ${first.name}` : `${context.term} report cards for ${context.className}`;
   doc.setProperties({ title: pdfSafe(title), subject: 'GradeFlow AI report card', author: state.teacher, creator: 'GradeFlow AI' });
   reports.forEach((student, index) => {
     if (index > 0) doc.addPage();
-    drawFront(doc, student, context, logoData, 'portrait');
+    drawFront(doc, student, context, logoData);
   });
   const filename = options.single
     ? `GradeFlow_${safeFilename(first.name)}_${safeFilename(context.term)}.pdf`

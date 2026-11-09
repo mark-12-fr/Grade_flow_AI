@@ -30,11 +30,11 @@ export function sf9Issues(student: Student, state: AppState): Issue[] {
 }
 
 export interface Sf9Details {
-  schoolName: string; year: string; principal: string; adviser: string; section: string; strand: string; value: string;
+  year: string; principal: string; adviser: string;
   /** Certificate of Transfer entries, keyed like Student.transfer. */
   transfer: Record<string, string>;
 }
-export const emptySf9Details: Sf9Details = { schoolName: '', year: '', principal: '', adviser: '', section: '', strand: '', value: '', transfer: {} };
+export const emptySf9Details: Sf9Details = { year: '', principal: '', adviser: '', transfer: {} };
 export const TRANSFER_DETAILS: [string, string][] = [
   ['admittedTo', 'Transfer: admitted to'], ['eligibilityForGrade', 'Transfer: eligibility for admission to grade'], ['approvedBy', 'Transfer: approved by'],
   ['admittedIn', 'Transfer: admitted in'], ['transferDate', 'Transfer: date'], ['cancellationOfEligibility', 'Transfer: cancellation of eligibility, approved by']
@@ -46,19 +46,10 @@ export function applySf9Details(students: Student[], ids: Set<number>, v: Sf9Det
   const put = (current: string | undefined, next: string) => (next.trim() && (overwrite || !current) ? next.trim() : current);
   const out = students.map((student) => {
     if (!ids.has(student.id)) return student;
-    const next: Student = { ...student, adviser: put(student.adviser, v.adviser), section: put(student.section, v.section), strand: put(student.strand, v.strand) };
+    const next: Student = { ...student, adviser: put(student.adviser, v.adviser) };
     const transfer = { ...student.transfer };
     TRANSFER_DETAILS.forEach(([key]) => { const next = put(transfer[key], v.transfer[key] ?? ''); if (next) transfer[key] = next; });
     next.transfer = transfer;
-    if (v.value) {
-      const values: Student['observedValues'] = {};
-      CORE_VALUE_KEYS.forEach((key) => {
-        const row = { ...(student.observedValues?.[key] ?? {}) };
-        ['q1', 'q2', 'q3', 'q4'].forEach((q) => { if (overwrite || blank(row[q])) row[q] = v.value; });
-        values[key] = row;
-      });
-      next.observedValues = { ...student.observedValues, ...values };
-    }
     if (JSON.stringify(next) === JSON.stringify(student)) return student;
     changed += 1;
     return next;

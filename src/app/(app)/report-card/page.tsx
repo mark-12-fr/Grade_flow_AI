@@ -9,7 +9,6 @@ import { PdfPreview } from '@/components/report/PdfPreview';
 import { Sf9Editor } from '@/components/report/Sf9Editor';
 import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
-import { STRAND_TRACK } from '@/lib/domain/curriculum';
 import { applySf9Details, emptySf9Details, sf9Issues, TRANSFER_DETAILS, type Sf9Details } from '@/lib/sf9/quality';
 import { learnerMeta } from '@/lib/sf10/record';
 import { setState, useAppState } from '@/lib/state/store';
@@ -223,17 +222,16 @@ export default function ReportCardPage() {
       </div>
 
       <details className="card sf10-edit" open={editOpen} onToggle={(e) => setEditOpen((e.target as HTMLDetailsElement).open)}>
-        <summary><strong>Fill in missing details</strong> <span>School, school year, principal, adviser, section, certificate of transfer and more, for one learner or many at once</span></summary>
+        <summary><strong>Fill in missing details</strong> <span>School year, principal, adviser and certificate of transfer, for one learner or many at once</span></summary>
         {!total ? <p className="muted">This is available after you upload an SF9 file.</p> : (
           <div className="sf10-edit-body">
             <div className="sf10-edit-grid">
               {([
-                ['schoolName', 'School name (everyone)'], ['year', 'School year, e.g. 2025-2026 (everyone)'], ['principal', 'Principal (everyone)'],
-                ['adviser', 'Adviser'], ['section', 'Section']
+                ['year', 'School year, e.g. 2025-2026 (everyone)'], ['principal', 'Principal (everyone)'], ['adviser', 'Adviser']
               ] as [Exclude<keyof Sf9Details, 'transfer'>, string][]).map(([key, label]) => (
                 <label key={key} className="sf10-field">
                   <span>{label}</span>
-                  <input type="text" value={details[key]} placeholder={key === 'schoolName' ? state.school.name : key === 'year' ? state.year : key === 'principal' ? state.school.principal : ''}
+                  <input type="text" value={details[key]} placeholder={key === 'year' ? state.year : key === 'principal' ? state.school.principal : ''}
                     onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
                 </label>
               ))}
@@ -243,29 +241,6 @@ export default function ReportCardPage() {
                   <input type="text" value={details.transfer[key] ?? ''} onChange={(e) => setDetails({ ...details, transfer: { ...details.transfer, [key]: e.target.value } })} />
                 </label>
               ))}
-              <label className="sf10-field">
-                <span>Strand</span>
-                <div className="select-wrap select-wrap-sm">
-                  <select value={details.strand} onChange={(e) => setDetails({ ...details, strand: e.target.value })}>
-                    <option value="">Leave as is</option>
-                    {Object.keys(STRAND_TRACK).map((k) => <option key={k} value={k}>{k}</option>)}
-                  </select>
-                  <Icon name="chevron-down" className="select-chevron" />
-                </div>
-              </label>
-              <label className="sf10-field">
-                <span>Observed values for all core values and quarters</span>
-                <div className="select-wrap select-wrap-sm">
-                  <select value={details.value} onChange={(e) => setDetails({ ...details, value: e.target.value })}>
-                    <option value="">Leave as is</option>
-                    <option value="AO">AO: Always Observed</option>
-                    <option value="SO">SO: Sometimes Observed</option>
-                    <option value="RO">RO: Rarely Observed</option>
-                    <option value="NO">NO: Not Observed</option>
-                  </select>
-                  <Icon name="chevron-down" className="select-chevron" />
-                </div>
-              </label>
             </div>
             <div className="sf10-edit-actions">
               <div className="select-wrap select-wrap-sm">
@@ -280,8 +255,8 @@ export default function ReportCardPage() {
               <button type="button" className="btn btn-primary btn-sm" onClick={() => {
                 const ids = new Set((scope === 'one' ? (student ? [student] : []) : scope === 'shown' ? filtered : students).map((x) => x.id));
                 const result = applySf9Details(state.students, ids, details, overwrite);
-                const school = { ...state.school, name: details.schoolName.trim() || state.school.name, principal: details.principal.trim() || state.school.principal };
-                const globalChange = Boolean(details.schoolName.trim() || details.year.trim() || details.principal.trim());
+                const school = { ...state.school, principal: details.principal.trim() || state.school.principal };
+                const globalChange = Boolean(details.year.trim() || details.principal.trim());
                 setState({ students: result.students, school, year: details.year.trim() || state.year });
                 toast(result.changed || globalChange ? `Updated ${result.changed} learner${result.changed === 1 ? '' : 's'}${globalChange ? ' and the school details' : ''}.` : 'Nothing to change. The fields were empty, or already filled in (turn on "Replace values already filled in").', result.changed || globalChange ? 'success' : 'info');
               }}>Apply</button>

@@ -31,15 +31,19 @@ export async function POST(request: Request) {
         return { ...roster, schoolLogo: extractLogo(name, data) };
       }
 
-      // Sheets that are a learner's SF10 form are read form by form.
+      // No question asked: a school grading workbook is read from its biggest learner list; otherwise the SF10 forms are read.
       const forms = grids.filter(looksLikeForm);
-      const others = grids.filter((g) => !looksLikeForm(g) && g.rows.length >= 20);
-      if (wanted !== FORMS && (!forms.length || others.length)) {
-        // A school grading workbook (learners in rows): let the teacher pick the sheet to read.
-        const sheets = grids.map((g) => ({ name: g.sheet, rows: g.rows.length, cols: g.rows[0]?.length ?? 0 }));
-        if (forms.length) sheets.unshift({ name: FORMS, rows: forms.length, cols: 0, label: `SF10 forms (${forms.length} sheets: ${forms.map((g) => g.sheet).join(', ')})` } as never);
-        return { mode: 'pick', sheets };
+      if (wanted !== FORMS) {
+        const lists = grids.filter((g) => !looksLikeForm(g) && g.rows.length >= 20);
+        const best = lists.sort((a, b) => b.rows.length * (b.rows[0]?.length ?? 0) - a.rows.length * (a.rows[0]?.length ?? 0))[0];
+        if (best && (!forms.length || best.rows.length > 50)) {
+          emit(8, `Reading the learner list "${best.sheet}"`);
+          const roster = await runRosterImport(best, undefined, () => limiter.takeCall(), emit);
+          emit(95, 'Building the permanent records');
+          return { ...roster, schoolLogo: extractLogo(name, data) };
+        }
       }
+      if (!forms.length) throw new HttpError(422, 'No SF10 forms or learner list with grades were found in this file.');
       if (cfg.maxSheets && forms.length > cfg.maxSheets) {
         throw new HttpError(422, `This workbook has ${forms.length} SF10 sheets; the AI reads one learner per sheet and the limit is ${cfg.maxSheets}.`);
       }

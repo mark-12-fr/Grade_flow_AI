@@ -111,11 +111,8 @@ interface Sf9Response {
   template?: boolean;
   aiError?: string;
   roster?: boolean;
-  mode?: 'pick-section';
-  sections?: { name: string; learners: number }[];
 }
 
-export interface Sf9Outcome extends ImportOutcome { pick?: { name: string; learners: number }[] }
 
 function applySchoolDetails(details: Record<string, string>, school: AppState['school']): AppState['school'] {
   const next = { ...school };
@@ -139,16 +136,12 @@ function checkFile(file: File, allowed: string[]): string | null {
 }
 
 /** Upload the SF9 class grade sheet: the server reads it with AI (or the built-in template reader). */
-export async function importSf9(file: File, section?: string): Promise<Sf9Outcome> {
+export async function importSf9(file: File): Promise<ImportOutcome> {
   const problem = checkFile(file, ['.csv', '.xlsx', '.xls']);
   if (problem) return { ok: false, error: problem, message: 'No class grade files were added.', type: 'error' };
-  const { data, error } = await callApi<Sf9Response>('/api/import', file, { spec: JSON.stringify(aiSchema()), ...(section ? { section } : {}) });
+  const { data, error } = await callApi<Sf9Response>('/api/import', file, { spec: JSON.stringify(aiSchema()) });
   if (error || !data) return { ok: false, error: error, message: "No class grade files were added.", type: "error" };
-  if (data.mode === 'pick-section' && data.sections) {
-    return { ok: true, pick: data.sections, type: 'info', message: 'This is a school-wide list. Choose the section to import.' };
-  }
-  if (!data.students) return { ok: false, error: `${file.name}: no learners were found.`, message: 'No class grade files were added.', type: 'error' };
-  if (!data.students.length) return { ok: false, error: `${file.name}: no learners were found.`, message: 'No class grade files were added.', type: 'error' };
+  if (!data.students?.length) return { ok: false, error: `${file.name}: no learners were found.`, message: 'No class grade files were added.', type: 'error' };
   if (data.students.length > MAX_LEARNERS) {
     return { ok: false, error: `${file.name}: the class limit of ${MAX_LEARNERS} learners would be exceeded.`, message: 'No class grade files were added.', type: 'error' };
   }
@@ -193,33 +186,29 @@ export async function importSf9(file: File, section?: string): Promise<Sf9Outcom
   });
 
   const aiNote = data.roster
-    ? ` Read ${section === '__all__' ? 'every section' : `section ${section}`} from the school-wide list.`
+    ? ` From ${new Set(students.map((x) => x.section)).size} sections.`
     : data.template
     ? ` AI import unavailable${data.aiError ? ` (${data.aiError})` : ''}; used the standard template reader.`
     : ` AI mapped ${data.mapping.length} columns${data.warnings.length ? ` (${data.warnings.length} note${data.warnings.length === 1 ? '' : 's'} to check).` : '.'}`;
   return {
     ok: true, type: missing || data.counts?.skipped ? 'info' : 'success',
-    message: `1 class file read.${aiNote} ${students.length} learner${students.length === 1 ? '' : 's'} found.${countNote(data.counts)} ` +
+    message: `SF9 ready: ${students.length} learner${students.length === 1 ? '' : 's'} read.${aiNote} ` +
       (missing ? `${missing} grade${missing === 1 ? '' : 's'} need review.` : 'All grades are complete.')
   };
 }
 
-interface Sf10Response { counts?: RowCounts; students?: Student[]; warnings?: string[]; sheets?: number | { name: string; rows: number; cols: number; label?: string }[]; schoolLogo?: string; mode?: 'pick' | 'roster' }
+interface Sf10Response { counts?: RowCounts; students?: Student[]; warnings?: string[]; schoolLogo?: string }
 
-export interface Sf10Outcome extends ImportOutcome { pick?: { name: string; rows: number; cols: number; label?: string }[] }
 
 /**
- * Upload an SF10 file. One learner per sheet forms are read by the AI directly; a school grading
- * workbook (learners in rows) first asks the teacher which sheet to read, then maps its columns.
+ * Upload an SF10 file. The server picks what to read by itself: the SF10 forms (one learner per sheet),
+ * or the learner list of a school grading workbook (learners in rows).
  */
-export async function importSf10(file: File, sheet?: string): Promise<Sf10Outcome> {
+export async function importSf10(file: File, sheet?: string): Promise<ImportOutcome> {
   const problem = checkFile(file, ['.csv', '.xlsx', '.xls']);
   if (problem) return { ok: false, error: problem, type: 'error', message: problem };
   const { data, error } = await callApi<Sf10Response>('/api/import-sf10', file, sheet ? { sheet } : {}, 240_000);
   if (error || !data) return { ok: false, error, type: 'error', message: `SF10 could not be read: ${error}` };
-  if (data.mode === 'pick' && Array.isArray(data.sheets)) {
-    return { ok: true, pick: data.sheets, type: 'info', message: 'Choose the sheet that lists your learners and their grades.' };
-  }
   const students = data.students ?? [];
   if (!students.length) return { ok: false, error: 'No SF10 record was found in this file.', type: 'error', message: 'SF10 could not be read: no SF10 record was found.' };
   setState((s) => ({
@@ -229,7 +218,7 @@ export async function importSf10(file: File, sheet?: string): Promise<Sf10Outcom
     school: data.schoolLogo ? { ...s.school, logo: data.schoolLogo } : s.school
   }));
   const n = students.length;
-  return { ok: true, type: data.counts?.skipped ? 'info' : 'success', message: `${n} SF10 record${n === 1 ? '' : 's'} read.${countNote(data.counts)}` };
+  return { ok: true, type: data.counts?.skipped ? 'info' : 'success', message: `SF10 ready: ${n} record${n === 1 ? '' : 's'} read.${data.counts?.skipped ? ` ${data.counts.skipped} row${data.counts.skipped === 1 ? '' : 's'} skipped (see the notes).` : ''}` };
 }
 
 export function removeSf10() {

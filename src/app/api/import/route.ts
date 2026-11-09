@@ -4,7 +4,7 @@ import { guard, HttpError, limiter } from '@/server/core/guard';
 import { readUpload, toResponse } from '@/server/core/http';
 import { streamJob } from '@/server/core/stream';
 import { ALL_SUBJECTS } from '@/lib/domain/curriculum';
-import { cardDefaults, listSections, readMasterList } from '@/server/import/masterList';
+import { cardDefaults, readMasterList } from '@/server/import/masterList';
 import { MappingError, parseSchema, runImport } from '@/server/import/mapper';
 import { readTemplate, TemplateError } from '@/server/import/template';
 
@@ -25,12 +25,8 @@ export async function POST(request: Request) {
       emit(5, 'Reading the sheet');
       const grid = readGrid(name, data);
       if (masterListSize(grid)) {
-        const section = form.get('section');
-        if (typeof section !== 'string' || !section) {
-          const sections = listSections(grid);
-          if (!sections.length) throw new MappingError(`${name}: sheet "${grid.sheet}" is a school-wide list but no sections were found in it.`, 'file');
-          return { mode: 'pick-section', sections, sheet: grid.sheet };
-        }
+        const asked = form.get('section');
+        const section = typeof asked === 'string' && asked ? asked : ALL; // no question asked: read every section
         emit(40, section === ALL ? 'Reading every section' : `Reading section ${section}`);
         return { ...readMasterList(grid, { ...schema, subjects: ALL_SUBJECTS.map((x) => ({ key: x.key, name: x.name, semester: x.semester })) }, section === ALL ? null : section, cardDefaults(readSheets(name, data).filter((g) => g.sheet !== grid.sheet))), roster: true, schoolLogo: extractLogo(name, data) };
       }

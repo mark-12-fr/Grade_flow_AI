@@ -625,7 +625,7 @@ export async function downloadReportCards(
   reports: Student[], context: ReportContext, state: AppState, options: { single?: boolean } = {}
 ): Promise<string> {
   const { jsPDF: PDF } = await import('jspdf');
-  const logoData = await loadLogoData(state.school.logo || '/assets/deped-seal.png');
+  const logoData = await loadLogoData(state.school.logo || '/assets/ui-logo.png');
   const doc = new PDF({ orientation: state.orientation === 'landscape' ? 'landscape' : 'portrait', unit: 'mm', format: state.paperSize === 'letter' ? 'letter' : 'a4', compress: true });
   const first = reports[0];
   const title = options.single ? `${context.term} report card for ${first.name}` : `${context.term} report cards for ${context.className}`;

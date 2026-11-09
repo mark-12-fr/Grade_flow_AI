@@ -1,4 +1,4 @@
-import { SEMESTERS } from '@/lib/domain/curriculum';
+import { semestersFor } from '@/lib/domain/curriculum';
 import { formatLongDate, prettyYear } from '@/lib/domain/format';
 import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from '@/lib/domain/grading';
 import type { AppState, Sf10Remedial, Student } from '@/lib/domain/types';
@@ -48,7 +48,7 @@ export function recordFor(student: Student, state: AppState): Sf10Rec {
     };
   }
   const context = reportContext(state);
-  const semesters = SEMESTERS.map((semester) => {
+  const semesters = semestersFor(student.strand).map((semester) => {
     const rows = semester.groups.flatMap((group) => group.subjects.map(([key, subject]) => {
       const g = student.grades[key] || {};
       const final = cell(g.final);

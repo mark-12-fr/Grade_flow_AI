@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Draws the SF9 report card PDF with jsPDF (ported from the original printing module).
 import type { jsPDF } from 'jspdf';
-import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/domain/curriculum';
+import { ALL_SUBJECTS, ATTENDANCE_MONTHS, semestersFor } from '@/lib/domain/curriculum';
 import { prettyYear } from '@/lib/domain/format';
 import { remarkFor, semesterAverage as semAvg, studentContext, type ReportContext } from '@/lib/domain/grading';
 import type { AppState, Student } from '@/lib/domain/types';
@@ -481,7 +481,7 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
       leftText(group.name, rightX, rowY + groupHeight / 2, rightWidth, { inset: 1.0 });
       rowY += groupHeight;
       group.subjects.forEach(function (item: any) {
-        const subject = SUBJECTS.find(function (entry: any) { return entry.key === item[0]; })!;
+        const subject = ALL_SUBJECTS.find(function (entry: any) { return entry.key === item[0]; })!;
         const grades: Record<string, any> = student.grades[subject.key] || {};
         cell(rightX, rowY, subjectWidth, subjectHeight, { stroke: line });
         cell(scoresX, rowY, scoreWidth, subjectHeight, { stroke: line });
@@ -520,8 +520,9 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
       rowY + averageHeight / 2, remarksWidth, { inset: 0.3 });
   }
 
-  drawSemester(SEMESTERS[0], 27.0, 105.0);
-  drawSemester(SEMESTERS[1], 107.4, 184.4);
+  const strandSemesters = semestersFor(student.strand);
+  drawSemester(strandSemesters[0], 27.0, 105.0);
+  drawSemester(strandSemesters[1], 107.4, 184.4);
 
   /* ---------- Joined legend strip ---------- */
   const legendTop = 186.0;

@@ -54,7 +54,7 @@ export const SEMESTERS: SemesterDef[] = [
 ];
 
 export interface Subject {
-  key: string; name: string; semester: 'first' | 'second'; group: string;
+  key: string; name: string; semester: 'first' | 'second'; group: string; alt?: string[];
   quarters: ['q1', 'q2'] | ['q3', 'q4']; finalKey: 'final';
 }
 
@@ -95,3 +95,81 @@ export const STRAND_TRACK: Record<string, string> = {
   STEM: 'ACAD: SCIENCE, TECHNOLOGY, ENGINEERING AND MATHEMATICS (STEM)',
   HEALTH: 'TECHNICAL-VOCATIONAL: HEALTH'
 };
+
+// ---- Per-strand curricula -------------------------------------------------------------------------
+// SUBJECTS / SEMESTERS above are the default (HUMSS-style) list used when a learner has no strand.
+// Each strand's report card lists its own subjects, as printed on the DepEd SF9 for that strand.
+
+type Sem = 'first' | 'second';
+const EXTRA: [key: string, name: string, semester: Sem, alt?: string[]][] = [
+  ['business_finance', 'Business Finance', 'first'],
+  ['fabm_2', 'Fundamentals of Accounting, Business and Management 2', 'first', ['Fundamentals of Accountancy, Business and Management 2']],
+  ['eapp', 'English for Academic and Professional Purposes', 'first'],
+  ['applied_economics_first', 'Applied Economics', 'first'],
+  ['organization_management', 'Organization and Management', 'first'],
+  ['criminology_elective', 'Criminology Elective', 'first'],
+  ['disaster_readiness_first', 'Disaster Readiness and Risk Reduction', 'first'],
+  ['general_physics_1', 'General Physics 1', 'first'],
+  ['general_biology_1', 'General Biology 1', 'first'],
+  ['safety_first_aid_first', 'Safety and First Aid', 'first'],
+  ['applied_economics', 'Applied Economics', 'second'],
+  ['business_ethics', 'Business Ethics and Social Responsibility', 'second'],
+  ['business_marketing', 'Business Marketing', 'second', ['Principles of Marketing']],
+  ['business_enterprise_simulation', 'Business Enterprise Simulation', 'second'],
+  ['disaster_readiness_second', 'Disaster Readiness and Risk Reduction', 'second'],
+  ['safety_first_aid_second', 'Safety and First Aid', 'second'],
+  ['general_physics_2', 'General Physics 2', 'second'],
+  ['general_biology_2', 'General Biology 2', 'second'],
+  ['general_chemistry_2', 'General Chemistry 2', 'second'],
+  ['capstone_research', 'Research/Capstone Projects', 'second', ['Research in Science, Technology, Engineering and Mathematics']]
+];
+const ALT: Record<string, string[]> = { research_daily_life: ['Practical Research 2'] };
+
+/** Every subject any strand can have; use it to look a subject up by key. */
+export const ALL_SUBJECTS: Subject[] = [
+  ...SUBJECTS.map((s) => ({ ...s, alt: ALT[s.key] })),
+  ...EXTRA.map(([key, name, semester, alt]): Subject => ({
+    key, name, semester, alt, group: 'Applied and Specialized Subjects',
+    quarters: semester === 'first' ? ['q1', 'q2'] : ['q3', 'q4'], finalKey: 'final'
+  }))
+];
+const nameOf = (key: string) => ALL_SUBJECTS.find((s) => s.key === key)!.name;
+
+const semester = (base: SemesterDef, core: string[], applied: string[]): SemesterDef => ({
+  ...base,
+  groups: [
+    { name: 'Core Subjects', subjects: core.map((k): [string, string] => [k, nameOf(k)]) },
+    { name: 'Applied and Specialized Subjects', subjects: applied.map((k): [string, string] => [k, nameOf(k)]) }
+  ]
+});
+const strandCurriculum = (s1: [string[], string[]], s2: [string[], string[]]): SemesterDef[] => [semester(SEMESTERS[0], ...s1), semester(SEMESTERS[1], ...s2)];
+
+const CORE1 = ['media_information_literacy', 'philosophy', 'contemporary_arts'];
+const STEM_1: [string[], string[]] = [[...CORE1, 'disaster_readiness_first', 'pe_health_first'], ['research_daily_life', 'filipino_larang', 'general_physics_1', 'general_biology_1']];
+const STEM_2: [string[], string[]] = [['pe_health_second'], ['entrepreneurship', 'inquiries_immersion', 'empowerment_technologies', 'general_physics_2', 'general_biology_2', 'general_chemistry_2', 'capstone_research']];
+
+export const STRAND_CURRICULA: Record<string, SemesterDef[]> = {
+  HUMSS: SEMESTERS,
+  ABM: strandCurriculum(
+    [[...CORE1, 'physical_science', 'pe_health_first'], ['research_daily_life', 'filipino_larang', 'business_finance', 'fabm_2']],
+    [['pe_health_second'], ['entrepreneurship', 'inquiries_immersion', 'empowerment_technologies', 'applied_economics', 'business_ethics', 'business_marketing', 'business_enterprise_simulation']]
+  ),
+  GAS: strandCurriculum(
+    [[...CORE1, 'pe_health_first'], ['eapp', 'filipino_larang']],
+    [['pe_health_second'], ['inquiries_immersion', 'trends_networks']]
+  ),
+  GASCRIM: strandCurriculum(
+    [[...CORE1, 'physical_science', 'pe_health_first'], ['research_daily_life', 'filipino_larang', 'applied_economics_first', 'organization_management', 'criminology_elective']],
+    [['pe_health_second'], ['entrepreneurship', 'inquiries_immersion', 'empowerment_technologies', 'disaster_readiness_second', 'trends_networks', 'community_engagement', 'culminating_activity', 'safety_first_aid_second']]
+  ),
+  STEM: strandCurriculum(STEM_1, STEM_2),
+  HEALTH: strandCurriculum(
+    [STEM_1[0], [...STEM_1[1], 'safety_first_aid_first']],
+    [STEM_2[0], [...STEM_2[1], 'culminating_activity']]
+  )
+};
+
+/** The semesters (and subjects) printed on this strand's report card; the default list when the strand is unknown. */
+export const semestersFor = (strand?: string): SemesterDef[] => (strand && STRAND_CURRICULA[strand]) || SEMESTERS;
+export const subjectsFor = (strand?: string): Subject[] =>
+  semestersFor(strand).flatMap((sem) => sem.groups.flatMap((g) => g.subjects.map(([key]) => ALL_SUBJECTS.find((s) => s.key === key)!)));

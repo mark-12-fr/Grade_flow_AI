@@ -1,6 +1,6 @@
 'use client';
 
-import { SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from '@/lib/domain/curriculum';
+import { SUBJECTS, subjectsFor, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from '@/lib/domain/curriculum';
 import { ageFromBirthdate } from '@/lib/domain/format';
 import { buildComment, isValidGrade, makeNextSteps, makeTraits, missingGradeCells, scaleMinimum } from '@/lib/domain/grading';
 import { setReadProgress } from '@/lib/state/progress';
@@ -250,7 +250,7 @@ export function validateBeforeProcessing(): string | null {
   if (!state.upload) return 'Upload an SF9 or SF10 file before continuing.';
   const errors: string[] = [];
   state.students.forEach((student) => {
-    SUBJECTS.forEach((subject) => {
+    subjectsFor(student.strand).forEach((subject) => {
       const grades = student.grades[subject.key] || {};
       [...subject.quarters, subject.finalKey].forEach((p) => {
         const value = grades[p as 'q1'];

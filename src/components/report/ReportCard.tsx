@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/domain/curriculum';
+import { ALL_SUBJECTS, ATTENDANCE_MONTHS, semestersFor } from '@/lib/domain/curriculum';
 import { prettyYear } from '@/lib/domain/format';
 import { remarkFor, semesterAverage, studentContext, type ReportContext } from '@/lib/domain/grading';
 import type { SchoolInfo, Student } from '@/lib/domain/types';
@@ -128,7 +128,7 @@ export function ReportCard({ student, context: classContext, school }: { student
 
       <section className="rc-official-grades" aria-label="Learning progress and achievement">
         <div className="rc-official-title"><strong>REPORT ON LEARNING PROGRESS AND ACHIEVEMENT</strong></div>
-        {SEMESTERS.map((semester) => {
+        {semestersFor(student.strand).map((semester) => {
           const avg = semesterAverage(student, semester.key);
           return (
             <section className="rc-semester" key={semester.key}>
@@ -145,7 +145,7 @@ export function ReportCard({ student, context: classContext, school }: { student
                     <Fragment key={group.name}>
                       <tr className="rc-subject-group"><th colSpan={5}>{group.name}</th></tr>
                       {group.subjects.map(([key]) => {
-                        const subject = SUBJECTS.find((s) => s.key === key)!;
+                        const subject = ALL_SUBJECTS.find((s) => s.key === key)!;
                         const grades = student.grades[subject.key] || {};
                         const remark = remarkFor(grades.final);
                         return (

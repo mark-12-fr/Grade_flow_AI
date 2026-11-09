@@ -2,6 +2,7 @@
  * Reader for a school-wide master list (one row per learner, many "<code> - <Subject>" column groups of Q1/Q2/FINAL,
  * several strands and grade levels). The teacher picks one section; grades are copied by code, never generated.
  */
+import { ALL_SUBJECTS, subjectsFor } from '@/lib/domain/curriculum';
 import type { Student } from '@/lib/domain/types';
 import type { Grid } from '@/server/import/extract';
 import { lrnText, newStudent, type ImportResult, type ImportSchema, MappingError } from '@/server/import/mapper';
@@ -21,7 +22,8 @@ const oneEdit = (a: string, b: string) => {
 const sameWord = (a: string, b: string) => {
   if (a === b) return true;
   const [short, long] = a.length <= b.length ? [a, b] : [b, a];
-  return short.length >= 5 && long.startsWith(short) || short.length >= 4 && oneEdit(a, b);
+  return short.length >= 5 && long.startsWith(short) || short.length >= 4 && oneEdit(a, b)
+    || short.length >= 9 && long.slice(0, 7) === short.slice(0, 7); // accounting / accountancy
 };
 const overlap = (a: string[], b: string[]) => a.filter((x) => b.some((y) => sameWord(x, y))).length;
 
@@ -67,7 +69,7 @@ export function listSections(grid: Grid): { name: string; learners: number }[] {
 }
 
 function matchGroups(subjectName: string, groups: Group[], strand: string): Group[] {
-  const parts = subjectName.split(/[/:]/).map(tokens).filter((p) => p.length);
+  const parts = subjectName.split(/[/:|]/).map(tokens).filter((p) => p.length);
   const strandTokens = tokens(strand);
   const out: { group: Group; score: number }[] = [];
   groups.forEach((group) => {
@@ -101,21 +103,23 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
   if (!lay) throw new MappingError('This list could not be read: the learner name, section and Q1/Q2/Final columns were not found.', 'file');
   const level = Math.max(0, ...lay.groups.map((g) => g.grade));
   const groups = lay.groups.filter((g) => g.grade === level);
+  const earlier = lay.groups.filter((g) => g.grade !== level); // the printed card also shows subjects graded in the earlier year
   const rows = grid.rows.slice(lay.first).filter((r) => (section === null ? cell(r, lay.col.section) : cell(r, lay.col.section) === section) && cell(r, lay.col.name));
   if (!rows.length) throw new MappingError(`No learners were found in ${section === null ? 'this list' : `section "${section}"`}.`, 'file');
 
   const warnings: string[] = [];
   const mapping: { col: number; header: string; field: string }[] = [];
-  const byStrand = new Map<string, Map<string, Group>>();
+  const byStrand = new Map<string, Map<string, Group[]>>();
   const colsFor = (strand: string) => {
     const known = byStrand.get(strand);
     if (known) return known;
-    const cols = new Map<string, Group>();
-    schema.subjects.forEach((subject) => {
-      const hits = matchGroups(subject.name, groups, strand);
-      const pick = subject.semester === 'first' ? hits[0] : hits[hits.length - 1];
-      if (!pick) return;
-      cols.set(subject.key, pick);
+    const cols = new Map<string, Group[]>();
+    subjectsFor(strandKey(strand)).forEach((subject) => {
+      const names = [subject.name, ...(subject.alt ?? [])].join('|');
+      // Preferred column first (first/last match by semester), then any other match, then earlier-year columns.
+      const rank = (hits: Group[]) => (subject.semester === 'first' ? hits : [...hits].reverse());
+      const options = [...rank(matchGroups(names, groups, strand)), ...rank(matchGroups(names, earlier, strand))];
+      if (options.length) cols.set(subject.key, options);
     });
     byStrand.set(strand, cols);
     return cols;
@@ -139,9 +143,11 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
     stu.section = cell(row, lay.col.section);
     stu.strand = strandKey(strandText);
     stu.adviser = cell(row, lay.col.adviser);
-    schema.subjects.forEach((subject) => {
+    subjectsFor(stu.strand).forEach((subject) => {
       const g: Record<string, number | null> = {};
-      const pick = cols.get(subject.key);
+      const options = cols.get(subject.key) ?? [];
+      // The learner's own grades decide between several matching columns (the first one that has a mark).
+      const pick = options.find((o) => [0, 1, 2].some((k) => grade(row[o.start + k]) !== null)) ?? options[0];
       const periods = subject.semester === 'first' ? ['q1', 'q2'] : ['q3', 'q4'];
       [...periods, 'final'].forEach((p, k) => { g[p] = pick ? grade(row[pick.start + k]) : null; });
       stu.grades[subject.key] = g;
@@ -155,10 +161,11 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
   else details.section = 'All sections';
   const sections = new Set(students.map((x) => x.section)).size;
   [...byStrand.entries()].forEach(([strand, cols]) => {
-    const missing = schema.subjects.filter((x) => !cols.has(x.key)).map((x) => x.name);
-    if (missing.length) warnings.push(`${strandKey(strand)}: no Grade ${level} column for ${missing.join(', ')}; left blank.`);
-    cols.forEach((pick, key) => {
-      const subject = schema.subjects.find((x) => x.key === key)!;
+    const missing = subjectsFor(strandKey(strand)).filter((x) => !cols.has(x.key)).map((x) => x.name);
+    if (missing.length) warnings.push(`${strandKey(strand)}: no column found for ${missing.join(', ')}; left blank.`);
+    cols.forEach((options, key) => {
+      const pick = options[0];
+      const subject = ALL_SUBJECTS.find((x) => x.key === key)!;
       const periods = subject.semester === 'first' ? ['q1', 'q2'] : ['q3', 'q4'];
       if (mapping.some((m) => m.field === `grade:${key}:${periods[0]}`)) return;
       [...periods, 'final'].forEach((p, k) => mapping.push({ col: pick.start + k, header: `${pick.name} · ${['Q1', 'Q2', 'FINAL'][k]}`, field: `grade:${key}:${p}` }));

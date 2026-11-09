@@ -1894,11 +1894,19 @@ html { scroll-behavior: smooth; }
 .sf9-sheet .sf9-average th { background: #f2efe2; text-align: left; font-size: 10px; }
 .sf9-sheet .sf9-average td { background: #f2efe2; font-weight: 700; }
 .sf9-legends { margin-top: 14px; }
+.sf9-legends { table-layout: fixed; }
+.sf9-legends th:nth-child(1) { width: 26%; }
+.sf9-legends th:nth-child(2) { width: 46%; }
 .sf9-legends td { padding: 0; vertical-align: top; text-align: left; font-size: 9px; }
-.sf9-legends td > div { display: flex; gap: 10px; padding: 2px 6px; border-bottom: 1px solid #b9b3a3; }
-.sf9-legends td > div:last-child { border-bottom: 0; }
-.sf9-legends td > div b { min-width: 40px; }
-.sf9-legends td > div span { flex: 1; }
+.sf9-leg { display: flex; flex-direction: column; height: 112px; }
+.sf9-leg > div { display: grid; flex: 1; align-items: center; padding: 0 0 0 6px; border-bottom: 1px solid #b9b3a3; }
+.sf9-leg > div:last-child { border-bottom: 0; }
+.sf9-leg b { font-weight: 700; }
+.sf9-leg-values > div { grid-template-columns: 26px 1fr; }
+.sf9-leg-progress > div { grid-template-columns: 1fr 66px 56px; }
+.sf9-leg-progress > div span { display: flex; align-items: center; justify-content: center; align-self: stretch; border-left: 1px solid #b9b3a3; text-align: center; white-space: nowrap; }
+.sf9-leg-sign > div { grid-template-columns: 38px 1fr; }
+.sf9-leg-sign > div span { align-self: stretch; border-left: 1px solid #b9b3a3; margin-left: 4px; }
 .sf9-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .sf9-head img { width: 62px; height: 70px; object-fit: contain; }
 .sf9-head > div { flex: 1; text-align: center; }

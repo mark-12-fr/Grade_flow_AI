@@ -82,9 +82,9 @@ export function Sf9Sheet({ student, context, state, side }: { student: Student; 
         <table className="sf9-legends">
           <thead><tr><th>Observed Values</th><th>Learning Progress &amp; Achievement</th><th>Parent/Guardian&apos;s Signature</th></tr></thead>
           <tbody><tr>
-            <td><div>AO <span>Always Observed</span></div><div>SO <span>Sometimes Observed</span></div><div>RO <span>Rarely Observed</span></div><div>NO <span>Not Observed</span></div></td>
-            <td>{[['Outstanding', '90-100', 'Passed'], ['Very Satisfactory', '85-89', 'Passed'], ['Satisfactory', '80-84', 'Passed'], ['Fairly Satisfactory', '75-79', 'Passed'], ['Did Not Meet Expectations', 'below 75', 'Failed']].map((r) => <div key={r[0]}><b>{r[0]}</b><span>{r[1]}</span><span>{r[2]}</span></div>)}</td>
-            <td>{['1st Q', '2nd Q', '3rd Q', '4th Q'].map((q) => <div key={q}><b>{q}</b></div>)}</td>
+            <td><div className="sf9-leg sf9-leg-values">{[['AO', 'Always Observed'], ['SO', 'Sometimes Observed'], ['RO', 'Rarely Observed'], ['NO', 'Not Observed']].map((r) => <div key={r[0]}><b>{r[0]}</b><span>{r[1]}</span></div>)}</div></td>
+            <td><div className="sf9-leg sf9-leg-progress">{[['Outstanding', '90-100', 'Passed'], ['Very Satisfactory', '85-89', 'Passed'], ['Satisfactory', '80-84', 'Passed'], ['Fairly Satisfactory', '75-79', 'Passed'], ['Did Not Meet Expectations', 'below 75', 'Failed']].map((r) => <div key={r[0]}><b>{r[0]}</b><span>{r[1]}</span><span className={r[2] === 'Failed' ? 'sf9-failed' : ''}>{r[2]}</span></div>)}</div></td>
+            <td><div className="sf9-leg sf9-leg-sign">{['1st Q', '2nd Q', '3rd Q', '4th Q'].map((q) => <div key={q}><b>{q}</b><span /></div>)}</div></td>
           </tr></tbody>
         </table>
       </div>

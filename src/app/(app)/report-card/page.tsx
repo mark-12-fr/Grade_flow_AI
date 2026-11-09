@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
 import { PdfPreview } from '@/components/report/PdfPreview';
-import { Sf9Editor } from '@/components/report/Sf9Editor';
+import { Sf9Sheet } from '@/components/report/Sf9Sheet';
 import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, reportContext } from '@/lib/domain/grading';
 import { applySf9Details, emptySf9Details, sf9Issues, TRANSFER_DETAILS, type Sf9Details } from '@/lib/sf9/quality';
@@ -40,6 +40,7 @@ export default function ReportCardPage() {
   const [deciding, setDeciding] = useState<{ done: number; total: number } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [side, setSide] = useState<'front' | 'back'>('front');
+  const [view, setView] = useState<'edit' | 'pdf'>('edit');
   const options = useMemo(() => {
     const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
     const all = [...metas.values()];
@@ -295,22 +296,19 @@ export default function ReportCardPage() {
           <div className="preview-tabs" role="group" aria-label="Report card side">
             <button type="button" className={`btn btn-sm ${side === 'front' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'front'} onClick={() => setSide('front')}>Front Preview</button>
             <button type="button" className={`btn btn-sm ${side === 'back' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'back'} onClick={() => setSide('back')}>Back Preview</button>
+            <button type="button" className={`btn btn-sm preview-view${view === 'pdf' ? ' btn-primary' : ' btn-secondary'}`} aria-pressed={view === 'pdf'} title={view === 'pdf' ? 'Go back to editing' : 'See the real PDF as it prints'} onClick={() => setView(view === 'pdf' ? 'edit' : 'pdf')}>{view === 'pdf' ? 'Edit' : 'Real PDF'}</button>
           </div>
           <div className="preview-label"><strong>{side === 'front' ? 'Front' : 'Back'}</strong><span>{side === 'front' ? 'Grades and learning progress' : 'Learner details, transfer, attendance and observed values'}</span><span>A4 portrait · page {side === 'front' ? 1 : 2} of 2</span></div>
           {student
             ? (
-              <PdfPreview student={student} context={context} state={state} side={side} />
+              view === 'edit'
+                ? <div className="sf9-scroll"><Sf9Sheet key={student.id} student={student} context={context} state={state} side={side} /></div>
+                : <PdfPreview student={student} context={context} state={state} side={side} />
             )
             : <p className="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>}
         </div>
       </div>
-      {student && (
-        <details className="card sf10-edit" open>
-          <summary><strong>Edit {side === 'front' ? 'front' : 'back'}</strong> <span>{side === 'front' ? 'Learner details and grades' : 'Attendance and observed values'} for {student.name}. The preview updates as you type.</span></summary>
-          <Sf9Editor key={`${student.id}-${side}`} student={student} state={state} side={side} />
-        </details>
-      )}
-      <p className="preview-hint"><Icon name="info" /> This preview is the real PDF (A4, front and back). In the print dialog choose Actual size (100%) and two-sided (flip on long edge).</p>
+      <p className="preview-hint"><Icon name="info" /> Tap any value on the page to edit it (Enter saves, Esc cancels). Tap an observed-values box to change AO, SO, RO or NO. “Real PDF” shows exactly how it prints. In the print dialog choose Actual size (100%) and two-sided (flip on long edge).</p>
 
       <div className="page-actions">
         <Link className="btn btn-secondary" href="/verification"><Icon name="arrow-left" /> Back to verification</Link>

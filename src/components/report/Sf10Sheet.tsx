@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef } from 'react';
+import { Editable } from '@/components/ui/Editable';
 import { recordFor } from '@/lib/sf10/record';
 import type { Sf10Edits } from '@/lib/sf10/edit';
 import type { AppState, Student } from '@/lib/domain/types';
@@ -10,25 +10,6 @@ const line = (value: unknown) => (value ? String(value) : '________');
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
 
-/** A value on the record that can be typed over in place. Saved when the cursor leaves it; Enter saves, Esc cancels. */
-function Ed({ value, onCommit, className = '' }: { value: string; onCommit: (value: string) => void; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  // The browser owns the text while it is being typed; only refresh it from the data when it is not focused.
-  useLayoutEffect(() => {
-    const node = ref.current;
-    if (node && document.activeElement !== node && node.textContent !== value) node.textContent = value;
-  }, [value]);
-  return (
-    <span ref={ref} className={`sf10-ed ${className}`} contentEditable suppressContentEditableWarning spellCheck={false} role="textbox" aria-label="Edit value"
-      onBlur={(e) => { const text = (e.currentTarget.textContent ?? '').replace(/\s+/g, ' ').trim(); if (text !== value) onCommit(text); else e.currentTarget.textContent = value; }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
-        if (e.key === 'Escape') { e.currentTarget.textContent = value; e.currentTarget.blur(); }
-      }}
-      onPaste={(e) => { e.preventDefault(); document.execCommand('insertText', false, e.clipboardData.getData('text/plain').replace(/\s+/g, ' ')); }} />
-  );
-}
-
 function BlankRows({ count }: { count: number }) {
   return <>{Array.from({ length: count }, (_, i) => <tr className="sf10-blank" key={i}><td></td><td></td><td></td><td></td><td></td><td></td></tr>)}</>;
 }
@@ -37,7 +18,7 @@ function BlankRows({ count }: { count: number }) {
 export function Sf10Sheet({ student, state, edits }: { student: Student; state: AppState; edits?: Sf10Edits }) {
   const rec = recordFor(student, state);
   // With `edits` every value can be typed over in place; without it the record is plain text.
-  const ed = (value: unknown, commit: (v: string) => void, className?: string) => (edits ? <Ed value={value == null ? '' : String(value)} onCommit={commit} className={className} /> : (value as string));
+  const ed = (value: unknown, commit: (v: string) => void, className?: string) => (edits ? <Editable value={value == null ? '' : String(value)} onCommit={commit} className={className} /> : (value as string));
   const tick = (on: unknown, key: string) => (edits
     ? <button type="button" className="sf10-tick" aria-pressed={Boolean(on)} aria-label="Tick or untick" onClick={() => edits.eligibility(key, !on)}>{box(on)}</button>
     : box(on));

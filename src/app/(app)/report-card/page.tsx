@@ -94,6 +94,15 @@ export default function ReportCardPage() {
   useEffect(() => { if (selectAll.current) selectAll.current.indeterminate = pickedShown > 0 && pickedShown < filtered.length; });
   const toggle = (id: number, on: boolean) => setState((s) => ({ selectedReportIds: on ? [...new Set([...s.selectedReportIds, id])] : s.selectedReportIds.filter((x) => x !== id) }));
 
+  // The real count only moves after each group of 50, so the bar creeps forward in between to keep it moving.
+  const [creep, setCreep] = useState(0);
+  useEffect(() => {
+    setCreep(0);
+    if (!deciding) return;
+    const timer = window.setInterval(() => setCreep((c) => Math.min(c + 2, 45)), 500);
+    return () => window.clearInterval(timer);
+  }, [deciding?.done, deciding === null]); // eslint-disable-line react-hooks/exhaustive-deps
+  const percent = deciding ? Math.min(99, Math.round((Math.min(deciding.total, deciding.done + creep) / deciding.total) * 100)) : 0;
   const decideCount = (scope === 'one' ? (student ? 1 : 0) : scope === 'shown' ? filtered.length : total);
   async function decideValues() {
     const ids = new Set((scope === 'one' ? (student ? [student] : []) : scope === 'shown' ? filtered : students).map((x) => x.id));
@@ -281,10 +290,10 @@ export default function ReportCardPage() {
                 setState({ students: result.students, school, year: details.year.trim() || state.year });
                 toast(result.changed || globalChange ? `Updated ${result.changed} learner${result.changed === 1 ? '' : 's'}${globalChange ? ' and the school details' : ''}.` : 'Nothing to change. The fields were empty, or already filled in (turn on "Replace values already filled in").', result.changed || globalChange ? 'success' : 'info');
               }}>Apply</button>
-              <button type="button" className={`btn btn-secondary btn-sm btn-ai${deciding ? ' working' : ''}`} disabled={Boolean(deciding) || !decideCount} aria-busy={Boolean(deciding)} onClick={() => void decideValues()}
+              <button type="button" className={`btn btn-secondary btn-sm btn-ai${deciding ? ' working' : ''}`} disabled={Boolean(deciding) || !decideCount} aria-busy={Boolean(deciding)} style={deciding ? ({ '--ai-progress': `${percent}%` } as React.CSSProperties) : undefined} onClick={() => void decideValues()}
                 title="The AI drafts the observed values (AO, SO, RO, NO) from each learner's grades. Attendance is not changed.">
                 <Icon name="sparkles" className="ai-sparkle" />
-                {deciding ? <span>The AI is deciding{deciding.total > 1 ? ` · ${deciding.done} of ${deciding.total}` : ''}<span className="ai-dots" aria-hidden="true" /></span> : `Decide observed values with AI (${decideCount})`}
+                {deciding ? <span>The AI is deciding · <strong className="ai-percent">{percent}%</strong>{deciding.total > 1 ? ` (${deciding.done} of ${deciding.total})` : ''}</span> : `Decide observed values with AI (${decideCount})`}
               </button>
             </div>
           </div>

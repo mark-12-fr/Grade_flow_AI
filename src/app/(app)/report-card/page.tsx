@@ -97,7 +97,7 @@ export default function ReportCardPage() {
     setBusy(true);
     try {
       await downloadReportCards(list, context, state, { single });
-      toast(single ? `Downloaded ${list[0].name}'s report card as a PDF.` : `Downloaded ${list.length} report card${list.length === 1 ? '' : 's'} as one PDF.`);
+      toast(single ? `Downloaded ${list[0].name}'s report card as a PDF.` : `Downloaded ${list.length} report cards as a ZIP: one folder per strand, one PDF per section.`);
     } catch (error) {
       toast(`The PDF could not be prepared. ${(error as Error).message}`, 'error');
     } finally { setBusy(false); }
@@ -213,7 +213,7 @@ export default function ReportCardPage() {
         <div className="sf10-actions">
           <span className="sf10-target">{target.length > 1 ? `${target.length} learners checked` : target.length === 1 ? (selectedStudents.length ? '1 learner checked' : student?.name) : ''}</span>
           <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length || busy} onClick={() => void download(target, target.length === 1)}>
-            <Icon name="download" /> Download PDF{target.length > 1 ? ` (${target.length})` : ''}
+            <Icon name="download" /> {target.length > 1 ? `Download ZIP by strand (${target.length})` : 'Download PDF'}
           </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => void print(target)}>
             <Icon name="printer" /> Print{target.length > 1 ? ` (${target.length})` : ''}

@@ -682,12 +682,39 @@ async function buildReportCardsPdf(reports: Student[], context: ReportContext, s
   return { doc, filename };
 }
 
-/** Builds the report-card PDF for the given learners and downloads it. */
+/** Several learners: a ZIP with one folder per strand (STEM, GAS, HUMSS...), each holding one PDF per section. One learner: a single PDF. */
 export async function downloadReportCards(
   reports: Student[], context: ReportContext, state: AppState, options: { single?: boolean } = {}
 ): Promise<string> {
-  const { doc, filename } = await buildReportCardsPdf(reports, context, state, Boolean(options.single));
-  doc.save(filename);
+  if (reports.length <= 1 || options.single) {
+    const { doc, filename } = await buildReportCardsPdf(reports, context, state, true);
+    doc.save(filename);
+    return filename;
+  }
+  const { zipSync } = await import('fflate');
+  const folders = new Map<string, Map<string, Student[]>>();
+  reports.forEach((student) => {
+    const strand = safeFilename(student.strand || context.strand || 'Other');
+    const section = safeFilename(student.section || context.section || 'Class');
+    if (!folders.has(strand)) folders.set(strand, new Map());
+    const sections = folders.get(strand)!;
+    sections.set(section, [...(sections.get(section) ?? []), student]);
+  });
+  const files: Record<string, Uint8Array> = {};
+  for (const [strand, sections] of [...folders.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    for (const [section, list] of [...sections.entries()].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))) {
+      const { doc } = await buildReportCardsPdf(list, context, state, false);
+      files[`${strand}/${section}.pdf`] = new Uint8Array(doc.output('arraybuffer'));
+      await new Promise((resolve) => setTimeout(resolve)); // let the page breathe between sections
+    }
+  }
+  const zip = zipSync(files, { level: 0 }); // PDFs are already compressed
+  const filename = `GradeFlow_${safeFilename(context.term)}_${safeFilename(context.className)}_${reports.length}-Reports.zip`;
+  const url = URL.createObjectURL(new Blob([zip as BlobPart], { type: 'application/zip' }));
+  const link = document.createElement('a');
+  link.href = url; link.download = filename;
+  document.body.appendChild(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   return filename;
 }
 

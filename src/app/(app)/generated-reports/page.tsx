@@ -43,7 +43,7 @@ export default function GeneratedReportsPage() {
     if (!list.length) { toast('Choose at least one report first.', 'error'); return; }
     try {
       await downloadReportCards(list, context, state, { single });
-      toast(single ? `Downloaded ${list[0].name}'s report as a PDF.` : `Downloaded ${list.length} report card${list.length === 1 ? '' : 's'} as one PDF.`);
+      toast(single ? `Downloaded ${list[0].name}'s report as a PDF.` : `Downloaded ${list.length} report cards as a ZIP: one folder per strand, one PDF per section.`);
     } catch (error) {
       toast(`The PDF could not be prepared. ${(error as Error).message}`, 'error');
     }
@@ -89,8 +89,8 @@ export default function GeneratedReportsPage() {
           <p>{context.className} · {context.term} · {prettyYear(context.year)}</p>
           <span>Generated just now · Reviewed by {context.teacher}</span>
         </div>
-        <button type="button" className="btn btn-white" disabled={count === 0} title={count ? `Download all ${count} report${count === 1 ? '' : 's'} as one PDF` : 'No reports available'} onClick={() => void download(reports)}>
-          <Icon name="download" /> Download all as PDF
+        <button type="button" className="btn btn-white" disabled={count === 0} title={count ? `Download all ${count} report${count === 1 ? '' : 's'} as a ZIP (a folder for each strand)` : 'No reports available'} onClick={() => void download(reports)}>
+          <Icon name="download" /> Download all (ZIP by strand)
         </button>
       </section>
 

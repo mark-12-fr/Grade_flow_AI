@@ -1,7 +1,7 @@
 'use client';
 
 import { nameParts, toSf10Data } from '@/lib/sf10/record';
-import { setState } from '@/lib/state/store';
+import { sf10Edits } from '@/lib/sf10/edit';
 import type { AppState, Sf10Data, Sf10Row, Sf10Semester, Student } from '@/lib/domain/types';
 
 const PASSING = 75;
@@ -26,24 +26,16 @@ const REMEDIAL_FIELDS: [keyof Sf10Semester['remedial'], string][] = [['from', 'R
 
 /** Edits everything printed on one learner's SF10. Every change shows on the record and in the PDF right away. */
 export function Sf10Editor({ student, state }: { student: Student; state: AppState }) {
-  const save = (change: (s: Student) => Student) => {
-    const id = student.id;
-    const apply = (list: Student[]) => list.map((x) => (x.id === id ? change(x) : x));
-    // Records read from an SF10 file live in sf10Students; otherwise the learner is one of the class roster.
-    setState((s) => (s.sf10Students.length ? { sf10Students: apply(s.sf10Students) } : { students: apply(s.students) }));
-  };
-  const sf = (change: (d: Sf10Data) => Sf10Data) => save((s) => ({ ...s, sf10: change(toSf10Data(s, state)) }));
-  const data = toSf10Data(student, state);
+  const e = sf10Edits(student, state);
+  const { data } = e;
   const name = nameParts(student);
-
-  const setName = (part: 'last' | 'first' | 'middle', value: string) => {
-    const next = { ...name, [part]: value };
-    save((s) => ({ ...s, lastName: next.last, firstName: next.first, middleName: next.middle, name: `${next.last}, ${[next.first, next.middle].filter(Boolean).join(' ')}`.trim() }));
-  };
+  const save = e.learner;
+  const sf = (change: (d: Sf10Data) => Sf10Data) => save((s) => ({ ...s, sf10: change(toSf10Data(s, state)) }));
+  const setName = e.setName;
   const field = (label: string, value: string, onChange: (v: string) => void) => (
     <label className="sf10-field" key={label}><span>{label}</span><input type="text" value={value} onChange={(e) => onChange(e.target.value)} /></label>
   );
-  const setSem = (index: number, change: (s: Sf10Semester) => Sf10Semester) => sf((d) => ({ ...d, semesters: d.semesters.map((x, i) => (i === index ? change(x) : x)) }));
+  const setSem = e.semester;
   const text = (v: unknown) => (typeof v === 'string' ? v : '');
 
   return (
@@ -54,7 +46,7 @@ export function Sf10Editor({ student, state }: { student: Student; state: AppSta
         {field('First name', name.first, (v) => setName('first', v))}
         {field('Middle name', name.middle, (v) => setName('middle', v))}
         {field('LRN', student.lrn ?? '', (v) => save((s) => ({ ...s, lrn: v })))}
-        {field('Date of birth (MM/DD/YYYY)', student.birthdate ?? '', (v) => save((s) => ({ ...s, birthdate: v })))}
+        {field('Date of birth (MM/DD/YYYY)', student.birthdate ?? '', e.setBirth)}
         {field('Sex', student.sex ?? '', (v) => save((s) => ({ ...s, sex: v })))}
       </div>
 

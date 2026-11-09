@@ -6,6 +6,7 @@ import { useUi } from '@/components/layout/Providers';
 import { Sf10Editor } from '@/components/report/Sf10Editor';
 import { Sf10Sheet } from '@/components/report/Sf10Sheet';
 import { downloadSf10, printSf10 } from '@/lib/pdf/sf10';
+import { sf10Edits } from '@/lib/sf10/edit';
 import { learnerMeta, sf10Source } from '@/lib/sf10/record';
 import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10/quality';
 import { setState, useAppState } from '@/lib/state/store';
@@ -239,9 +240,11 @@ export default function Sf10Page() {
         </div>
       )}
 
+      {current && visibleIndex !== -1 && <p className="preview-hint"><Icon name="pencil" /> Tap any value on the record to edit it. Press Enter to save, or Esc to cancel. Hover a subject to remove it.</p>}
+
       <article className="card sf10-sheet" aria-label="SF10 record">
         {current && visibleIndex !== -1
-          ? <div key={current.id} className="swap-in"><Sf10Sheet student={current} state={state} /></div>
+          ? <div key={current.id} className="swap-in"><Sf10Sheet student={current} state={state} edits={sf10Edits(current, state)} /></div>
           : <p className="sf10-incomplete">{source.length ? 'No learner to show. Change the search or filters.' : 'Upload an SF10 file first.'}</p>}
       </article>
 

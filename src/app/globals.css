@@ -1872,3 +1872,18 @@ html { scroll-behavior: smooth; }
 .sf10-cell-input:focus { outline: none; border-color: var(--blue); box-shadow: var(--focus-ring); }
 .sf10-rows { min-width: 760px; }
 .sf10-edit-actions .sf10-field { min-width: 150px; }
+
+/* In-place editing on the SF10 record: tap a value and type. The printed PDF is not affected. */
+.sf10-ed { display: inline-block; min-width: 1.6em; padding: 0 2px; border-radius: 3px; outline: none; cursor: text; transition: background-color 0.15s, box-shadow 0.15s; }
+.sf10-ed:empty::before { content: '\00a0\00a0\00a0\00a0\00a0'; }
+.sf10-ed:hover { background: rgba(59, 130, 246, 0.12); }
+.sf10-ed:focus { background: #fff8d6; box-shadow: 0 0 0 2px var(--blue); }
+.sf10-ed-wide { min-width: 12em; }
+.sf10-tick { padding: 0; color: inherit; background: none; border: 0; font: inherit; cursor: pointer; }
+.sf10-tick:hover { color: var(--blue); }
+.sf10-subject { position: relative; }
+.sf10-remove { position: absolute; top: 50%; right: 4px; width: 18px; height: 18px; padding: 0; color: #b42318; background: #fff; border: 1px solid #e6b3ad; border-radius: 50%; font-size: 12px; line-height: 1; opacity: 0; transform: translateY(-50%); cursor: pointer; transition: opacity 0.15s; }
+.sf10-grades tr:hover .sf10-remove, .sf10-remove:focus { opacity: 1; }
+.sf10-add { padding: 4px 10px; color: var(--blue); background: none; border: 1px dashed var(--blue); border-radius: 6px; font: inherit; font-size: 0.72rem; cursor: pointer; }
+.sf10-add:hover { background: rgba(59, 130, 246, 0.1); }
+.sf10-add-row td { text-align: left !important; }

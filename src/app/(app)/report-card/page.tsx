@@ -286,8 +286,8 @@ export default function ReportCardPage() {
       <div className="preview-canvas">
         <div className="preview-column">
           <div className="preview-tabs" role="group" aria-label="Report card side">
-            <button type="button" className="btn btn-secondary btn-sm" aria-pressed={side === 'front'} onClick={() => setSide('front')}>Front Preview</button>
-            <button type="button" className="btn btn-secondary btn-sm" aria-pressed={side === 'back'} onClick={() => setSide('back')}>Back Preview</button>
+            <button type="button" className={`btn btn-sm ${side === 'front' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'front'} onClick={() => setSide('front')}>Front Preview</button>
+            <button type="button" className={`btn btn-sm ${side === 'back' ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={side === 'back'} onClick={() => setSide('back')}>Back Preview</button>
           </div>
           <div className="preview-label"><strong>{side === 'front' ? 'Front' : 'Back'}</strong><span>{side === 'front' ? 'Grades and learning progress' : 'Learner details, transfer, attendance and observed values'}</span><span>A4 portrait · page {side === 'front' ? 1 : 2} of 2</span></div>
           {student

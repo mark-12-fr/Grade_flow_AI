@@ -1607,7 +1607,6 @@ img { max-width: 100%; display: block; }
 .a4-preview { position: relative; width: 100%; max-width: 780px; margin-inline: auto; overflow: hidden; background: #fff; border: 1px solid #aebdce; box-shadow: 0 5px 18px rgba(20, 44, 78, 0.12); }
 .a4-preview-inner { width: 210mm; height: 297mm; transform-origin: top left; }
 .preview-tabs { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-.preview-tabs .btn[aria-pressed="true"] { color: #fff; background: var(--navy); border-color: var(--navy); }
 
 @media print {
   html, body { width: 210mm; }

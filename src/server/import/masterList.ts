@@ -2,7 +2,7 @@
  * Reader for a school-wide master list (one row per learner, many "<code> - <Subject>" column groups of Q1/Q2/FINAL,
  * several strands and grade levels). The teacher picks one section; grades are copied by code, never generated.
  */
-import { ALL_SUBJECTS, subjectsFor } from '@/lib/domain/curriculum';
+import { ALL_SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, subjectsFor } from '@/lib/domain/curriculum';
 import type { Student } from '@/lib/domain/types';
 import type { Grid } from '@/server/import/extract';
 import { lrnText, newStudent, type ImportResult, type ImportSchema, MappingError } from '@/server/import/mapper';
@@ -30,6 +30,7 @@ const overlap = (a: string[], b: string[]) => a.filter((x) => b.some((y) => same
 interface Group { start: number; name: string; grade: number }
 interface Layout {
   qRow: number; first: number; groups: Group[];
+  months: Map<string, number>; // month key -> column holding that month's days absent
   col: { name: number; lrn: number; age: number; sex: number; section: number; strand: number; adviser: number; birth: number };
 }
 
@@ -54,7 +55,12 @@ export function layoutOf(grid: Grid): Layout | null {
     const grade = Number(/grade\s*(\d+)/i.exec(cell(rows[qRow - 2] ?? [], i))?.[1] ?? 0);
     if (name) groups.push({ start: i, name, grade });
   });
-  return { qRow, first: qRow + 1, groups, col };
+  const months = new Map<string, number>();
+  ATTENDANCE_MONTHS.forEach((m) => {
+    const i = head.findIndex((c) => norm(c).length >= 3 && norm(c).slice(0, 3) === m.label.toLowerCase() && norm(c).length >= 4);
+    if (i >= 0) months.set(m.key, i);
+  });
+  return { qRow, first: qRow + 1, groups, months, col };
 }
 
 export function listSections(grid: Grid): { name: string; learners: number }[] {
@@ -100,7 +106,43 @@ const STRAND_KEYS: [RegExp, string][] = [
 const strandKey = (text: string) => STRAND_KEYS.find(([re]) => re.test(text))?.[1] ?? text;
 
 /** section = one section's name, or null to read every section in the list. */
-export function readMasterList(grid: Grid, schema: ImportSchema, section: string | null): ImportResult {
+export interface CardDefaults { schoolDays: Record<string, number>; values: Record<string, Record<string, string>> }
+
+/** School days per month and the printed observed values, taken from the report-card sheets (ABM, HUMSS, ...) of the same workbook. */
+export function cardDefaults(sheets: Grid[]): CardDefaults {
+  const out: CardDefaults = { schoolDays: {}, values: {} };
+  for (const sheet of sheets) {
+    const rows = sheet.rows;
+    if (!Object.keys(out.schoolDays).length) {
+      const head = rows.findIndex((r) => r.filter((c) => ATTENDANCE_MONTHS.some((m) => norm(c) === m.label.toLowerCase())).length >= 8);
+      const dayRow = head < 0 ? undefined : rows.slice(head + 1, head + 6).find((r) => r.some((c) => /schooldays/.test(norm(c))));
+      if (head >= 0 && dayRow) {
+        ATTENDANCE_MONTHS.forEach((m) => {
+          const col = rows[head].findIndex((c) => norm(c) === m.label.toLowerCase());
+          const n = Number(dayRow[col]);
+          if (col >= 0 && String(dayRow[col]).trim() !== '' && Number.isInteger(n) && n >= 0) out.schoolDays[m.key] = n;
+        });
+      }
+    }
+    if (!Object.keys(out.values).length) {
+      const qHead = rows.findIndex((r) => r.some((c) => /^corevalues?$/.test(norm(c))));
+      const numRow = qHead < 0 ? undefined : rows.slice(qHead, qHead + 4).find((r) => [1, 2, 3, 4].every((q, k) => { const i = r.findIndex((c) => Number(c) === 1 && String(c).trim() !== ''); return i >= 0 && Number(r[i + k]) === q; }));
+      if (qHead >= 0 && numRow) {
+        const c1 = numRow.findIndex((c) => String(c).trim() !== '' && Number(c) === 1);
+        const labels: [string, RegExp][] = [['makaDiyos', /diyos/], ['makatao', /makatao/], ['makakalikasan', /kalikasan/], ['makabansa', /makabansa/]];
+        rows.slice(qHead).forEach((r) => {
+          const label = labels.find(([, re]) => r.some((c) => re.test(norm(c)) && /^\d/.test(String(c).trim())));
+          if (!label || out.values[label[0]]) return;
+          const q = [0, 1, 2, 3].map((k) => String(r[c1 + k] ?? '').trim().toUpperCase());
+          if (q.every((v) => ['AO', 'SO', 'RO', 'NO'].includes(v))) out.values[label[0]] = { q1: q[0], q2: q[1], q3: q[2], q4: q[3] };
+        });
+      }
+    }
+  }
+  return out;
+}
+
+export function readMasterList(grid: Grid, schema: ImportSchema, section: string | null, cards: CardDefaults = { schoolDays: {}, values: {} }): ImportResult {
   const lay = layoutOf(grid);
   if (!lay) throw new MappingError('This list could not be read: the learner name, section and Q1/Q2/Final columns were not found.', 'file');
   const level = Math.max(0, ...lay.groups.map((g) => g.grade));
@@ -131,6 +173,7 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
     const n = Number(String(raw ?? '').trim());
     return Number.isFinite(n) && n > 0 && n <= 100 ? n : null; // 0 is the sheet's placeholder for "not taken"
   };
+  const overAbsent = new Set<string>();
   const students: Student[] = rows.map((row, i) => {
     const stu = newStudent(i + 1, cell(row, lay.col.name), schema);
     stu.roll = String(i + 1).padStart(2, '0');
@@ -145,6 +188,25 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
     stu.section = cell(row, lay.col.section);
     stu.strand = strandKey(strandText);
     stu.adviser = cell(row, lay.col.adviser);
+    // Days absent come from the list (one column per month); school days are the same for everyone, so days present = school days - absent.
+    const a = stu.attendance;
+    lay.months.forEach((col, key) => {
+      const n = Number(cell(row, col));
+      if (cell(row, col) === '' || !Number.isInteger(n) || n < 0) return;
+      a.absent[key] = n;
+      const days = cards.schoolDays[key];
+      if (days !== undefined) {
+        a.schoolDays[key] = days;
+        a.months[key] = n <= days ? days - n : null; // more absences than school days: leave blank so it gets reviewed
+        if (n > days) overAbsent.add(stu.name);
+      }
+    });
+    const dayKeys = Object.keys(a.schoolDays);
+    if (dayKeys.length) {
+      a.total = dayKeys.reduce((t, k) => t + (a.schoolDays[k] ?? 0), 0);
+      a.present = dayKeys.reduce((t, k) => t + (a.months[k] ?? 0), 0);
+    }
+    CORE_VALUE_KEYS.forEach((key) => { if (cards.values[key]) stu.observedValues[key] = { ...cards.values[key] }; });
     subjectsFor(stu.strand).forEach((subject) => {
       const g: Record<string, number | null> = {};
       const options = cols.get(subject.key) ?? [];
@@ -157,6 +219,7 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
     return stu;
   });
 
+  if (overAbsent.size) warnings.push(`${overAbsent.size} learner${overAbsent.size === 1 ? ' has' : 's have'} more days absent than school days in a month (${[...overAbsent].slice(0, 3).join('; ')}${overAbsent.size > 3 ? '; …' : ''}); days present left blank for review.`);
   const first = students[0];
   const details: Record<string, string> = { gradeLevel: String(level || 12) };
   if (section !== null) Object.assign(details, { section, strand: first.strand ?? '', teacher: first.adviser ?? '' });
@@ -173,9 +236,11 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
       [...periods, 'final'].forEach((p, k) => mapping.push({ col: pick.start + k, header: `${pick.name} · ${['Q1', 'Q2', 'FINAL'][k]}`, field: `grade:${key}:${p}` }));
     });
   });
-  warnings.unshift(`Read ${section === null ? `all ${sections} sections` : `section ${section}`} from the school-wide list "${grid.sheet}": ${students.length} learners. Attendance and observed values are not in this list.`);
+  warnings.unshift(`Read ${section === null ? `all ${sections} sections` : `section ${section}`} from the school-wide list "${grid.sheet}": ${students.length} learners. ${Object.keys(cards.schoolDays).length ? `Days absent come from the list; school days (${a11(cards)}) come from the report-card sheets.` : 'School days were not found, so only days absent were read.'} ${Object.keys(cards.values).length ? 'Observed values are the ones printed on the report-card sheet (the same for every learner).' : 'No observed values were found.'}`);
   return {
     students, classDetails: details, mapping, warnings, sheet: grid.sheet,
     counts: { found: students.length, imported: students.length, skipped: 0, blank: 0 }
   };
 }
+
+const a11 = (c: CardDefaults) => `${Object.values(c.schoolDays).reduce((t, n) => t + n, 0)} days`;

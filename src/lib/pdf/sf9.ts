@@ -459,8 +459,8 @@ export function drawFront(doc: jsPDF, student: Student, classContext: ReportCont
     doc.setFont('times', 'bold');
     doc.setFontSize(S(7.4));
     setTextColor(doc, ink);
-    doc.text(pdfSafe(semester.label), X(rightX + rightWidth / 2), Y(top + headingHeight * 0.55),
-      { align: 'center', baseline: 'middle' });
+    doc.text(pdfSafe(semester.label), X(rightX), Y(top + headingHeight * 0.55),
+      { align: 'left', baseline: 'middle' });
 
     const tableTop = top + headingHeight + 0.8;
     let tableHeight = bottom - tableTop;

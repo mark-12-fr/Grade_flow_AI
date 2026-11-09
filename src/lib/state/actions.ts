@@ -214,9 +214,8 @@ export async function importSf10(file: File, sheet?: string): Promise<ImportOutc
   setState((s) => ({
     sf10Students: students,
     sf10Index: 0,
-    sf10File: { name: sheet && sheet !== '__forms__' ? `${file.name} · ${sheet}` : file.name, size: file.size, warnings: data.warnings ?? [] },
-    school: data.schoolLogo ? { ...s.school, logo: data.schoolLogo } : s.school
-  }));
+    sf10File: { name: sheet && sheet !== '__forms__' ? `${file.name} · ${sheet}` : file.name, size: file.size, warnings: data.warnings ?? [] }
+  })); // the SF10 workbook's picture (the DepEd seal) must not replace the SF9 report card logo
   const n = students.length;
   return { ok: true, type: data.counts?.skipped ? 'info' : 'success', message: `SF10 ready: ${n} record${n === 1 ? '' : 's'} read.${data.counts?.skipped ? ` ${data.counts.skipped} row${data.counts.skipped === 1 ? '' : 's'} skipped (see the notes).` : ''}` };
 }

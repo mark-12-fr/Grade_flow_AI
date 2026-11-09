@@ -1844,3 +1844,17 @@ html { scroll-behavior: smooth; }
 .sf9-editor .sf9-grades { table-layout: fixed; min-width: 560px; }
 .sf9-editor .sf9-grades .sf9-grade-col { width: 130px; }
 .sf9-editor .sf9-grades .grade-input { display: block; margin-inline: auto; }
+
+/* "Decide observed values with AI": a twinkling icon, a light sweep and moving dots while the AI works. */
+.btn-ai { position: relative; overflow: hidden; gap: 6px; }
+.btn-ai .ai-sparkle { transition: transform 0.2s var(--ease-soft); }
+.btn-ai:not(:disabled):hover .ai-sparkle { transform: rotate(15deg) scale(1.12); }
+.btn-ai.working { opacity: 1; cursor: progress; border-color: var(--blue); }
+.btn-ai.working::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(59, 130, 246, 0.28) 50%, transparent 70%); animation: slide 1.4s ease-in-out infinite; pointer-events: none; }
+.btn-ai.working .ai-sparkle { color: var(--blue); animation: aiTwinkle 1s ease-in-out infinite; }
+.ai-dots::after { content: ''; animation: dots 1.2s steps(1, end) infinite; }
+@keyframes aiTwinkle { 0%, 100% { transform: scale(0.85) rotate(0deg); opacity: 0.7; } 50% { transform: scale(1.25) rotate(20deg); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .btn-ai.working::after, .btn-ai.working .ai-sparkle, .ai-dots::after { animation: none; }
+  .ai-dots::after { content: '...'; }
+}

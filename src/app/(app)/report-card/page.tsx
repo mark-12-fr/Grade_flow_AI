@@ -277,9 +277,10 @@ export default function ReportCardPage() {
                 setState({ students: result.students, school, year: details.year.trim() || state.year });
                 toast(result.changed || globalChange ? `Updated ${result.changed} learner${result.changed === 1 ? '' : 's'}${globalChange ? ' and the school details' : ''}.` : 'Nothing to change. The fields were empty, or already filled in (turn on "Replace values already filled in").', result.changed || globalChange ? 'success' : 'info');
               }}>Apply</button>
-              <button type="button" className="btn btn-secondary btn-sm" disabled={deciding} onClick={() => void decideValues()}
+              <button type="button" className={`btn btn-secondary btn-sm btn-ai${deciding ? ' working' : ''}`} disabled={deciding} aria-busy={deciding} onClick={() => void decideValues()}
                 title="The AI drafts the observed values (AO, SO, RO, NO) from each learner's grades. Attendance is not changed.">
-                {deciding ? 'Deciding…' : 'Decide observed values with AI'}
+                <Icon name="sparkles" className="ai-sparkle" />
+                {deciding ? <span>The AI is deciding<span className="ai-dots" aria-hidden="true" /></span> : 'Decide observed values with AI'}
               </button>
             </div>
           </div>

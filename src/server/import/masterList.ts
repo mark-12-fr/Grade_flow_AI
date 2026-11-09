@@ -106,7 +106,7 @@ const STRAND_KEYS: [RegExp, string][] = [
 const strandKey = (text: string) => STRAND_KEYS.find(([re]) => re.test(text))?.[1] ?? text;
 
 /** section = one section's name, or null to read every section in the list. */
-export interface CardDefaults { schoolDays: Record<string, number>; values: Record<string, Record<string, string>> }
+export interface CardDefaults { schoolDays: Record<string, number>; values: Record<string, Record<string, string>>; year?: string; principal?: string }
 
 /** School days per month and the printed observed values, taken from the report-card sheets (ABM, HUMSS, ...) of the same workbook. */
 export function cardDefaults(sheets: Grid[]): CardDefaults {
@@ -122,6 +122,22 @@ export function cardDefaults(sheets: Grid[]): CardDefaults {
           const n = Number(dayRow[col]);
           if (col >= 0 && String(dayRow[col]).trim() !== '' && Number.isInteger(n) && n >= 0) out.schoolDays[m.key] = n;
         });
+      }
+    }
+    if (!out.year) {
+      for (const r of rows) {
+        const i = r.findIndex((c) => /^schoolyear:?$/.test(norm(c)));
+        const v = i < 0 ? undefined : r.slice(i + 1).find((c) => /\d{4}\s*-\s*\d{4}/.test(String(c)));
+        if (v !== undefined) { out.year = String(v).trim(); break; }
+      }
+    }
+    if (!out.principal) {
+      const at = rows.findIndex((r) => r.some((c) => norm(c) === 'principal'));
+      if (at > 0) {
+        const col = rows[at].findIndex((c) => norm(c) === 'principal');
+        const near = rows.slice(Math.max(0, at - 3), at).reverse().flatMap((r) => r.map((c, i) => ({ c: String(c).trim(), d: Math.abs(i - col) })))
+          .filter((x) => x.c && x.d <= 2 && !/adviser|principal|^_+$|:$/i.test(x.c) && /[a-z]/i.test(x.c)).sort((a, b) => a.d - b.d)[0];
+        if (near) out.principal = near.c.replace(/\s+/g, ' ');
       }
     }
     if (!Object.keys(out.values).length) {
@@ -222,6 +238,8 @@ export function readMasterList(grid: Grid, schema: ImportSchema, section: string
   if (overAbsent.size) warnings.push(`${overAbsent.size} learner${overAbsent.size === 1 ? ' has' : 's have'} more days absent than school days in a month (${[...overAbsent].slice(0, 3).join('; ')}${overAbsent.size > 3 ? '; …' : ''}); days present left blank for review.`);
   const first = students[0];
   const details: Record<string, string> = { gradeLevel: String(level || 12) };
+  if (cards.year) details.year = cards.year;
+  if (cards.principal) details.principal = cards.principal;
   if (section !== null) Object.assign(details, { section, strand: first.strand ?? '', teacher: first.adviser ?? '' });
   else details.section = 'All sections';
   const sections = new Set(students.map((x) => x.section)).size;

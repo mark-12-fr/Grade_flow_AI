@@ -8,6 +8,8 @@ import { useUi } from '@/components/layout/Providers';
 import { ReportCard } from '@/components/report/ReportCard';
 import { downloadReportCards } from '@/lib/pdf/sf9';
 import { approvedCount, missingGradeCells, readyToGenerate, reportContext } from '@/lib/domain/grading';
+import { STRAND_TRACK } from '@/lib/domain/curriculum';
+import { applySf9Details, emptySf9Details, sf9Issues, type Sf9Details } from '@/lib/sf9/quality';
 import { learnerMeta } from '@/lib/sf10/record';
 import { setState, useAppState } from '@/lib/state/store';
 import type { Student } from '@/lib/domain/types';
@@ -31,28 +33,28 @@ export default function ReportCardPage() {
   const selectAll = useRef<HTMLInputElement>(null);
 
   const metas = useMemo(() => new Map(students.map((s) => [s.id, learnerMeta(s, state)])), [students, state]);
-  const missingBy = useMemo(() => {
-    const map = new Map<number, number>();
-    missingGradeCells(students).forEach(({ student: st }) => map.set(st.id, (map.get(st.id) ?? 0) + 1));
-    return map;
-  }, [students]);
+  const issuesBy = useMemo(() => new Map(students.map((s) => [s.id, sf9Issues(s, state)])), [students, state]);
+  const [details, setDetails] = useState<Sf9Details>(emptySf9Details);
+  const [scope, setScope] = useState<'one' | 'shown' | 'all'>('shown');
+  const [overwrite, setOverwrite] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const options = useMemo(() => {
     const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
     const all = [...metas.values()];
     return { strands: uniq(all.map((m) => m.strand)), sections: uniq(all.filter((m) => !strand || m.strand === strand).map((m) => m.section)), levels: uniq(all.flatMap((m) => m.levels)) };
   }, [metas, strand]);
-  const needCheck = students.filter((s) => missingBy.has(s.id)).length;
+  const needCheck = students.filter((s) => (issuesBy.get(s.id) ?? []).length > 0).length;
   const q = query.trim().toLowerCase();
   const filtered = useMemo(() => students.filter((s) => {
     const m = metas.get(s.id)!;
     if (strand && m.strand !== strand) return false;
     if (section && m.section !== section) return false;
     if (level && !m.levels.includes(level)) return false;
-    const count = missingBy.get(s.id) ?? 0;
+    const count = (issuesBy.get(s.id) ?? []).length;
     if (quality === 'check' && !count) return false;
     if (quality === 'complete' && count) return false;
     return !q || s.name.toLowerCase().includes(q) || String(s.lrn || '').toLowerCase().includes(q) || String(s.roll).toLowerCase().includes(q);
-  }), [students, metas, strand, section, level, q, quality, missingBy]);
+  }), [students, metas, strand, section, level, q, quality, issuesBy]);
   const filtersOn = Boolean(q || strand || section || level || quality !== 'all');
   const visibleIndex = student ? filtered.findIndex((s) => s.id === student.id) : -1;
   const show = (st: Student | undefined) => { if (st) setState({ previewIndex: students.findIndex((x) => x.id === st.id) }); };
@@ -176,7 +178,8 @@ export default function ReportCardPage() {
             : filtered.map((s) => {
               const m = metas.get(s.id)!;
               const active = student?.id === s.id;
-              const count = missingBy.get(s.id) ?? 0;
+              const list = issuesBy.get(s.id) ?? [];
+              const count = list.length;
               return (
                 <div key={s.id} className={`sf10-row${active ? ' active' : ''}${picked.has(s.id) ? ' picked' : ''}`} role="option" aria-selected={active} aria-current={active ? 'true' : undefined}>
                   <input type="checkbox" checked={picked.has(s.id)} aria-label={`Select ${s.name}`} onChange={(e) => toggle(s.id, e.target.checked)} />
@@ -185,7 +188,7 @@ export default function ReportCardPage() {
                     <span>{s.name}</span>
                     <em>{[m.strand, m.section].filter(Boolean).join(' · ')}</em>
                   </button>
-                  <span className={`sf10-quality ${count ? 'check' : 'ok'}`} title={count ? `${count} grade${count === 1 ? '' : 's'} missing` : 'Complete'}>
+                  <span className={`sf10-quality ${count ? 'check' : 'ok'}`} title={count ? list.map((i) => i.text).join('\n') : 'Complete'}>
                     <i aria-hidden="true" />{count ? `${count} to check` : 'Complete'}
                   </span>
                 </div>
@@ -205,6 +208,77 @@ export default function ReportCardPage() {
           </button>
         </div>
       </div>
+
+      <details className="card sf10-edit" open={editOpen} onToggle={(e) => setEditOpen((e.target as HTMLDetailsElement).open)}>
+        <summary><strong>Fill in missing details</strong> <span>School, school year, principal, adviser, section and more, for one learner or many at once</span></summary>
+        {!total ? <p className="muted">This is available after you upload an SF9 file.</p> : (
+          <div className="sf10-edit-body">
+            <div className="sf10-edit-grid">
+              {([
+                ['schoolName', 'School name (everyone)'], ['year', 'School year, e.g. 2025-2026 (everyone)'], ['principal', 'Principal (everyone)'],
+                ['adviser', 'Adviser'], ['section', 'Section']
+              ] as [keyof Sf9Details, string][]).map(([key, label]) => (
+                <label key={key} className="sf10-field">
+                  <span>{label}</span>
+                  <input type="text" value={details[key]} placeholder={key === 'schoolName' ? state.school.name : key === 'year' ? state.year : key === 'principal' ? state.school.principal : ''}
+                    onChange={(e) => setDetails({ ...details, [key]: e.target.value })} />
+                </label>
+              ))}
+              <label className="sf10-field">
+                <span>Strand</span>
+                <div className="select-wrap select-wrap-sm">
+                  <select value={details.strand} onChange={(e) => setDetails({ ...details, strand: e.target.value })}>
+                    <option value="">Leave as is</option>
+                    {Object.keys(STRAND_TRACK).map((k) => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                  <Icon name="chevron-down" className="select-chevron" />
+                </div>
+              </label>
+              <label className="sf10-field">
+                <span>Observed values for all core values and quarters</span>
+                <div className="select-wrap select-wrap-sm">
+                  <select value={details.value} onChange={(e) => setDetails({ ...details, value: e.target.value })}>
+                    <option value="">Leave as is</option>
+                    <option value="AO">AO: Always Observed</option>
+                    <option value="SO">SO: Sometimes Observed</option>
+                    <option value="RO">RO: Rarely Observed</option>
+                    <option value="NO">NO: Not Observed</option>
+                  </select>
+                  <Icon name="chevron-down" className="select-chevron" />
+                </div>
+              </label>
+            </div>
+            <div className="sf10-edit-actions">
+              <div className="select-wrap select-wrap-sm">
+                <select aria-label="Apply to" value={scope} onChange={(e) => setScope(e.target.value as 'one' | 'shown' | 'all')}>
+                  <option value="one">This learner</option>
+                  <option value="shown">All shown ({filtered.length})</option>
+                  <option value="all">Everyone ({total})</option>
+                </select>
+                <Icon name="chevron-down" className="select-chevron" />
+              </div>
+              <label className="sf10-check"><input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} /><span>Replace values already filled in</span></label>
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => {
+                const ids = new Set((scope === 'one' ? (student ? [student] : []) : scope === 'shown' ? filtered : students).map((x) => x.id));
+                const result = applySf9Details(state.students, ids, details, overwrite);
+                const school = { ...state.school, name: details.schoolName.trim() || state.school.name, principal: details.principal.trim() || state.school.principal };
+                const globalChange = Boolean(details.schoolName.trim() || details.year.trim() || details.principal.trim());
+                setState({ students: result.students, school, year: details.year.trim() || state.year });
+                toast(result.changed || globalChange ? `Updated ${result.changed} learner${result.changed === 1 ? '' : 's'}${globalChange ? ' and the school details' : ''}.` : 'Nothing to change. The fields were empty, or already filled in (turn on "Replace values already filled in").', result.changed || globalChange ? 'success' : 'info');
+              }}>Apply</button>
+            </div>
+          </div>
+        )}
+      </details>
+
+      {student && (issuesBy.get(student.id) ?? []).length > 0 && (
+        <div className="sf10-issues" role="status">
+          <Icon name="alert-triangle" />
+          <div><strong>Needs checking</strong><ul>{(issuesBy.get(student.id) ?? []).map((i) => <li key={i.text}>{i.text}</li>)}</ul></div>
+          {(issuesBy.get(student.id) ?? []).some((i) => i.kind !== 'grade') && <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditOpen(true)}>Fill in details</button>}
+          {(issuesBy.get(student.id) ?? []).some((i) => i.kind === 'grade') && <Link className="btn btn-secondary btn-sm" href="/verification">Fix grades</Link>}
+        </div>
+      )}
 
       <div className="preview-canvas">
         <div className="preview-column">

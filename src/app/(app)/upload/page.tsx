@@ -41,7 +41,7 @@ export default function UploadPage() {
     setSf9Busy('');
     if (sf9Input.current) sf9Input.current.value = '';
     if (!result.ok) setError(result.error ?? '');
-    if (result.pick) setSectionPick({ file, sections: result.pick, selected: result.pick[0]?.name ?? '' });
+    if (result.pick) setSectionPick({ file, sections: result.pick, selected: '__all__' });
     toast(result.message ?? '', result.type);
   }
 
@@ -130,6 +130,7 @@ export default function UploadPage() {
                       <span className="sf10-file-name">{sectionPick.file.name}: choose the section to import</span>
                       <div className="select-wrap">
                         <select aria-label="Section to import" value={sectionPick.selected} onChange={(e) => setSectionPick({ ...sectionPick, selected: e.target.value })}>
+                          <option value="__all__">All sections ({sectionPick.sections.reduce((n, x) => n + x.learners, 0)} learners)</option>
                           {sectionPick.sections.map((x) => <option key={x.name} value={x.name}>{x.name} ({x.learners} learners)</option>)}
                         </select>
                         <Icon name="chevron-down" className="select-chevron" />

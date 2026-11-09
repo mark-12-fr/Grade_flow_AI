@@ -193,7 +193,7 @@ export async function importSf9(file: File, section?: string): Promise<Sf9Outcom
   });
 
   const aiNote = data.roster
-    ? ` Read section ${section} from the school-wide list.`
+    ? ` Read ${section === '__all__' ? 'every section' : `section ${section}`} from the school-wide list.`
     : data.template
     ? ` AI import unavailable${data.aiError ? ` (${data.aiError})` : ''}; used the standard template reader.`
     : ` AI mapped ${data.mapping.length} columns${data.warnings.length ? ` (${data.warnings.length} note${data.warnings.length === 1 ? '' : 's'} to check).` : '.'}`;

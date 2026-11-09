@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/domain/curriculum';
 import { prettyYear } from '@/lib/domain/format';
-import { remarkFor, semesterAverage, type ReportContext } from '@/lib/domain/grading';
+import { remarkFor, semesterAverage, studentContext, type ReportContext } from '@/lib/domain/grading';
 import type { SchoolInfo, Student } from '@/lib/domain/types';
 
 const VALUE_LABELS: [string, string][] = [
@@ -21,7 +21,8 @@ function TransferRows({ fields }: { fields: [string, string | undefined][] }) {
 }
 
 /** The SF9 learner report card (front of the card), same layout as the printed form. */
-export function ReportCard({ student, context, school }: { student: Student; context: ReportContext; school: SchoolInfo }) {
+export function ReportCard({ student, context: classContext, school }: { student: Student; context: ReportContext; school: SchoolInfo }) {
+  const context = studentContext(classContext, student);
   const transfer = student.transfer || {};
   const addressLines = String(context.schoolAddress || '').split(' · ').filter(Boolean)
     .filter((line) => !line.toLowerCase().includes('senior high school department'));

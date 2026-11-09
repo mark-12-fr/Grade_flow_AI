@@ -186,3 +186,16 @@ export function reportContext(state: AppState, overrides: { year?: string; term?
   };
 }
 export type ReportContext = ReturnType<typeof reportContext>;
+
+/** The class-level context with this learner's own section, strand and adviser when the upload mixed several sections. */
+export function studentContext(context: ReportContext, student: Student): ReportContext {
+  if (!student.section && !student.strand && !student.adviser) return context;
+  const strand = student.strand || context.strand;
+  return {
+    ...context,
+    section: student.section || context.section,
+    strand,
+    trackStrand: STRAND_TRACK[strand] || strand,
+    teacher: student.adviser || context.teacher
+  };
+}

@@ -3,7 +3,7 @@
 import type { jsPDF } from 'jspdf';
 import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/domain/curriculum';
 import { prettyYear } from '@/lib/domain/format';
-import { remarkFor, semesterAverage as semAvg, type ReportContext } from '@/lib/domain/grading';
+import { remarkFor, semesterAverage as semAvg, studentContext, type ReportContext } from '@/lib/domain/grading';
 import type { AppState, Student } from '@/lib/domain/types';
 
 function pdfSafe(value: unknown): string {
@@ -28,7 +28,8 @@ function setDrawColor(doc: any, color: any) {
   doc.setDrawColor(color[0], color[1], color[2]);
 }
 
-export function drawFront(doc: jsPDF, student: Student, context: ReportContext, logoData: string | null) {
+export function drawFront(doc: jsPDF, student: Student, classContext: ReportContext, logoData: string | null) {
+  const context = studentContext(classContext, student);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   // The card is designed on A4 landscape. Scale it down when the user picks

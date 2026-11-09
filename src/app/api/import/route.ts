@@ -7,6 +7,8 @@ import { listSections, readMasterList } from '@/server/import/masterList';
 import { MappingError, parseSchema, runImport } from '@/server/import/mapper';
 import { readTemplate, TemplateError } from '@/server/import/template';
 
+const ALL = '__all__';
+
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
@@ -28,8 +30,8 @@ export async function POST(request: Request) {
           if (!sections.length) throw new MappingError(`${name}: sheet "${grid.sheet}" is a school-wide list but no sections were found in it.`, 'file');
           return { mode: 'pick-section', sections, sheet: grid.sheet };
         }
-        emit(40, `Reading section ${section}`);
-        return { ...readMasterList(grid, schema, section), roster: true, schoolLogo: extractLogo(name, data) };
+        emit(40, section === ALL ? 'Reading every section' : `Reading section ${section}`);
+        return { ...readMasterList(grid, schema, section === ALL ? null : section), roster: true, schoolLogo: extractLogo(name, data) };
       }
       limiter.takeCall();
       try {

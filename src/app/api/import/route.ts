@@ -28,7 +28,8 @@ export async function POST(request: Request) {
         const asked = form.get('section');
         const section = typeof asked === 'string' && asked ? asked : ALL; // no question asked: read every section
         emit(40, section === ALL ? 'Reading every section' : `Reading section ${section}`);
-        return { ...readMasterList(grid, { ...schema, subjects: ALL_SUBJECTS.map((x) => ({ key: x.key, name: x.name, semester: x.semester })) }, section === ALL ? null : section, cardDefaults(readSheets(name, data).filter((g) => g.sheet !== grid.sheet))), roster: true, schoolLogo: extractLogo(name, data) };
+        // The only picture in a school-wide list workbook is a tiny low-resolution seal, so it is not used as the logo.
+        return { ...readMasterList(grid, { ...schema, subjects: ALL_SUBJECTS.map((x) => ({ key: x.key, name: x.name, semester: x.semester })) }, section === ALL ? null : section, cardDefaults(readSheets(name, data).filter((g) => g.sheet !== grid.sheet))), roster: true };
       }
       limiter.takeCall();
       try {

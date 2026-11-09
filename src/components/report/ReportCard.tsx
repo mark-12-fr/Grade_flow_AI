@@ -36,7 +36,7 @@ export function ReportCard({ student, context: classContext, school }: { student
       <section className="rc-official-learner" aria-label="Learner details and observations">
         <div className="rc-official-school">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="rc-logo" src={school.logo || '/assets/ui-logo.png'} alt="School seal" />
+          <img className="rc-logo" src={school.logo || '/assets/deped-seal.png'} alt="School seal" />
           <div>
             {addressLines.map((line) => <span key={line}>{line}</span>)}
             <strong>{context.schoolName}</strong>

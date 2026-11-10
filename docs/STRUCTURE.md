@@ -14,7 +14,7 @@ Grade_flow_AI/
     vendor/               bundled third-party code
   public/assets/          images and logos
   tests/                  vitest tests for the backend code
-  samples/                the script that builds the fictional sample workbook (public/samples/messy_class.xlsx, used by the "Try with sample file" button)
+  samples/                the script that builds the fictional sample workbook (public/samples/messy_class.xlsx)
   docs/                   documentation (this folder)
   .env                    SECRETS, git-ignored (create it yourself, see docs/ENV.md)
 ```

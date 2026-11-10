@@ -1181,8 +1181,6 @@ img { max-width: 100%; display: block; }
 .info-strip > .icon { width: 15px; height: 15px; margin-top: 1px; color: var(--blue); }
 .info-strip strong { color: var(--navy); font-size: 12px; font-weight: 600; }
 .info-strip p { margin-top: 2px; color: var(--muted); font-size: 11.5px; line-height: 1.55; }
-.sample-strip { align-items: center; margin-top: 12px; }
-.sample-strip .btn { margin-left: auto; flex: none; }
 
 .reports-side { display: flex; flex-direction: column; gap: 13px; }
 .print-settings { padding: 17px 18px; }

@@ -9,8 +9,6 @@ import { importSf10, importSf9, removeSf10Undoable, removeSf9Undoable, validateB
 import { formatFileSize } from '@/lib/domain/format';
 import { getState, setState, useAppState } from '@/lib/state/store';
 
-const SAMPLE_URL = '/samples/messy_class.xlsx';
-
 export default function UploadPage() {
   const router = useRouter();
   const { toast, openModal } = useUi();
@@ -75,17 +73,6 @@ export default function UploadPage() {
     if (!file) return;
     if ((files?.length ?? 0) > 1) { toast('Choose one file for the SF10.', 'error'); return; }
     void runSf10(file);
-  }
-
-  async function trySample() {
-    try {
-      const res = await fetch(SAMPLE_URL);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      void runSf9(new File([blob], 'sample_class.xlsx', { type: blob.type }));
-    } catch {
-      toast('The sample file could not be loaded. Check your connection and try again.', 'error');
-    }
   }
 
   function removeFile(what: 'sf9' | 'sf10') {
@@ -199,17 +186,6 @@ export default function UploadPage() {
               </div>
             </div>
           </article>
-
-          {!hasFiles && !busy && (
-            <div className="info-strip sample-strip">
-              <Icon name="sparkles" />
-              <div>
-                <strong>No file yet?</strong>
-                <p>Try GradeFlow with a sample class. It uses fictional learners, so no real data is needed.</p>
-              </div>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => void trySample()}>Try with sample file</button>
-            </div>
-          )}
 
           <div className="page-actions">
             <div className="action-end">

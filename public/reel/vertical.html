@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GradeFlow AI · Reel (9:16)</title>
+<link rel="icon" href="../assets/favicon.svg">
+<!--
+  GradeFlow AI vertical reel for Facebook Reels and TikTok: 26 seconds, 1080x1920, 120 BPM.
+  Fast whip cuts on the bar, word-pop captions, punch zooms on the real app (shots/, filmed by
+  scripts/capture-reel.mjs) and the real SF9 / SF10 PDFs. Engine: engine.js. Music: soundtrack.js.
+  Text stays clear of the bottom of the frame, where Reels and TikTok draw their own captions.
+  Same options and keys as index.html; render with: npm run reel -- --vertical
+-->
+<link rel="stylesheet" href="reel.css">
+<style>
+  #stage { background: #060b17; }
+  #bg { position: absolute; inset: 0; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 30%, #0f1f45 0%, #070d1a 55%, #04070f 100%); }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); }
+  #blobA { width: 900px; height: 900px; left: -250px; top: 300px; background: rgba(37, 99, 235, .38); }
+  #blobB { width: 700px; height: 700px; right: -260px; top: 1100px; background: rgba(245, 165, 36, .16); }
+
+  /* captions: big words that pop in, the key words on a colour block */
+  .vcap { position: absolute; left: 64px; right: 64px; top: 290px; }
+  .vcap .ln { display: block; font-size: 112px; line-height: 1.02; font-weight: 800; letter-spacing: -.035em; text-transform: uppercase; white-space: nowrap; }
+  .vcap .small { display: block; margin-top: 22px; font-size: 46px; font-weight: 700; letter-spacing: -.01em; text-transform: uppercase; color: rgba(255, 255, 255, .78); }
+  .hl, .hlb { padding: 0 20px; border-radius: 16px; margin-left: -6px; }
+  .hl { background: var(--amber); color: #14213d; }
+  .hlb { background: var(--blue-600); color: #fff; }
+  .vsub { position: absolute; left: 64px; right: 64px; font-size: 38px; font-weight: 500; color: rgba(255, 255, 255, .74); letter-spacing: -.01em; }
+
+  /* the hook */
+  #v1 .stack { position: absolute; left: 0; right: 0; top: 520px; text-align: center; }
+  #v1 .ln { display: block; font-size: 168px; line-height: 1.04; font-weight: 800; letter-spacing: -.045em; text-transform: uppercase; }
+  #v1 .ln .hl { padding: 0 26px; border-radius: 22px; }
+  #v1ghost { position: absolute; left: 90px; top: 520px; width: 1100px; opacity: .12; transform-origin: 50% 50%; }
+  #v1ghost img { width: 100%; display: block; border-radius: 6px; }
+
+  /* app window layer (scenes 2 and 3) */
+  #app { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+  .appwin .bar { height: 40px; }
+
+  /* outro */
+  #v7 { background: radial-gradient(ellipse at 50% 40%, #3b82f6 0%, #2563eb 45%, #1d4ed8 100%); }
+  #v7mark { width: 230px; height: 230px; overflow: visible; filter: drop-shadow(0 10px 30px rgba(15, 23, 42, .25)); }
+  #v7word { margin-top: 40px; font-size: 132px; font-weight: 800; letter-spacing: -.05em; line-height: 1; white-space: nowrap; }
+  #v7word span { font-weight: 400; letter-spacing: -.03em; }
+  #v7word b { margin-left: 22px; color: var(--amber); font-weight: 800; letter-spacing: -.02em; }
+  #v7tag { margin-top: 44px; font-size: 54px; line-height: 1.18; font-weight: 600; color: rgba(255, 255, 255, .95); letter-spacing: -.02em; }
+  #v7pill { margin-top: 56px; height: 76px; padding: 0 34px; border-radius: 999px; background: rgba(255, 255, 255, .15);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); display: flex; align-items: center; gap: 16px; font-size: 32px; font-weight: 600; }
+  #v7 .center { justify-content: flex-start; padding-top: 520px; }
+
+  /* top: story-style progress and the brand */
+  #top { position: absolute; left: 0; right: 0; top: 0; z-index: 40; pointer-events: none; }
+  #prog { position: absolute; left: 40px; right: 40px; top: 56px; display: flex; gap: 10px; }
+  #prog i { flex: 1; height: 7px; border-radius: 4px; background: rgba(255, 255, 255, .22); overflow: hidden; position: relative; }
+  #prog i b { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #fff; border-radius: 4px; }
+  #brand { position: absolute; left: 60px; top: 150px; display: flex; align-items: center; gap: 16px; font-size: 38px; font-weight: 800; letter-spacing: -.04em; }
+  #brand svg { width: 58px; height: 58px; }
+  #brand span { font-weight: 400; }
+  #brand b { margin-left: 6px; color: var(--amber); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="gf" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="16" fill="#14213d"/>
+      <path d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+      <path d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="6" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="stage" role="img" aria-label="GradeFlow AI vertical reel: upload your class sheet, type the LRN, get the real SF9 and SF10, and a blank grade stays blank and gets flagged.">
+  <div id="bg"><div class="blob" id="blobA"></div><div class="blob" id="blobB"></div></div>
+  <div id="app"><div class="appwin" id="appwin"></div></div>
+
+  <section class="scene" id="v1">
+    <div id="v1ghost"><img id="v1ghostimg" alt=""></div>
+    <div class="stack" id="v1stack">
+      <span class="ln"><span class="w">Still</span></span>
+      <span class="ln"><span class="w">encoding</span></span>
+      <span class="ln"><span class="w hl">SF9s</span></span>
+      <span class="ln"><span class="w">by hand?</span></span>
+    </div>
+  </section>
+
+  <section class="scene" id="v2">
+    <div class="vcap" id="c2a"><span class="ln"><span class="w">Upload</span> <span class="w">your</span></span><span class="ln"><span class="w hl">class sheet</span></span></div>
+    <div class="vcap" id="c2b"><span class="ln"><span class="w">16 learners</span></span><span class="ln"><span class="w hlb">read.</span></span></div>
+  </section>
+
+  <section class="scene" id="v3">
+    <div class="vcap" id="c3a"><span class="ln"><span class="w">Type</span> <span class="w">the</span></span><span class="ln"><span class="w hl">LRN.</span></span></div>
+    <div class="vcap" id="c3b"><span class="ln"><span class="w">There's</span> <span class="w">the</span></span><span class="ln"><span class="w hlb">SF9.</span></span></div>
+  </section>
+
+  <section class="scene" id="v4">
+    <div class="vcap" id="c4"><span class="ln"><span class="w">The</span> <span class="w">real</span></span><span class="ln"><span class="w hl">SF9.</span></span><span class="small w">Ready to print</span></div>
+    <div class="paper" id="v4paper"><img id="v4img" alt=""><div class="scanbar" id="v4scan"></div></div>
+  </section>
+
+  <section class="scene" id="v5">
+    <div class="vcap" id="c5"><span class="ln"><span class="w">And</span> <span class="w">the</span></span><span class="ln"><span class="w hlb">SF10.</span></span><span class="small w">Both semesters</span></div>
+    <div id="v5pages">
+      <div class="paper" id="v5p2"><img id="v5p2img" alt=""></div>
+      <div class="paper" id="v5p1"><img id="v5p1img" alt=""></div>
+    </div>
+  </section>
+
+  <section class="scene" id="v6">
+    <div class="vcap" id="c6a"><span class="ln"><span class="w">Missing</span></span><span class="ln"><span class="w hl">a grade?</span></span></div>
+    <div class="vcap" id="c6b"><span class="ln"><span class="w">It stays</span></span><span class="ln"><span class="w hl">blank.</span></span><span class="small w">And it gets flagged</span></div>
+    <div class="appwin" id="v6win"></div>
+  </section>
+
+  <section class="scene" id="v7">
+    <div class="center">
+      <div id="v7markWrap">
+        <svg id="v7mark" viewBox="0 0 64 64">
+          <path id="v7arc" d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          <path id="v7bar" d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="v7word" class="w">Grade<span>Flow</span><b>AI</b></div>
+      <div id="v7tag" class="w">Upload once.<br>Every report card, ready.</div>
+      <div id="v7pill" class="w">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/></svg>
+        <span id="v7url">SF9 · SF10 · Senior High School</span>
+      </div>
+    </div>
+  </section>
+
+  <div id="top">
+    <div id="prog"></div>
+    <div id="brand"><svg><use href="#gf"/></svg><div>Grade<span>Flow</span><b>AI</b></div></div>
+  </div>
+</div>
+
+<script src="shots/manifest.js"></script>
+<script src="soundtrack.js"></script>
+<script src="engine.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- timeline: every cut on a bar of 120 BPM (2 s), the hook on beats ---------- */
+  const T = { v1: 0, v2: 2, v3: 6, v4: 10, v5: 14, v6: 18, v7: 22, end: 26 };
+  const END = T.end;
+  const SCENES = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7'].map((id) => ({ id, at: T[id] }));
+  const PLAN = [
+    { at: T.v1, kind: 'hook' },
+    { at: T.v2, kind: 'groove', chords: ['F', 'G', 'C', 'Am'], hit: 1, riser: 0.5, roll: 0.5 },
+    { at: T.v3, kind: 'groove', pluck: true, chords: ['F', 'G', 'Am', 'C'], hit: 0.5, riser: 0.4, riserG: 0.3 },
+    { at: T.v4, kind: 'groove', pluck: true, chords: ['Am', 'F', 'C', 'G'], hit: 0.8, riser: 0.4, riserG: 0.35 },
+    { at: T.v5, kind: 'groove', chords: ['F', 'G', 'C', 'C'], hit: 0.6, riser: 0.4, riserG: 0.3 },
+    { at: T.v6, kind: 'drop', hit: 1.2, riser: 0.6, riserG: 0.45 },
+    { at: T.v7, kind: 'end', hit: 1.4, riser: 1.0, riserG: 0.8, roll: 1.0 }
+  ];
+  const reel = ReelEngine.create({
+    width: 1080, height: 1920, T, END, scenes: SCENES, plan: PLAN,
+    transition: { type: 'whip', dur: 0.3 }, onFrame
+  });
+  const { E, clamp, $, $$, center, A, F, stagger, sfx, drawPath, SH, Screen, params } = reel;
+  if (params.get('url')) $('#v7url').textContent = params.get('url').slice(0, 48);
+
+  const pop = (sel, at, gap = 0.08) => stagger($$(sel + ' .w'), at, gap, 0.34, { o: [0, 1], s: [1.5, 1], b: [12, 0] }, 'back');
+  const out = (sel, at) => A(sel, at, 0.2, { o: [1, 0], y: [0, -40], b: [0, 10] }, 'in3');
+
+  /* ---------- background drift ---------- */
+  F(0, END, (p, t) => {
+    $('#blobA').style.transform = `translate3d(${(Math.sin(t * 0.5) * 120).toFixed(1)}px,${(Math.cos(t * 0.37) * 160).toFixed(1)}px,0)`;
+    $('#blobB').style.transform = `translate3d(${(Math.cos(t * 0.43) * 140).toFixed(1)}px,${(Math.sin(t * 0.31) * 180).toFixed(1)}px,0)`;
+  });
+
+  /* ---------- 1 · hook: one word per beat, the frame shakes on each ---------- */
+  const hookAt = [0.02, 0.5, 1.0, 1.5];
+  $$('#v1stack .w').forEach((w, i) => {
+    A(w, hookAt[i], 0.28, { o: [0, 1], s: [1.9, 1], b: [16, 0] }, 'back');
+    sfx(hookAt[i], 'hit', { g: i === 2 ? 1 : 0.75 });
+  });
+  F(0, T.v2, (p, t) => {
+    let k = 0;
+    for (const at of hookAt) { const d = t - at; if (d >= 0 && d < 0.22) k = Math.max(k, 1 - d / 0.22); }
+    $('#v1stack').style.transform = `translate3d(${(Math.sin(t * 97) * 14 * k).toFixed(1)}px,${(Math.cos(t * 83) * 10 * k).toFixed(1)}px,0)`;
+  });
+  A('#v1ghost', 0, T.v2, { r: [-9, -5], s: [1.05, 1.15], o: [0.06, 0.16] }, 'lin');
+
+  /* ---------- 2 + 3 · the real app ---------- */
+  if (!SH) {
+    $('#app').insertAdjacentHTML('beforeend', '<div class="noshots">Run npm run reel:capture to film the app.</div>');
+  } else {
+    const B = SH.boxes;
+    $('#v1ghostimg').src = 'shots/' + SH.shots[SH.pdf.sf9[0]].file;
+
+    // one window across scenes 2 and 3; it whips in on the drop and out at the cut to the PDFs
+    const w = new Screen($('#appwin'), { left: 40, top: 620, width: 1000, vw: 1100, vh: 960, url: 'GradeFlow AI · Upload Class Details' });
+    A('#appwin', T.v2, 0.32, { o: [0, 1], x: [360, 0], s: [1.08, 1], b: [24, 0] }, 'out3');
+    A('#appwin', T.v4, 0.3, { o: [1, 0], x: [0, -360], b: [0, 26] }, 'in3');
+    F(T.v2, T.v4 - T.v2, (p, t) => { $('#app').style.visibility = t >= T.v2 && t < T.v4 + 0.3 ? 'visible' : 'hidden'; });
+
+    // upload
+    pop('#c2a', T.v2 + 0.1);
+    w.show(T.v2, ['upload']).camera(T.v2 - 0.1, 0, 1.5, 600, 330)
+      .cursorFrom([820, 470]).cursorOn(T.v2 + 0.2, true).move(T.v2 + 0.25, 0.5, center(B.upload.chooseSf9)).click(T.v2 + 0.8);
+    sfx(T.v2 + 0.8, 'click');
+    const readAt = T.v2 + 0.9, readDur = 1.2;
+    w.show(readAt, ['reading-base'], 0.08);
+    const stepPct = [25, 40, 90, 100];
+    let stepI = 0;
+    SH.reading.forEach((f) => {
+      const at = readAt + 0.1 + (readDur - 0.2) * (f.pct / 100);
+      w.show(at, ['reading-base', f.shot]);
+      while (stepI < stepPct.length && f.pct >= stepPct[stepI]) { sfx(at, 'ping', { note: [88, 91, 93, 96][stepI] }); stepI++; }
+    });
+    const doneAt = readAt + readDur + 0.05;
+    sfx(doneAt, 'chime', { notes: [84, 91, 96] });
+    out('#c2a', doneAt);
+    pop('#c2b', doneAt + 0.08);
+    // the file row first, then the camera follows the cursor to Prepare reports
+    w.show(doneAt, ['uploaded'], 0.15).camera(doneAt + 0.1, 0.45, 1.3, 700, 380).camera(doneAt + 0.45, 0.5, 1.3, 1290, 440)
+      .move(doneAt + 0.4, 0.55, center(B.uploaded.prepare)).click(doneAt + 1.0);
+    sfx(doneAt + 1.0, 'click');
+    w.show(doneAt + 1.25, ['sf9'], 0.2).url(doneAt + 1.25, 'GradeFlow AI · Report Cards').camera(doneAt + 1.2, 0.5, 1.0, 840, 480);
+    sfx(doneAt + 1.2, 'whoosh', { dur: 0.35, g: 0.3 });
+
+    // search, pick, download
+    pop('#c3a', T.v3 + 0.1);
+    w.camera(T.v3, 0.45, 1.6, 640, 330).move(T.v3, 0.4, center(B.sf9.search)).click(T.v3 + 0.45);
+    sfx(T.v3 + 0.45, 'click', { g: 0.7 });
+    const typeAt = T.v3 + 0.6;
+    SH.typing.forEach((name, i) => {
+      const at = typeAt + i * 0.1;
+      w.show(at, SH.shots[name].x === undefined ? [name] : [SH.typing[0], name]);
+      sfx(at, 'key');
+    });
+    const pickedAt = typeAt + SH.typing.length * 0.1 + 0.05;
+    w.show(pickedAt, ['sf9-picked'], 0.15).camera(pickedAt + 0.1, 0.6, 1.05, 860, 560);
+    sfx(pickedAt, 'tick', { note: 88, g: 0.6 });
+    out('#c3a', pickedAt);
+    pop('#c3b', pickedAt + 0.06);
+    const dlAt = pickedAt + 1.2;
+    w.move(pickedAt + 0.55, 0.5, center(B.sf9picked.thisLearner)).click(dlAt)
+      .show(dlAt + 0.15, ['sf9-downloaded'], 0.1).camera(dlAt + 0.15, 0.5, 1.3, 1350, 860);
+    sfx(dlAt, 'click');
+    sfx(dlAt + 0.15, 'pop');
+
+    /* ---------- 4 · the SF9 PDF, then a pan down its grades ---------- */
+    const sf9 = SH.shots[SH.pdf.sf9[0]];
+    $('#v4img').src = 'shots/' + sf9.file;
+    const pw = 1000, ph = Math.round((pw * sf9.h) / sf9.w);
+    Object.assign($('#v4paper').style, { left: '40px', top: '760px', width: pw + 'px', height: ph + 'px' });
+    pop('#c4', T.v4 + 0.1);
+    A('#v4paper', T.v4, 0.45, { r: [-4, 0], s: [1.08, 1] }, 'back');
+    F(T.v4 + 0.25, 0.9, (p) => {
+      $('#v4scan').style.transform = `translate3d(0,${(-160 + (ph + 180) * p).toFixed(1)}px,0)`;
+      $('#v4scan').style.opacity = p > 0 && p < 1 ? 1 : 0;
+    }, 'inOut3');
+    const z = 2.2, focus = (fx, fy) => [-(fx - 0.5) * pw * z, -(fy - 0.5) * ph * z];
+    const [x1, y1] = focus(0.74, 0.27), [x2, y2] = focus(0.74, 0.72);
+    A('#v4img', T.v4 + 1.1, 0.9, { s: [1, z], x: [0, x1], y: [0, y1] }, 'inOut3');
+    A('#v4img', T.v4 + 2.2, 1.5, { x: [x1, x2], y: [y1, y2] }, 'inOut3');
+    sfx(T.v4 + 0.25, 'scan', { dur: 0.9 });
+    sfx(T.v4 + 1.1, 'whoosh', { dur: 0.8, g: 0.25 });
+    sfx(T.v4 + 2.2, 'whoosh', { dur: 1.2, g: 0.18, up: false });
+
+    /* ---------- 5 · both SF10 pages, fanned, then a slow push in ---------- */
+    const p1 = SH.shots[SH.pdf.sf10[0]], p2 = SH.shots[SH.pdf.sf10[1] || SH.pdf.sf10[0]];
+    const qh = 900, qw = Math.round((qh * p1.w) / p1.h);
+    $('#v5p1img').src = 'shots/' + p1.file;
+    $('#v5p2img').src = 'shots/' + p2.file;
+    Object.assign($('#v5p1').style, { left: '80px', top: '660px', width: qw + 'px', height: qh + 'px' });
+    Object.assign($('#v5p2').style, { left: '370px', top: '700px', width: qw + 'px', height: qh + 'px' });
+    pop('#c5', T.v5 + 0.1);
+    A('#v5p2', T.v5 + 0.12, 0.5, { o: [0, 1], y: [220, 0], r: [12, 5], s: [0.9, 1] }, 'back');
+    A('#v5p1', T.v5 + 0.26, 0.5, { o: [0, 1], y: [220, 0], r: [-10, -4], s: [0.9, 1] }, 'back');
+    A('#v5pages', T.v5 + 1.0, 2.9, { s: [1, 1.12], y: [0, -40] }, 'inOut3');
+    sfx(T.v5 + 0.12, 'whoosh', { dur: 0.5, g: 0.35, pan: 0.3 });
+    sfx(T.v5 + 0.26, 'whoosh', { dur: 0.5, g: 0.35, pan: -0.3 });
+
+    /* ---------- 6 · a real blank grade: flagged, then shown blank on the card ---------- */
+    pop('#c6a', T.v6 + 0.15);
+    sfx(T.v6 + 0.15, 'hit', { g: 0.8 });
+    const w6 = new Screen($('#v6win'), { left: 40, top: 640, width: 1000, vw: 1100, vh: 900, url: 'GradeFlow AI · Needs checking' });
+    const cells = B.sf9check.blankCells;
+    const blank = { x: cells[2].x, y: cells[2].y, w: cells[3].x + cells[3].w - cells[2].x, h: cells[2].h };
+    const sTo = blank.y - 450;
+    w6.show(T.v6, ['sf9-check']).camera(T.v6 - 0.1, 0, 1.15, 1010, center(B.sf9check.row)[1])
+      .ring(T.v6 + 0.9, 0.8, B.sf9check.quality, 7)
+      .show(T.v6 + 1.8, ['sf9-check-full'], 0.25).scroll(T.v6 + 1.8, 0.8, sTo)
+      .camera(T.v6 + 1.8, 0.8, 1.7, blank.x + blank.w / 2 - 60, blank.y - sTo + blank.h / 2)
+      .ring(T.v6 + 2.6, 0, blank, 5);
+    sfx(T.v6 + 0.9, 'ping', { note: 79, g: 0.8 });
+    sfx(T.v6 + 1.8, 'whoosh', { dur: 0.8, g: 0.25, up: false });
+    out('#c6a', T.v6 + 2.5);
+    pop('#c6b', T.v6 + 2.58);
+    sfx(T.v6 + 2.6, 'ping', { note: 76, g: 0.9 });
+  }
+
+  /* ---------- 7 · end card ---------- */
+  drawPath($('#v7arc'), T.v7 + 0.2, 0.8, 'inOut3');
+  drawPath($('#v7bar'), T.v7 + 0.9, 0.35, 'out3');
+  A('#v7markWrap', T.v7 + 0.1, 1.0, { s: [0.7, 1], o: [0, 1] }, 'out5');
+  A('#v7word', T.v7 + 0.6, 0.6, { o: [0, 1], s: [1.3, 1], b: [14, 0] }, 'back');
+  A('#v7tag', T.v7 + 1.1, 0.6, { o: [0, 1], y: [30, 0] });
+  A('#v7pill', T.v7 + 1.5, 0.5, { o: [0, 1], s: [0.8, 1] }, 'back');
+  sfx(T.v7 + 0.2, 'shimmer', { dur: 0.8 });
+  sfx(T.v7 + 0.9, 'bell', { notes: [84, 88, 91, 96], g: 0.8, dur: 3 });
+  sfx(T.v7 + 1.5, 'ping', { note: 96, g: 0.6 });
+
+  /* ---------- top: one progress segment per scene, hidden on the end card ---------- */
+  const prog = $('#prog');
+  SCENES.slice(0, -1).forEach(() => prog.insertAdjacentHTML('beforeend', '<i><b></b></i>'));
+  const fills = $$('#prog b');
+  function onFrame(t) {
+    fills.forEach((b, i) => {
+      const s = SCENES[i].at, e = SCENES[i + 1].at;
+      b.style.width = (clamp((t - s) / (e - s)) * 100).toFixed(2) + '%';
+    });
+    const hide = E.out3(clamp((t - T.v7) / 0.3));
+    $('#top').style.opacity = (1 - hide).toFixed(3);
+  }
+
+  reel.start();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GradeFlow AI · Teacher Reel</title>
+<link rel="icon" href="../assets/favicon.svg">
+<!--
+  GradeFlow AI promo reel, about 34 seconds, 1920x1080. Scenes 3 to 5 show the real app,
+  filmed by scripts/capture-reel.mjs into shots/.
+
+  Everything is driven by one clock (t, in seconds) through render(t), so the reel is
+  seekable and renders frame-accurately to video (scripts/render-reel.mjs).
+
+  Query options:  ?url=gradeflow.example.com  shows your address in the closing pill
+                  ?once                       plays once instead of looping
+                  ?render                     1920x1080, no controls (used by the renderer)
+  Keys:  Space play/pause · ← → seek 1 s · R restart · M sound · F fullscreen
+
+  Sound: soundtrack.js synthesizes an original score from the timeline below (T, END) and the
+  sound cues placed with sfx(), so music and effects stay in sync with every cut.
+-->
+<link rel="stylesheet" href="reel.css">
+<style>
+  /* ---------- HUD ---------- */
+  #hud { position: absolute; inset: 0; z-index: 50; pointer-events: none; font-family: var(--mono); font-size: 15px; letter-spacing: .28em; text-transform: uppercase; }
+  #hud > div { position: absolute; }
+  .hud-tl { left: 54px; top: 46px; display: flex; align-items: center; gap: 14px; }
+  .hud-tl .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .hud-tl .sl { opacity: .5; }
+  .hud-tr { right: 54px; top: 46px; }
+  .hud-bl { left: 54px; bottom: 46px; letter-spacing: .14em; }
+  .hud-br { right: 54px; bottom: 52px; width: 230px; height: 2px; background: currentColor; opacity: .25; }
+  #hudFillWrap { position: absolute; right: 54px; bottom: 52px; width: 230px; height: 2px; }
+  #hudFill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: currentColor; }
+
+  /* ---------- 1 · identity ---------- */
+  #s1 { background: radial-gradient(ellipse at 50% 50%, #0c1730 0%, #060b16 55%, #03060d 100%); }
+  #s1glow { position: absolute; left: 50%; top: 50%; width: 1100px; height: 1100px; margin: -550px 0 0 -550px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(37, 99, 235, .55) 0%, rgba(37, 99, 235, .18) 32%, rgba(37, 99, 235, 0) 66%); }
+  #s1mark { width: 270px; height: 270px; overflow: visible; filter: drop-shadow(0 0 14px rgba(96, 165, 250, .95)) drop-shadow(0 0 46px rgba(37, 99, 235, .8)); }
+  #s1word { margin-top: 58px; font-family: var(--mono); font-size: 22px; letter-spacing: .62em; padding-left: .62em; color: #cfe0ff; }
+  #s1word b { color: var(--amber); font-weight: 600; }
+  #s1sweep { position: absolute; top: 0; bottom: 0; width: 360px; left: -400px;
+    background: linear-gradient(90deg, rgba(96, 165, 250, 0), rgba(96, 165, 250, .10), rgba(96, 165, 250, 0)); }
+
+  /* ---------- 2 · promise ---------- */
+  #s2 { background: linear-gradient(128deg, #1e40af 0%, #2563eb 45%, #3b82f6 100%); }
+  #s2 .eyebrow { color: rgba(255, 255, 255, .7); font-size: 15px; margin-bottom: 44px; }
+  #s2h { font-size: 168px; line-height: 1.02; font-weight: 800; letter-spacing: -.05em; }
+  #s2h .ln { display: block; white-space: nowrap; }
+  .u { position: relative; display: inline-block; }
+  .u svg { position: absolute; left: -2%; width: 104%; bottom: -26px; height: 34px; overflow: visible; }
+  #s2copy { position: absolute; left: 0; right: 0; top: 140px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #s2row { position: absolute; left: 0; bottom: -78px; white-space: nowrap; font-size: 330px; font-weight: 800; letter-spacing: -.04em;
+    color: rgba(255, 255, 255, .09); display: flex; gap: 150px; }
+  #s2row span { position: relative; display: inline-block; }
+  #s2hit svg { position: absolute; left: -60px; right: -60px; top: 30px; bottom: 50px; width: calc(100% + 120px); height: calc(100% - 80px); overflow: visible; }
+
+  /* ---------- real app screens (3, 4, 5) ---------- */
+  .cap { position: absolute; left: 130px; top: 300px; width: 540px; }
+  .cap .eyebrow { margin-bottom: 26px; }
+  .cap .h-xl { font-size: 66px; line-height: 1.02; letter-spacing: -.045em; }
+  .cap .sub { margin-top: 28px; font-size: 26px; line-height: 1.45; }
+  #s3 { background: radial-gradient(ellipse at 74% 40%, #dbe7ff 0%, #eef3ff 32%, #f8fafc 64%); color: var(--ink); }
+  #s3 .eyebrow { color: var(--blue-600); }
+  #s3 .h-xl { color: var(--ink); }
+  #s3 .sub { color: var(--muted); }
+
+  #s4 { background: radial-gradient(ellipse at 62% 50%, #12224a 0%, #070d1a 60%, #04070f 100%); }
+  #s4 .eyebrow { color: var(--blue-400); }
+  #s4 .sub { color: rgba(255, 255, 255, .7); }
+  #s5 { background: radial-gradient(ellipse at 50% 40%, #0d1a36 0%, #050912 55%, #020409 100%); }
+  #s5 .h1 { font-size: 104px; line-height: 1.02; font-weight: 800; letter-spacing: -.05em; }
+  #s5 .h1.c-blue-l { color: #5b9bff; }
+  #s5 .sub { position: absolute; left: 0; right: 0; top: 948px; text-align: center; color: rgba(255, 255, 255, .74); font-size: 30px; }
+  #s5 .heads { position: absolute; left: 0; right: 0; top: 110px; text-align: center; }
+
+  /* ---------- 6 · outro ---------- */
+  #s6 { background: radial-gradient(ellipse at 50% 42%, #3b82f6 0%, #2563eb 45%, #1d4ed8 100%); }
+  #s6mark { width: 200px; height: 200px; overflow: visible; filter: drop-shadow(0 10px 30px rgba(15, 23, 42, .25)); }
+  #s6word { margin-top: 30px; font-size: 156px; font-weight: 800; letter-spacing: -.05em; line-height: 1; white-space: nowrap; }
+  #s6word span { font-weight: 400; letter-spacing: -.03em; }
+  #s6word b { margin-left: 26px; color: var(--amber); font-weight: 800; letter-spacing: -.02em; }
+  #s6tag { margin-top: 34px; font-size: 38px; font-weight: 500; color: rgba(255, 255, 255, .92); letter-spacing: -.01em; }
+  #s6pill { margin-top: 46px; height: 64px; padding: 0 28px; border-radius: 999px; background: rgba(255, 255, 255, .14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
+    display: flex; align-items: center; gap: 14px; font-size: 24px; font-weight: 500; }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="gf" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="16" fill="#14213d"/>
+      <path d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+      <path d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="6" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div id="stage" role="img" aria-label="GradeFlow AI promo: upload the class sheet you already have, the AI reads it, every grade is checked against your file, and SF9 report cards and SF10 records are ready to download.">
+
+  <!-- 1 · IDENTITY -->
+  <section class="scene" id="s1">
+    <div id="s1glow"></div>
+    <div id="s1sweep"></div>
+    <div class="center">
+      <div id="s1markWrap">
+        <svg id="s1mark" viewBox="0 0 64 64">
+          <path id="s1arc" d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#bcd5ff" stroke-width="5" stroke-linecap="round"/>
+          <path id="s1bar" d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="s1word"><span class="w">G</span><span class="w">R</span><span class="w">A</span><span class="w">D</span><span class="w">E</span><span class="w">F</span><span class="w">L</span><span class="w">O</span><span class="w">W</span><span class="w">&nbsp;</span><b class="w">A</b><b class="w">I</b></div>
+    </div>
+  </section>
+
+  <!-- 2 · PROMISE -->
+  <section class="scene" id="s2">
+    <div id="s2row"><span>78</span><span>83</span><span>86</span><span>88</span><span id="s2hit">90<svg viewBox="0 0 450 255" preserveAspectRatio="none"><path id="s2circle" d="M358 54 C 281 15, 108 19, 52 88 C 9 145, 79 223, 232 228 C 371 231, 448 167, 419 100 C 396 53, 326 34, 221 37" fill="none" stroke="#fdba74" stroke-width="7" stroke-linecap="round"/></svg></span><span>92</span><span>95</span><span>97</span><span>99</span></div>
+    <div id="s2copy">
+      <div class="eyebrow" id="s2eye">GradeFlow AI · Senior High School</div>
+      <h1 id="s2h">
+        <span class="ln"><span class="w">Report</span> <span class="w">cards,</span></span>
+        <span class="ln"><span class="w">done</span> <span class="w">in</span> <span class="w u">minutes.<svg viewBox="0 0 640 34" preserveAspectRatio="none"><path id="s2under" d="M6 22 C 176 10, 400 30, 634 12" fill="none" stroke="#fdba74" stroke-width="7" stroke-linecap="round"/></svg></span></span>
+      </h1>
+    </div>
+  </section>
+
+  <!-- 3 · HOW TO USE: the real app, filmed by scripts/capture-reel.mjs -->
+  <section class="scene" id="s3">
+    <div class="cap" id="s3a">
+      <div class="eyebrow w">Step 1 · Upload</div><br>
+      <h2 class="h-xl"><span class="w">Upload the sheet</span><br><span class="w">you already have.</span></h2>
+      <p class="sub w">Excel or CSV, as it is.<br>Every grade is copied straight from your file.</p>
+    </div>
+    <div class="cap" id="s3b">
+      <div class="eyebrow w">Step 2 · SF9</div><br>
+      <h2 class="h-xl"><span class="w">Pick a learner.</span><br><span class="w">Get the SF9.</span></h2>
+      <p class="sub w">Search by LRN or name, then download<br>one learner, the ones you pick, or everyone.</p>
+    </div>
+    <div class="appwin" id="s3win"></div>
+  </section>
+
+  <!-- 4 · THE FORMS: the PDFs the app downloads, page for page -->
+  <section class="scene" id="s4">
+    <div class="beat" id="s4a">
+      <div class="cap">
+        <div class="eyebrow w">SF9 · Report card</div><br>
+        <h2 class="h-xl"><span class="w">The real SF9,</span><br><span class="w">ready to print.</span></h2>
+        <p class="sub w">The PDF the app downloads:<br>one landscape page per learner.</p>
+      </div>
+      <div class="paper" id="s4sf9"><img id="s4sf9img" alt=""><div class="scanbar" id="s4scan"></div></div>
+      <div class="chip blue" id="s4c1">SF9 · <b>Learner's Report Card</b></div>
+      <div class="chip white" id="s4c2">Grades <b>from your sheet</b></div>
+    </div>
+    <div class="beat" id="s4b">
+      <div class="cap">
+        <div class="eyebrow w">SF10 · Permanent record</div><br>
+        <h2 class="h-xl"><span class="w">And the SF10,</span><br><span class="w">for every learner.</span></h2>
+        <p class="sub w">Both semesters, filled in<br>from the same class sheet.</p>
+      </div>
+      <div class="appwin" id="s4win"></div>
+      <div class="paper" id="s4p2"><img id="s4p2img" alt=""></div>
+      <div class="paper" id="s4p1"><img id="s4p1img" alt=""></div>
+      <div class="chip blue" id="s4c3">SF10-SHS · <b>2 pages</b></div>
+    </div>
+  </section>
+
+  <!-- 5 · NO GUESSING: a real blank grade, flagged by the app -->
+  <section class="scene" id="s5">
+    <div class="heads">
+      <div class="h1 w">No grade in the sheet.</div><br>
+      <div class="h1 c-blue-l w">No grade on the card.</div>
+    </div>
+    <div class="appwin" id="s5win"></div>
+    <p class="sub w">GradeFlow AI never makes up a grade. Blank stays blank, and it gets flagged.</p>
+  </section>
+
+  <!-- 6 · OUTRO -->
+  <section class="scene" id="s6">
+    <div class="center">
+      <div id="s6markWrap">
+        <svg id="s6mark" viewBox="0 0 64 64">
+          <path id="s6arc" d="M44.3 23.4A15 15 0 1 0 47 32" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          <path id="s6bar" d="M47 32H34" fill="none" stroke="#f5a524" stroke-width="6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="s6word" class="w">Grade<span>Flow</span><b>AI</b></div>
+      <div id="s6tag" class="w">Upload once. Every report card, ready.</div>
+      <div id="s6pill" class="w">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/></svg>
+        <span id="s6url">SF9 · SF10 · Senior High School</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-tl"><i class="dot"></i>GradeFlow AI <span class="sl">/</span> Teacher reel 2026</div>
+    <div class="hud-tr"><span id="hudNum">01 / 06</span> — <span id="hudLabel">Identity</span></div>
+    <div class="hud-bl" id="tc">00:00:00:00</div>
+    <div class="hud-br"></div>
+    <div id="hudFillWrap"><i id="hudFill"></i></div>
+  </div>
+</div>
+
+<script src="shots/manifest.js"></script>
+<script src="soundtrack.js"></script>
+<script src="engine.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- timeline ---------- */
+  const T = { s1: 0, s2: 3.2, s3: 7.4, s3b: 12.4, s4: 18.6, s4b: 21.8, s5: 25.2, s6: 29.2, end: 33.7 };
+  const SCENES = [
+    { id: 's1', at: T.s1, label: 'Identity', tone: 'light' },
+    { id: 's2', at: T.s2, label: 'Promise', tone: 'light' },
+    { id: 's3', at: T.s3, label: 'How to use', tone: 'dark' },
+    { id: 's4', at: T.s4, label: 'SF9 and SF10', tone: 'light' },
+    { id: 's5', at: T.s5, label: 'No guessing', tone: 'light' },
+    { id: 's6', at: T.s6, label: 'Get started', tone: 'light' }
+  ];
+  const END = T.end;
+  let rowX0 = 0;
+  const reel = ReelEngine.create({
+    width: 1920, height: 1080, T, END, scenes: SCENES,
+    transition: { type: 'fade', dur: 0.42 }, onFrame: hudFrame, onMeasure: measure
+  });
+  const { E, clamp, lerp, $, $$, center, A, F, stagger, sfx, drawPath, blurIn, SH, Screen, params, fps: FPS, XD: XF } = reel;
+  if (params.get('url')) $('#s6url').textContent = params.get('url').slice(0, 60);
+
+  /* ---------- 1 · identity ---------- */
+  A('#s1glow', 0, 2.2, { o: [0, 1], s: [0.55, 1] }, 'out3');
+  A('#s1glow', 2.3, 0.9, { s: [1, 1.18] }, 'inOut3');
+  drawPath($('#s1arc'), 0.35, 1.15, 'inOut3');
+  drawPath($('#s1bar'), 1.38, 0.42, 'out3');
+  A('#s1markWrap', 0.2, 1.6, { s: [0.86, 1] }, 'out5');
+  A('#s1markWrap', 2.4, 0.8, { s: [1, 1.07] }, 'in3');
+  stagger($$('#s1word .w'), 1.55, 0.045, 0.55, { o: [0, 1], y: [12, 0], b: [8, 0] }, 'out3');
+  A('#s1sweep', 1.3, 1.5, { x: [0, 2700] }, 'inOut3');
+  sfx(0.4, 'bell', { notes: [76], g: 0.5, dur: 2.2 });
+  sfx(0.95, 'bell', { notes: [81], g: 0.45, dur: 2 });
+  sfx(1.4, 'bell', { notes: [84, 91], g: 0.8, dur: 2.4 }); // the amber crossbar lands
+  sfx(1.3, 'whoosh', { dur: 1.5, g: 0.3, pan: -0.3 });
+  const letterNotes = [81, 84, 86, 88, 91, 93, 96, 98, 100, 0, 103, 105];
+  $$('#s1word .w').forEach((el, i) => { if (letterNotes[i]) sfx(1.55 + i * 0.045, 'tick', { note: letterNotes[i], g: 0.35, pan: (i / 11) * 1.2 - 0.6 }); });
+
+  /* ---------- 2 · promise ---------- */
+  A('#s2eye', T.s2 + 0.25, 0.6, { o: [0, 1], y: [14, 0] });
+  stagger($$('#s2h .w'), T.s2 + 0.35, 0.11, 0.75, { o: [0, 1], y: [70, 0], b: [18, 0], s: [1.06, 1] }, 'out5');
+  drawPath($('#s2under'), T.s2 + 1.35, 0.6, 'out3');
+  drawPath($('#s2circle'), T.s2 + 1.9, 0.75, 'inOut3');
+  sfx(T.s2 + 1.35, 'scribble', { dur: 0.6 });
+  sfx(T.s2 + 1.9, 'scribble', { dur: 0.75 });
+  A('#s2copy', T.s3 - 0.5, 0.6, { s: [1, 1.04], o: [1, 0.85] }, 'in3');
+  const hitAt = T.s2 + 2.25, rowSpeed = -150;
+  F(T.s2 - XF, (T.s3 + XF) - (T.s2 - XF), (p, t) => {
+    $('#s2row').style.transform = `translate3d(${(rowX0 + rowSpeed * (t - hitAt)).toFixed(2)}px,0,0)`;
+    const glow = clamp((t - (T.s2 + 1.9)) / 0.6);
+    $('#s2hit').style.color = `rgba(255,255,255,${(0.09 + 0.2 * E.out3(glow)).toFixed(3)})`;
+  });
+
+  /* ---------- real app screens ----------
+     Scenes 3 to 5 show the real app: screenshots, element boxes and PDFs captured by
+     scripts/capture-reel.mjs (shots/manifest.js). A Screen is a browser window over those
+     captures with a camera (zoom and pan), page scrolling and a cursor, all keyed to the clock. */
+  const caption = (sel, at, out) => {
+    A($(sel + ' .eyebrow'), at, 0.6, { o: [0, 1], y: [14, 0] });
+    stagger($$(sel + ' .h-xl .w'), at + 0.08, 0.12, 0.75, blurIn, 'out5');
+    A($(sel + ' .sub'), at + 0.45, 0.7, { o: [0, 1], y: [20, 0] });
+    if (out) A(sel, out, 0.4, { o: [1, 0], y: [0, -30], b: [0, 8] }, 'in3');
+  };
+
+  if (!SH) {
+    ['#s3', '#s4', '#s5'].forEach((s) => $(s).insertAdjacentHTML('beforeend', '<div class="noshots">Run npm run reel:capture to film the app.</div>'));
+  } else {
+    const B = SH.boxes;
+
+    /* ---------- 3 · how to use: upload, then the SF9 page ---------- */
+    caption('#s3a', T.s3 + 0.3, T.s3b - 0.35);
+    caption('#s3b', T.s3b + 0.05);
+    const w3 = new Screen($('#s3win'), { left: 700, top: 162, width: 1140, url: 'GradeFlow AI · Upload Class Details' });
+    A('#s3win', T.s3 + 0.1, 0.9, { o: [0, 1], x: [140, 0], y: [30, 0], s: [0.95, 1] }, 'out5');
+    sfx(T.s3 + 0.1, 'whoosh', { dur: 0.8, g: 0.45, pan: 0.4 });
+
+    w3.show(T.s3, ['upload']).cursorFrom([1250, 820]).cursorOn(T.s3 + 0.6, true)
+      .move(T.s3 + 0.65, 0.7, center(B.upload.chooseSf9)).click(T.s3 + 1.4);
+    sfx(T.s3 + 1.4, 'click');
+    // the real progress indicator, frame by frame, timed by its own percent
+    const readAt = T.s3 + 1.5, readDur = 1.5;
+    w3.show(readAt, ['reading-base'], 0.1).camera(readAt - 0.05, 0.6, 2.0, 560, 380);
+    const stepPct = [25, 40, 90, 100];
+    let stepI = 0;
+    SH.reading.forEach((f) => {
+      const at = readAt + 0.15 + (readDur - 0.25) * (f.pct / 100);
+      w3.show(at, ['reading-base', f.shot]);
+      while (stepI < stepPct.length && f.pct >= stepPct[stepI]) { sfx(at, 'ping', { note: [88, 91, 93, 96][stepI] }); stepI++; }
+    });
+    const doneAt = readAt + readDur + 0.1;
+    sfx(doneAt, 'chime', { notes: [84, 91, 96] });
+    w3.show(doneAt, ['uploaded'], 0.18).camera(doneAt + 0.15, 0.7, 1.25, 1000, 400)
+      .move(doneAt + 0.3, 0.75, center(B.uploaded.prepare)).click(doneAt + 1.15);
+    sfx(doneAt + 1.15, 'click');
+    const sf9At = doneAt + 1.35;
+    w3.show(sf9At, ['sf9'], 0.3).url(sf9At, 'GradeFlow AI · Report Cards').camera(sf9At - 0.05, 0.6, 1, 840, 525);
+    sfx(sf9At - 0.1, 'whoosh', { dur: 0.45, g: 0.35 });
+
+    // step 2: type the LRN (one real capture per key), pick, download, scroll to the live SF9
+    const typeAt = T.s3b + 0.95;
+    w3.move(T.s3b + 0.1, 0.6, center(B.sf9.search)).click(T.s3b + 0.75).camera(T.s3b + 0.45, 0.65, 1.6, 800, 420);
+    sfx(T.s3b + 0.75, 'click', { g: 0.7 });
+    // a clipped capture (only the search card changed) sits on the first full typed frame
+    SH.typing.forEach((name, i) => {
+      const at = typeAt + i * 0.09;
+      w3.show(at, SH.shots[name].x === undefined ? [name] : [SH.typing[0], name]);
+      sfx(at, 'key');
+    });
+    const pickedAt = typeAt + SH.typing.length * 0.09 + 0.12;
+    w3.show(pickedAt, ['sf9-picked'], 0.2).camera(pickedAt + 0.15, 0.7, 1, 840, 525);
+    sfx(pickedAt, 'tick', { note: 88, g: 0.6 });
+    const dlAt = pickedAt + 0.95;
+    w3.move(pickedAt + 0.25, 0.65, center(B.sf9picked.thisLearner)).click(dlAt);
+    sfx(dlAt, 'click');
+    w3.show(dlAt + 0.2, ['sf9-downloaded'], 0.12).camera(dlAt + 0.25, 0.7, 1.6, 1300, 860);
+    sfx(dlAt + 0.2, 'pop');
+    const scrollAt = dlAt + 1.15;
+    const maxScroll = SH.shots['sf9-picked-full'].h - SH.view.height;
+    w3.cursorOn(scrollAt - 0.1, false).show(scrollAt, ['sf9-picked-full'], 0.25, 'sf9-picked')
+      .camera(scrollAt - 0.1, 0.6, 1, 840, 525).scroll(scrollAt + 0.35, 1.0, Math.min(maxScroll, B.sf9picked.sheet.y - 70));
+    sfx(scrollAt + 0.35, 'whoosh', { dur: 0.9, g: 0.25, up: false });
+
+    /* ---------- 4 · the forms: the PDFs the app downloads ---------- */
+    caption('#s4a .cap', T.s4 + 0.25);
+    A('#s4a', T.s4b - 0.35, 0.4, { o: [1, 0], s: [1, 0.97], b: [0, 10] }, 'in3');
+    const sf9pdf = SH.shots[SH.pdf.sf9[0]];
+    $('#s4sf9img').src = 'shots/' + sf9pdf.file;
+    const pw = 1100, ph = Math.round((pw * sf9pdf.h) / sf9pdf.w);
+    Object.assign($('#s4sf9').style, { left: '720px', top: Math.round((1080 - ph) / 2) + 'px', width: pw + 'px', height: ph + 'px' });
+    Object.assign($('#s4c1').style, { left: '1390px', top: Math.round((1080 - ph) / 2) - 74 + 'px' }); // above the page, clear of the zoom
+    Object.assign($('#s4c2').style, { left: '680px', top: Math.round((1080 + ph) / 2) - 40 + 'px' });
+    A('#s4sf9', T.s4 + 0.1, 0.9, { o: [0, 1], y: [70, 0], s: [0.93, 1] }, 'out5');
+    F(T.s4 + 0.45, 1.2, (p) => {
+      $('#s4scan').style.transform = `translate3d(0,${lerp(-160, ph + 20, p).toFixed(1)}px,0)`;
+      $('#s4scan').style.opacity = p > 0 && p < 1 ? 1 : 0;
+    }, 'inOut3');
+    // zoom into the grades: bring the point (74% across, 34% down) to the middle
+    const zs = 1.8, fx = (0.74 - 0.5) * pw, fy = (0.34 - 0.5) * ph;
+    A('#s4sf9img', T.s4 + 1.55, 1.25, { s: [1, zs], x: [0, -fx * zs], y: [0, -fy * zs] }, 'inOut3');
+    A('#s4c1', T.s4 + 1.0, 0.5, { o: [0, 1], s: [0.5, 1], x: [-30, 0] }, 'back');
+    A('#s4c2', T.s4 + 1.3, 0.5, { o: [0, 1], s: [0.5, 1], x: [-30, 0] }, 'back');
+    sfx(T.s4 + 0.1, 'whoosh', { dur: 0.8, g: 0.4, pan: 0.4 });
+    sfx(T.s4 + 0.45, 'scan', { dur: 1.2 });
+    sfx(T.s4 + 1.0, 'pop');
+    sfx(T.s4 + 1.3, 'pop', { g: 0.8 });
+    sfx(T.s4 + 1.55, 'whoosh', { dur: 1.0, g: 0.22 });
+
+    caption('#s4b .cap', T.s4b + 0.05);
+    const w4 = new Screen($('#s4win'), { left: 700, top: 162, width: 1140, url: 'GradeFlow AI · SF10 Record' });
+    A('#s4win', T.s4b, 0.7, { o: [0, 1], x: [120, 0], s: [0.95, 1] }, 'out5');
+    A('#s4win', T.s4b + 1.55, 0.6, { o: [1, 0], s: [1, 0.94] }, 'inOut3');
+    w4.show(T.s4b, ['sf10']).cursorFrom([1200, 760]).cursorOn(T.s4b + 0.3, true)
+      .camera(T.s4b + 0.2, 0.8, 1.25, 900, 420).move(T.s4b + 0.35, 0.6, center(B.sf10.thisLearner)).click(T.s4b + 1.0)
+      .show(T.s4b + 1.15, ['sf10-downloaded'], 0.12);
+    sfx(T.s4b, 'whoosh', { dur: 0.6, g: 0.35 });
+    sfx(T.s4b + 1.0, 'click');
+    sfx(T.s4b + 1.15, 'pop');
+    const p1 = SH.shots[SH.pdf.sf10[0]], p2 = SH.shots[SH.pdf.sf10[1] || SH.pdf.sf10[0]];
+    const qh = 860, qw = Math.round((qh * p1.w) / p1.h);
+    $('#s4p1img').src = 'shots/' + p1.file;
+    $('#s4p2img').src = 'shots/' + p2.file;
+    Object.assign($('#s4p1').style, { left: '760px', top: '108px', width: qw + 'px', height: qh + 'px' });
+    Object.assign($('#s4p2').style, { left: '1180px', top: '128px', width: qw + 'px', height: qh + 'px' });
+    Object.assign($('#s4c3').style, { left: '1480px', top: '900px' });
+    A('#s4p1', T.s4b + 1.6, 0.8, { o: [0, 1], y: [120, 0], r: [-5, -1.5], s: [0.9, 1] }, 'out5');
+    A('#s4p2', T.s4b + 1.78, 0.8, { o: [0, 1], y: [120, 0], r: [6, 2.5], s: [0.9, 1] }, 'out5');
+    A('#s4c3', T.s4b + 2.3, 0.5, { o: [0, 1], s: [0.5, 1] }, 'back');
+    sfx(T.s4b + 1.6, 'whoosh', { dur: 0.7, g: 0.4, pan: -0.2 });
+    sfx(T.s4b + 1.78, 'whoosh', { dur: 0.7, g: 0.3, pan: 0.3 });
+    sfx(T.s4b + 2.3, 'pop', { g: 0.8 });
+
+    /* ---------- 5 · no guessing: the real flag on a real blank grade ---------- */
+    const heads = $$('#s5 .heads .w');
+    A(heads[0], T.s5 + 0.2, 0.8, { o: [0, 1], y: [60, 0], b: [18, 0], s: [1.04, 1] }, 'out5');
+    A(heads[1], T.s5 + 0.6, 0.8, { o: [0, 1], y: [60, 0], b: [18, 0], s: [1.04, 1] }, 'out5');
+    A($('#s5 .sub'), T.s5 + 1.7, 0.7, { o: [0, 1], y: [20, 0] });
+    sfx(T.s5 + 0.2, 'hit');
+    sfx(T.s5 + 0.6, 'hit', { g: 0.9 });
+    const w5 = new Screen($('#s5win'), { left: 360, top: 400, width: 1200, vh: 640, url: 'GradeFlow AI · Report Cards · Needs checking' });
+    A('#s5win', T.s5 + 0.95, 0.7, { o: [0, 1], y: [50, 0], s: [0.96, 1] }, 'out5');
+    sfx(T.s5 + 0.95, 'whoosh', { dur: 0.6, g: 0.35 });
+    const cells = B.sf9check.blankCells;
+    const blank = { x: cells[2].x, y: cells[2].y, w: cells[3].x + cells[3].w - cells[2].x, h: cells[2].h };
+    const sTo = blank.y - 300;
+    w5.show(T.s5, ['sf9-check']).camera(T.s5, 0, 1.3, 950, center(B.sf9check.row)[1])
+      .ring(T.s5 + 1.45, 0.7, B.sf9check.quality, 7)
+      .show(T.s5 + 2.2, ['sf9-check-full'], 0.3).scroll(T.s5 + 2.2, 0.9, sTo)
+      .camera(T.s5 + 2.2, 0.9, 2.1, blank.x + blank.w / 2 - 110, blank.y - sTo + blank.h / 2)
+      .ring(T.s5 + 3.05, 0, blank, 5);
+    sfx(T.s5 + 1.45, 'ping', { note: 79, g: 0.8 });
+    sfx(T.s5 + 2.2, 'whoosh', { dur: 0.8, g: 0.25, up: false });
+    sfx(T.s5 + 3.05, 'ping', { note: 76, g: 0.9 });
+  }
+
+  /* ---------- 6 · outro ---------- */
+  drawPath($('#s6arc'), T.s6 + 0.25, 0.85, 'inOut3');
+  drawPath($('#s6bar'), T.s6 + 1.0, 0.35, 'out3');
+  A('#s6markWrap', T.s6 + 0.15, 1.1, { s: [0.8, 1], o: [0, 1] }, 'out5');
+  A('#s6word', T.s6 + 0.75, 0.85, { o: [0, 1], y: [40, 0], b: [16, 0] }, 'out5');
+  A('#s6tag', T.s6 + 1.25, 0.7, { o: [0, 1], y: [20, 0] });
+  A('#s6pill', T.s6 + 1.6, 0.6, { o: [0, 1], y: [16, 0], s: [0.94, 1] }, 'back');
+  A('#s6 .center', T.s6, END - T.s6, { s: [1.02, 1] }, 'out3');
+  sfx(T.s6 + 0.25, 'shimmer', { dur: 0.85 });
+  sfx(T.s6 + 1.0, 'bell', { notes: [84, 88, 91, 96], g: 0.8, dur: 3 });
+  sfx(T.s6 + 1.6, 'ping', { note: 96, g: 0.6 });
+
+  /* ---------- HUD ---------- */
+  const hud = $('#hud');
+  const pad = (n, w = 2) => String(n).padStart(w, '0');
+  function timecode(t) {
+    const f = Math.floor(t * FPS + 1e-6);
+    const sec = Math.floor(f / FPS);
+    return `${pad(Math.floor(sec / 3600))}:${pad(Math.floor(sec / 60) % 60)}:${pad(sec % 60)}:${pad(f % FPS)}`;
+  }
+  function hudFrame(t, top) {
+    const sc = SCENES[top];
+    hud.style.color = sc.tone === 'dark' ? '#0f172a' : '#ffffff';
+    hud.style.opacity = (sc.tone === 'dark' ? 0.75 : 0.8) * (1 - E.out3(clamp((t - T.s6) / 0.4)));
+    $('#hudNum').textContent = `${pad(top + 1)} / ${pad(SCENES.length)}`;
+    $('#hudLabel').textContent = sc.label;
+    $('#tc').textContent = timecode(t);
+    $('#hudFill').style.width = ((t / END) * 100).toFixed(2) + '%';
+  }
+
+  /* rowX0 needs layout: place the circled grade at the screen centre when the circle is drawn */
+  function measure() {
+    const hit = $('#s2hit');
+    rowX0 = 960 - (hit.offsetLeft + hit.offsetWidth / 2);
+  }
+
+  reel.start();
+})();
+</script>
+</body>
+</html>

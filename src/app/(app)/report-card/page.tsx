@@ -312,10 +312,6 @@ export default function ReportCardPage() {
         </div>
       </div>
       <p className="preview-hint"><Icon name="info" /> Tap any value on the page to edit it (Enter saves, Esc cancels). Tap an observed-values box to change AO, SO, RO or NO. Download and Print make the real PDF. In the print dialog choose Actual size (100%) and two-sided (flip on long edge).</p>
-
-      <div className="page-actions">
-        <Link className="btn btn-secondary" href="/verification"><Icon name="arrow-left" /> Back to verification</Link>
-      </div>
     </section>
   );
 }

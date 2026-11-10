@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import { extractLogo, readGrid } from '@/server/extract';
-import { guard, HttpError, limiter } from '@/server/guard';
-import { readUpload, toResponse } from '@/server/http';
-import { streamJob } from '@/server/stream';
-import { MappingError, parseSchema, runImport } from '@/server/mapper';
-import { readTemplate, TemplateError } from '@/server/template';
+import { extractLogo, masterListSize, readGrid, readSheets } from '@/server/import/extract';
+import { guard, HttpError, limiter } from '@/server/core/guard';
+import { readUpload, toResponse } from '@/server/core/http';
+import { streamJob } from '@/server/core/stream';
+import { ALL_SUBJECTS } from '@/lib/domain/curriculum';
+import { cardDefaults, readMasterList } from '@/server/import/masterList';
+import { MappingError, parseSchema, runImport } from '@/server/import/mapper';
+import { readTemplate, TemplateError } from '@/server/import/template';
+
+const ALL = '__all__';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -20,6 +24,13 @@ export async function POST(request: Request) {
     return streamJob(async (emit) => {
       emit(5, 'Reading the sheet');
       const grid = readGrid(name, data);
+      if (masterListSize(grid)) {
+        const asked = form.get('section');
+        const section = typeof asked === 'string' && asked ? asked : ALL; // no question asked: read every section
+        emit(40, section === ALL ? 'Reading every section' : `Reading section ${section}`);
+        // The only picture in a school-wide list workbook is a tiny low-resolution seal, so it is not used as the logo.
+        return { ...readMasterList(grid, { ...schema, subjects: ALL_SUBJECTS.map((x) => ({ key: x.key, name: x.name, semester: x.semester })) }, section === ALL ? null : section, cardDefaults(readSheets(name, data).filter((g) => g.sheet !== grid.sheet))), roster: true };
+      }
       limiter.takeCall();
       try {
         emit(15, 'Finding the learners and subjects');

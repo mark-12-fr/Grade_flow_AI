@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Icon } from '@/components/Icon';
-import { useUi } from '@/components/Providers';
-import { removeSf10, removeSf9 } from '@/lib/actions';
-import { formatDate, prettyYear } from '@/lib/format';
-import { useAppState } from '@/lib/store';
+import { Icon } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { removeSf10, removeSf9 } from '@/lib/state/actions';
+import { formatDate, prettyYear } from '@/lib/domain/format';
+import { useAppState } from '@/lib/state/store';
 
 export default function HistoryPage() {
   const state = useAppState();

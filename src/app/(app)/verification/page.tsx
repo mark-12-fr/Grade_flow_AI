@@ -3,15 +3,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { useUi } from '@/components/Providers';
-import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '@/lib/curriculum';
-import { initials, prettyYear } from '@/lib/format';
+import { Icon } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { ALL_SUBJECTS, ATTENDANCE_MONTHS, semestersFor, subjectsFor } from '@/lib/domain/curriculum';
+import { initials, prettyYear } from '@/lib/domain/format';
 import {
   approvedCount, averageGrade, averageLabel, gradeScaleDescription, isValidGrade, missingGradeCells, reviewedCommentCount, scaleMinimum, studentStatus
-} from '@/lib/grading';
-import { setState, useAppState } from '@/lib/store';
-import type { AppState, Student } from '@/lib/types';
+} from '@/lib/domain/grading';
+import { setState, useAppState } from '@/lib/state/store';
+import type { AppState, Student } from '@/lib/domain/types';
 
 const PAGE_SIZE = 6;
 type Tab = 'grades' | 'attendance' | 'values';
@@ -24,7 +24,7 @@ const NAMES: Record<string, string> = { lrn: 'LRN', roll: 'Roll / ID number', na
 function fieldLabel(field: string): string {
   const parts = field.split(':');
   if (parts[0] === 'grade') {
-    const subject = SUBJECTS.find((s) => s.key === parts[1]);
+    const subject = ALL_SUBJECTS.find((s) => s.key === parts[1]);
     return `${subject ? subject.name : parts[1]} · ${parts[2] === 'final' ? 'Semester final' : `Quarter ${parts[2].slice(1)}`}`;
   }
   if (parts[0] === 'att') return `Attendance · ${parts[1].toUpperCase()} · ${parts[2].replace(/([A-Z])/g, ' $1').toLowerCase()}`;
@@ -230,7 +230,7 @@ export default function VerificationPage() {
                       <td>{[student.age, student.sex].filter(Boolean).join(' / ') || '—'}</td>
                       <td>{student.lrn || '—'}</td>
                       <td>{averageLabel(student)}</td>
-                      <td>{SUBJECTS.length * 3 - m} / {SUBJECTS.length * 3}</td>
+                      <td>{subjectsFor(student.strand).length * 3 - m} / {subjectsFor(student.strand).length * 3}</td>
                       <td><StatusBadge student={student} /></td>
                       <td><button type="button" className="btn btn-secondary row-edit" onClick={() => selectStudent(student.id, true)}>Edit grades</button></td>
                     </tr>
@@ -271,7 +271,7 @@ export default function VerificationPage() {
                 ))}
               </div>
               <div className="grade-editor-panel" role="tabpanel" tabIndex={0}>
-                {tab === 'grades' && SEMESTERS.map((semester) => (
+                {tab === 'grades' && semestersFor(selected?.strand).map((semester) => (
                   <div key={semester.key}>
                     <h4>{semester.label}</h4>
                     <div className="grade-editor-scroll"><table className="grade-editor-table">

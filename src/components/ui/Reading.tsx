@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useReadProgress } from '@/lib/progress';
+import { useReadProgress } from '@/lib/state/progress';
 
 const STEPS: Record<'sf9' | 'sf10' | 'sheet', string[]> = {
   sf9: ['Uploading your file', 'Reading the sheet', 'Finding the learners and subjects', 'Copying the grades into the report cards'],

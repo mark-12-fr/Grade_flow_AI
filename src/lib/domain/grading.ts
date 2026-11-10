@@ -1,6 +1,6 @@
-import { PASSING_GRADE, STRAND_TRACK, SUBJECTS, type Subject } from './curriculum';
-import { formatDate, formatLongDate, prettyYear } from './format';
-import type { AppState, GradeValue, Period, Student } from './types';
+import { PASSING_GRADE, STRAND_TRACK, subjectsFor, type Subject } from '@/lib/domain/curriculum';
+import { formatDate, formatLongDate, prettyYear } from '@/lib/domain/format';
+import type { AppState, GradeValue, Period, Student } from '@/lib/domain/types';
 
 export function isGradeValue(value: GradeValue): boolean {
   return value !== null && value !== undefined && value !== '' && !Number.isNaN(Number(value));
@@ -13,15 +13,16 @@ function rawAverage(student: Student, subjects: Subject[]): number | null {
   return values.reduce((sum: number, v) => sum + Number(v), 0) / values.length;
 }
 
-export const semesterSubjects = (key: string) => SUBJECTS.filter((s) => s.semester === key);
+export const semesterSubjects = (student: Student, key: string) => subjectsFor(student.strand).filter((s) => s.semester === key);
+
 
 export function semesterAverage(student: Student, key: string): number | null {
-  const raw = rawAverage(student, semesterSubjects(key));
+  const raw = rawAverage(student, semesterSubjects(student, key));
   return raw === null ? null : Math.round(raw);
 }
 
 export function averageGrade(student: Student): number | null {
-  const raw = rawAverage(student, SUBJECTS);
+  const raw = rawAverage(student, subjectsFor(student.strand));
   return raw === null ? null : Math.round(raw);
 }
 
@@ -31,7 +32,7 @@ export function remarkFor(value: GradeValue): '' | 'Passed' | 'Failed' {
 }
 
 export function studentStatus(student: Student): 'approved' | 'needs-correction' {
-  const missing = SUBJECTS.some((subject) => {
+  const missing = subjectsFor(student.strand).some((subject) => {
     const grades = student.grades[subject.key] || {};
     return [...subject.quarters, subject.finalKey].some((p) => {
       const v = grades[p as Period];
@@ -44,7 +45,7 @@ export function studentStatus(student: Student): 'approved' | 'needs-correction'
 export function missingGradeCells(students: Student[]) {
   const list: { student: Student; subject: Subject; period: Period; periodLabel: string }[] = [];
   students.forEach((student) => {
-    SUBJECTS.forEach((subject) => {
+    subjectsFor(student.strand).forEach((subject) => {
       const grades = student.grades[subject.key] || {};
       [...subject.quarters, subject.finalKey].forEach((p) => {
         const period = p as Period;
@@ -78,7 +79,7 @@ export function gradeScaleDescription(state: Pick<AppState, 'gradingScale'>): st
 
 // Standard competition ranking (1,2,2,4); learners with any missing grade stay unranked.
 export function computeRanks(students: Student[]) {
-  const scored = students.map((student) => ({ student, raw: studentStatus(student) === 'approved' ? rawAverage(student, SUBJECTS) : null }));
+  const scored = students.map((student) => ({ student, raw: studentStatus(student) === 'approved' ? rawAverage(student, subjectsFor(student.strand)) : null }));
   const ranked = scored.filter((e) => e.raw !== null).sort((a, b) => (b.raw as number) - (a.raw as number));
   const result = new Map<number, { rank: number | null; average: number | null; raw: number | null }>();
   ranked.forEach((entry, index) => {
@@ -123,12 +124,13 @@ const subjectAction = (key: string) => SUBJECT_ACTIONS[key] || SUBJECT_ACTIONS.e
 
 export function buildComment(student: Student): string {
   const first = student.name.split(' ')[0];
-  const entries = SUBJECTS.map((subject) => ({ subject, value: (student.grades[subject.key] || {}).final }))
+  const subjects = subjectsFor(student.strand);
+  const entries = subjects.map((subject) => ({ subject, value: (student.grades[subject.key] || {}).final }))
     .filter((e) => e.value !== null && e.value !== undefined && e.value !== '' && !Number.isNaN(Number(e.value)))
     .sort((a, b) => Number(b.value) - Number(a.value));
   const average = averageGrade(student);
-  const strongest = entries.length ? entries[0].subject : SUBJECTS[0];
-  const growth = entries.length ? entries[entries.length - 1].subject : SUBJECTS[1];
+  const strongest = entries.length ? entries[0].subject : subjects[0];
+  const growth = entries.length ? entries[entries.length - 1].subject : subjects[1];
   let opening: string;
   if (average === null) opening = 'has shown real effort this term while we complete the grade record.';
   else if (average >= 93) opening = 'has had an outstanding term.';
@@ -149,10 +151,11 @@ export function makeTraits(student: Student) {
 }
 
 export function makeNextSteps(student: Student): string[] {
-  const entries = SUBJECTS.map((subject) => ({ subject, value: (student.grades[subject.key] || {}).final }))
+  const subjects = subjectsFor(student.strand);
+  const entries = subjects.map((subject) => ({ subject, value: (student.grades[subject.key] || {}).final }))
     .filter((e) => typeof e.value === 'number')
     .sort((a, b) => Number(a.value) - Number(b.value));
-  const growth = entries.length ? entries[0].subject : SUBJECTS[0];
+  const growth = entries.length ? entries[0].subject : subjects[0];
   return [
     `Practise ${growth.name.toLowerCase()} a little every day.`,
     'Add examples and detail to longer written answers.',
@@ -186,3 +189,16 @@ export function reportContext(state: AppState, overrides: { year?: string; term?
   };
 }
 export type ReportContext = ReturnType<typeof reportContext>;
+
+/** The class-level context with this learner's own section, strand and adviser when the upload mixed several sections. */
+export function studentContext(context: ReportContext, student: Student): ReportContext {
+  if (!student.section && !student.strand && !student.adviser) return context;
+  const strand = student.strand || context.strand;
+  return {
+    ...context,
+    section: student.section || context.section,
+    strand,
+    trackStrand: STRAND_TRACK[strand] || strand,
+    teacher: student.adviser || context.teacher
+  };
+}

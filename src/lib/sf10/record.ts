@@ -1,7 +1,7 @@
-import { SEMESTERS } from './curriculum';
-import { formatLongDate, prettyYear } from './format';
-import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from './grading';
-import type { AppState, Sf10Remedial, Student } from './types';
+import { semestersFor, strandKey } from '@/lib/domain/curriculum';
+import { formatLongDate, prettyYear } from '@/lib/domain/format';
+import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from '@/lib/domain/grading';
+import type { AppState, Sf10Data, Sf10Remedial, Student } from '@/lib/domain/types';
 
 export interface Sf10Rec {
   last: string; first: string; middle: string; lrn: string; sex: string; birth: string;
@@ -48,7 +48,7 @@ export function recordFor(student: Student, state: AppState): Sf10Rec {
     };
   }
   const context = reportContext(state);
-  const semesters = SEMESTERS.map((semester) => {
+  const semesters = semestersFor(student.strand).map((semester) => {
     const rows = semester.groups.flatMap((group) => group.subjects.map(([key, subject]) => {
       const g = student.grades[key] || {};
       const final = cell(g.final);
@@ -58,14 +58,14 @@ export function recordFor(student: Student, state: AppState): Sf10Rec {
     return {
       school: context.schoolName, schoolId: '', gradeLevel: state.gradeLevel, sy: prettyYear(state.year), semLabel: semester.key === 'first' ? '1ST' : '2ND',
       quarters: [ordinal(semester.quarterLabels[0]), ordinal(semester.quarterLabels[1])] as [string, string],
-      track: state.strand, section: state.section, rows, average: avg === null ? '' : String(avg), averageAction: avg === null ? '' : remarkFor(avg).toUpperCase(),
-      remarks: '', adviser: state.teacher, principal: state.school.principal, dateChecked: '', remedial: EMPTY_REMEDIAL
+      track: student.strand || state.strand, section: student.section || state.section, rows, average: avg === null ? '' : String(avg), averageAction: avg === null ? '' : remarkFor(avg).toUpperCase(),
+      remarks: '', adviser: student.adviser || state.teacher, principal: state.school.principal, dateChecked: '', remedial: EMPTY_REMEDIAL
     };
   });
   const annual = averageGrade(student);
   return {
     ...base, birth: student.birthdate ? formatLongDate(student.birthdate) : '', eligibility: {}, semesters,
-    completion: { trackAccomplished: state.strand, shsAverage: annual === null ? '' : String(annual), certifiedBy: state.school.principal },
+    completion: { trackAccomplished: student.strand || state.strand, shsAverage: annual === null ? '' : String(annual), certifiedBy: state.school.principal },
     complete: studentStatus(student) === 'approved'
   };
 }
@@ -76,7 +76,17 @@ export const sf10Source = (state: AppState): Student[] => (state.sf10Students.le
 /** Strand, section and grade levels of a learner, used to filter the SF10 list. */
 export function learnerMeta(student: Student, state: AppState): { strand: string; section: string; levels: string[] } {
   const sems = student.sf10?.semesters ?? [];
-  if (!sems.length) return { strand: state.strand, section: state.section, levels: [state.gradeLevel] };
+  if (!sems.length) return { strand: strandKey(student.strand || state.strand), section: student.section || state.section, levels: [state.gradeLevel] };
   const last = [...sems].reverse().find((s) => s.section || s.track) ?? sems[sems.length - 1];
-  return { strand: last.track || '', section: last.section || '', levels: [...new Set(sems.map((x) => x.gradeLevel).filter(Boolean))] };
+  return { strand: strandKey(last.track || ''), section: last.section || '', levels: [...new Set(sems.map((x) => x.gradeLevel).filter(Boolean))] };
+}
+
+/** The editable copy of a learner's SF10: what is stored when it was read from a file, otherwise what is built from the class grades. */
+export function toSf10Data(student: Student, state: AppState): Sf10Data {
+  if (student.sf10) return student.sf10;
+  const rec = recordFor(student, state);
+  return {
+    eligibility: { ...rec.eligibility }, completion: { ...rec.completion },
+    semesters: rec.semesters.map(({ semLabel, quarters: _quarters, ...sem }) => ({ ...sem, sem: semLabel === '2ND' ? '2' : '1' }))
+  };
 }

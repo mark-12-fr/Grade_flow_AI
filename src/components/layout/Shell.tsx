@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Icon, type IconName } from './Icon';
-import { PAGE_META, STEP_ORDER } from '@/lib/curriculum';
-import { formatDate } from '@/lib/format';
-import { allCommentsReviewed, missingGradeCells, readyToGenerate } from '@/lib/grading';
-import { useAppState } from '@/lib/store';
-import type { PageId } from '@/lib/types';
+import { Icon, type IconName } from '@/components/ui/Icon';
+import { PAGE_META, STEP_ORDER } from '@/lib/domain/curriculum';
+import { formatDate } from '@/lib/domain/format';
+import { allCommentsReviewed, missingGradeCells } from '@/lib/domain/grading';
+import { useAppState } from '@/lib/state/store';
+import type { PageId } from '@/lib/domain/types';
 
 const NAV: { page: PageId; icon: IconName; label: string }[] = [
   { page: 'upload', icon: 'upload', label: 'Uploads' },
@@ -68,9 +68,6 @@ export function Shell({ children }: { children: ReactNode }) {
   const items: { icon: IconName; title: string; text: string; link?: string; linkLabel?: string }[] = [];
   if (missing.length) {
     items.push({ icon: 'alert-triangle', title: `${missing.length} grade${missing.length === 1 ? '' : 's'} need review`, text: `${missing[0].student.name} · ${missing[0].subject.name}`, link: '/verification', linkLabel: 'Review grades' });
-  }
-  if (readyToGenerate(state.students) && !state.generated) {
-    items.push({ icon: 'check-circle', title: 'Ready to generate', text: `All grades are approved for ${state.className}.`, link: '/report-card', linkLabel: 'Preview reports' });
   }
   if (!items.length) items.push({ icon: 'check-circle', title: 'You are all caught up', text: 'There are no grade checks waiting for you right now.' });
   const showDot = missing.length > 0 || (state.students.length > 0 && !allCommentsReviewed(state.students));
@@ -165,7 +162,6 @@ export function Shell({ children }: { children: ReactNode }) {
           )}
           {children}
           <footer className="app-footer">
-            <span><Icon name="shield-check" /> Learner data stays in your browser except for the file you upload.</span>
             <span>GradeFlow</span>
           </footer>
         </main>

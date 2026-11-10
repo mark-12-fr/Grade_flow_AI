@@ -2,16 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { Reading } from '@/components/Reading';
-import { useUi } from '@/components/Providers';
-import { importSf10, importSf9, removeSf10, removeSf9, validateBeforeProcessing } from '@/lib/actions';
-import { formatFileSize } from '@/lib/format';
-import { getState, setState, useAppState } from '@/lib/store';
-
-// Preselect the sheet that most likely lists the learners: the biggest one with many columns.
-const guessSheet = (sheets: { name: string; rows: number; cols: number; label?: string }[]) =>
-  [...sheets].filter((x) => x.rows > 5 && x.name !== '__forms__').sort((a, b) => b.rows * b.cols - a.rows * a.cols)[0]?.name ?? sheets[0]?.name ?? '';
+import { Icon } from '@/components/ui/Icon';
+import { Reading } from '@/components/ui/Reading';
+import { useUi } from '@/components/layout/Providers';
+import { importSf10, importSf9, removeSf10, removeSf9, validateBeforeProcessing } from '@/lib/state/actions';
+import { formatFileSize } from '@/lib/domain/format';
+import { getState, setState, useAppState } from '@/lib/state/store';
 
 export default function UploadPage() {
   const router = useRouter();
@@ -23,7 +19,6 @@ export default function UploadPage() {
   const [sf10Busy, setSf10Busy] = useState<{ file: string; kind: 'sf10' | 'sheet' } | null>(null);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
-  const [pick, setPick] = useState<{ file: File; sheets: { name: string; rows: number; cols: number; label?: string }[]; selected: string } | null>(null);
 
   const hasFiles = Boolean(state.upload) || state.sf10Students.length > 0;
   const upload = state.upload;
@@ -37,30 +32,17 @@ export default function UploadPage() {
     const result = await importSf9(file);
     setSf9Busy('');
     if (sf9Input.current) sf9Input.current.value = '';
-    if (!result.ok) setError(result.error ?? '');
-    toast(result.message ?? '', result.type);
+    if (!result.ok) { setError(result.error ?? ''); toast(result.message ?? '', result.type); }
   }
 
   async function onSf10(files: FileList | null) {
     const file = files?.[0];
     if (!file) return;
     if ((files?.length ?? 0) > 1) { toast('Choose one file for the SF10.', 'error'); return; }
-    setPick(null);
     setSf10Busy({ file: file.name, kind: 'sf10' });
     const result = await importSf10(file);
     setSf10Busy(null);
     if (sf10Input.current) sf10Input.current.value = '';
-    if (result.pick) setPick({ file, sheets: result.pick, selected: guessSheet(result.pick) });
-    toast(result.message ?? '', result.type);
-  }
-
-  async function readPickedSheet() {
-    if (!pick) return;
-    const { file, selected } = pick;
-    setSf10Busy({ file: `${file.name} · ${selected}`, kind: 'sheet' });
-    const result = await importSf10(file, selected);
-    setSf10Busy(null);
-    if (result.ok && !result.pick) setPick(null);
     toast(result.message ?? '', result.type);
   }
 
@@ -142,20 +124,6 @@ export default function UploadPage() {
                   </div>
                   <div className="sf10-file-list" aria-live="polite">
                     {sf10Busy && <Reading fileName={sf10Busy.file} kind={sf10Busy.kind} />}
-                    {!sf10Busy && pick && (
-                      <div className="sf10-file-row sf10-pick">
-                        <span className="file-type-icon"><Icon name="file-sheet" /></span>
-                        <span className="sf10-file-name">{pick.file.name}: choose the sheet with your learners</span>
-                        <div className="select-wrap">
-                          <select aria-label="Sheet to read" value={pick.selected} onChange={(e) => setPick({ ...pick, selected: e.target.value })}>
-                            {pick.sheets.map((x) => <option key={x.name} value={x.name}>{x.label ?? `${x.name} (${x.rows} rows)`}</option>)}
-                          </select>
-                          <Icon name="chevron-down" className="select-chevron" />
-                        </div>
-                        <button type="button" className="btn btn-primary btn-sm" onClick={() => void readPickedSheet()}>Read this sheet</button>
-                        <button type="button" className="icon-btn" aria-label="Cancel" onClick={() => setPick(null)}><Icon name="x" /></button>
-                      </div>
-                    )}
                     {!sf10Busy && state.sf10File && (
                       <div className="sf10-file-row">
                         <span className="file-type-icon"><Icon name="file-text" /></span>

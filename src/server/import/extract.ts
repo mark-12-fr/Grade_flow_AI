@@ -88,6 +88,15 @@ export function readGrid(filename: string, data: Buffer): Grid {
   return { ...primary, skippedSheets: all.filter((g) => g !== primary).map((g) => g.sheet) };
 }
 
+/**
+ * A school-wide master list (many subjects x Q1/Q2/FINAL across strands and grade levels) is not one class's gradebook.
+ * Returns the number of FINAL columns when the sheet looks like one, else 0.
+ */
+export function masterListSize(grid: Grid): number {
+  const finals = grid.rows.slice(0, 8).reduce((n, row) => n + row.filter((c) => String(c).trim().toLowerCase() === 'final').length, 0);
+  return finals > 30 ? finals : 0;
+}
+
 export function colLetter(index: number): string {
   let out = '', n = index + 1;
   while (n) { const rem = (n - 1) % 26; out = String.fromCharCode(65 + rem) + out; n = Math.floor((n - 1) / 26); }

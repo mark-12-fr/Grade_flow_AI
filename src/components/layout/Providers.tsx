@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Icon } from './Icon';
+import { Icon } from '@/components/ui/Icon';
+import { hydrate } from '@/lib/state/store';
 
 type ToastType = 'success' | 'error' | 'info';
 interface ModalOptions {
@@ -41,6 +42,8 @@ export function Providers({ children }: { children: ReactNode }) {
   }, []);
 
   const openModal = useCallback((options: ModalOptions) => setModal(options), []);
+
+  useEffect(() => { void hydrate(); }, []);
 
   useEffect(() => {
     const el = dialog.current;

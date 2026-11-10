@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Icon } from '@/components/Icon';
-import { useUi } from '@/components/Providers';
-import { Sf10Sheet } from '@/components/Sf10Sheet';
-import { downloadSf10 } from '@/lib/pdf/sf10';
-import { learnerMeta, sf10Source } from '@/lib/sf10Record';
-import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10Quality';
-import { setState, useAppState } from '@/lib/store';
-import type { Student } from '@/lib/types';
+import { Icon } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { Sf10Sheet } from '@/components/report/Sf10Sheet';
+import { downloadSf10, printSf10 } from '@/lib/pdf/sf10';
+import { sf10Edits } from '@/lib/sf10/edit';
+import { learnerMeta, sf10Source } from '@/lib/sf10/record';
+import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10/quality';
+import { setState, useAppState } from '@/lib/state/store';
+import type { Student } from '@/lib/domain/types';
 
 const slug = (value: string) => value.replace(/[^\x20-\x7E]/g, '?').replace(/\W+/g, '_').replace(/^_+|_+$/g, '') || 'SF10';
 
@@ -29,6 +30,7 @@ export default function Sf10Page() {
   const [editOpen, setEditOpen] = useState(false);
   const selectAll = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
 
   const metas = useMemo(() => new Map(source.map((s) => [s.id, learnerMeta(s, state)])), [source, state]);
   const options = useMemo(() => {
@@ -55,6 +57,11 @@ export default function Sf10Page() {
   const current = source[Math.min(Math.max(0, state.sf10Index), Math.max(0, source.length - 1))] ?? null;
   const visibleIndex = current ? filtered.findIndex((s) => s.id === current.id) : -1;
   const show = (student: Student | undefined) => { if (student) setState({ sf10Index: source.findIndex((s) => s.id === student.id) }); };
+  // Tapping a learner in the list shows that record and scrolls down to it.
+  const open = (student: Student) => {
+    show(student);
+    window.setTimeout(() => sheetRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 60);
+  };
 
   // When the filters hide the learner on screen, show the first match instead.
   useEffect(() => {
@@ -85,7 +92,16 @@ export default function Sf10Page() {
     finally { setBusy(false); }
   }
 
-  const scopeName = slug([strand, section, level && `G${level}`].filter(Boolean).join('-') || 'class');
+  // One learner by default; when learners are checked in the list (or Select all is ticked), the buttons apply to all of them.
+  const target = selectedStudents.length ? selectedStudents : current ? [current] : [];
+
+  async function print(students: Student[]) {
+    if (!students.length) return;
+    setBusy(true);
+    try { await printSf10(students, state); toast(`Opening the print dialog for ${students.length} SF10 record${students.length === 1 ? '' : 's'} (A4).`, 'info'); }
+    catch { toast('Printing could not start. Reload the page and try again.', 'error'); }
+    finally { setBusy(false); }
+  }
 
   return (
     <section className="page active" aria-labelledby="sf10-page-title">
@@ -149,7 +165,7 @@ export default function Sf10Page() {
               return (
                 <div key={s.id} className={`sf10-row${active ? ' active' : ''}${pickedSet.has(s.id) ? ' picked' : ''}`} role="option" aria-selected={active} aria-current={active ? 'true' : undefined}>
                   <input type="checkbox" checked={pickedSet.has(s.id)} aria-label={`Select ${s.name}`} onChange={(e) => toggle(s.id, e.target.checked)} />
-                  <button type="button" className="sf10-row-main" onClick={() => show(s)}>
+                  <button type="button" className="sf10-row-main" onClick={() => open(s)}>
                     <strong>{s.lrn || '—'}</strong>
                     <span>{s.name}</span>
                     <em>{[m.strand, m.section].filter(Boolean).join(' · ')}</em>
@@ -163,16 +179,14 @@ export default function Sf10Page() {
         </div>
 
         <div className="sf10-actions">
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!current || busy} onClick={() => current && void download([current], slug(current.lrn || current.name))}>
-            <Icon name="download" /> This learner (PDF)
+          <span className="sf10-target">{target.length > 1 ? `${target.length} learners checked` : target.length === 1 ? (selectedStudents.length ? '1 learner checked' : current?.name) : ''}</span>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length || busy}
+            onClick={() => void download(target, target.length === 1 ? slug(target[0].lrn || target[0].name) : selectedStudents.length ? 'selected' : 'class')}>
+            <Icon name="download" /> {target.length > 1 ? `Download PDF (${target.length})` : 'Download PDF'}
           </button>
-          <button type="button" className="btn btn-secondary btn-sm" disabled={!picked.length || busy} onClick={() => void download(selectedStudents, 'selected')}>
-            <Icon name="download" /> Selected ({picked.length})
+          <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => void print(target)}>
+            <Icon name="printer" /> Print{target.length > 1 ? ` (${target.length})` : ''}
           </button>
-          <button type="button" className="btn btn-primary btn-sm" disabled={!filtered.length || busy} onClick={() => void download(filtered, scopeName)}>
-            <Icon name="download" /> {filtersOn ? `All shown (${filtered.length})` : `Everyone (${filtered.length})`}
-          </button>
-          {busy && <span className="sf10-busy" role="status">Preparing the PDF...</span>}
         </div>
       </div>
 
@@ -231,9 +245,21 @@ export default function Sf10Page() {
         </div>
       )}
 
-      <article className="card sf10-sheet" aria-label="SF10 record">
+      {current && visibleIndex !== -1 && (
+        <div className="preview-bar preview-bar-two">
+          <div className="preview-who" title={current.name}><strong>{current.name}</strong><span>{current.lrn}</span></div>
+          <div className="student-pager">
+            <button type="button" className="icon-btn" aria-label="Previous learner" disabled={visibleIndex <= 0} onClick={() => show(filtered[visibleIndex - 1])}><Icon name="chevron-left" /></button>
+            <span>{`${visibleIndex + 1} of ${filtered.length}`}</span>
+            <button type="button" className="icon-btn" aria-label="Next learner" disabled={visibleIndex >= filtered.length - 1} onClick={() => show(filtered[visibleIndex + 1])}><Icon name="chevron-right" /></button>
+          </div>
+        </div>
+      )}
+      {current && visibleIndex !== -1 && <p className="preview-hint"><Icon name="pencil" /> Tap any value on the record to edit it. Press Enter to save, or Esc to cancel. Hover a subject to remove it.</p>}
+
+      <article className="card sf10-sheet" aria-label="SF10 record" ref={sheetRef} style={{ scrollMarginTop: 'calc(var(--header-height, 60px) + 12px)' }}>
         {current && visibleIndex !== -1
-          ? <div key={current.id} className="swap-in"><Sf10Sheet student={current} state={state} /></div>
+          ? <div key={current.id} className="swap-in"><Sf10Sheet student={current} state={state} edits={sf10Edits(current, state)} /></div>
           : <p className="sf10-incomplete">{source.length ? 'No learner to show. Change the search or filters.' : 'Upload an SF10 file first.'}</p>}
       </article>
     </section>

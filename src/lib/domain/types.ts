@@ -39,6 +39,10 @@ export interface Student {
   sex: string;
   lrn: string;
   birthdate?: string;
+  /** Set when one upload holds several sections (school-wide list); overrides the class-level values on the card. */
+  section?: string;
+  strand?: string;
+  adviser?: string;
   grades: Grades;
   attendance: Attendance;
   transfer: Record<string, string>;

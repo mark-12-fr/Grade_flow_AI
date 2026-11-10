@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { HttpError, LimitExceeded } from './guard';
-import { ExtractError } from './extract';
-import { MappingError } from './mapper';
+import { HttpError, LimitExceeded } from '@/server/core/guard';
+import { ExtractError } from '@/server/import/extract';
+import { MappingError } from '@/server/import/mapper';
 
 export const MAX_BYTES = 10 * 1024 * 1024;
 

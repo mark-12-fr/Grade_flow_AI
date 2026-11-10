@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isConfigured } from '@/server/llm';
+import { isConfigured } from '@/server/core/llm';
 
 export const dynamic = 'force-dynamic';
 

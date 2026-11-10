@@ -4,10 +4,10 @@
  * as structured data. Every number it returns is then checked against the sheet's own cells: a grade
  * the model could not have read from the sheet is dropped, never kept.
  */
-import { AiError, callAi, type Caller, type Tool } from './llm';
-import { fullText, type Grid } from './extract';
-import { MappingError } from './mapper';
-import type { Sf10Semester, Student } from '@/lib/types';
+import { AiError, callAi, type Caller, type Tool } from '@/server/core/llm';
+import { fullText, type Grid } from '@/server/import/extract';
+import { MappingError } from '@/server/import/mapper';
+import type { Sf10Semester, Student } from '@/lib/domain/types';
 
 const T = { type: 'string' };
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', properties, required });

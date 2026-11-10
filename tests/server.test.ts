@@ -1,12 +1,12 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import XLSX from '@/vendor/xlsx.cjs';
-import { readGrid, readSheets, parseCsv } from '@/server/extract';
-import { cleanField, MappingError, runImport, type ImportSchema } from '@/server/mapper';
-import { runImportSf10 } from '@/server/sf10';
-import { limiter, limits, guard, HttpError } from '@/server/guard';
-import { parseJson, callAi, AiError } from '@/server/llm';
-import { SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from '@/lib/curriculum';
+import { readGrid, readSheets, parseCsv } from '@/server/import/extract';
+import { cleanField, MappingError, runImport, type ImportSchema } from '@/server/import/mapper';
+import { runImportSf10 } from '@/server/import/sf10';
+import { limiter, limits, guard, HttpError } from '@/server/core/guard';
+import { parseJson, callAi, AiError } from '@/server/core/llm';
+import { SUBJECTS, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from '@/lib/domain/curriculum';
 
 const schema: ImportSchema = {
   subjects: SUBJECTS.map((s) => ({ key: s.key, name: s.name, semester: s.semester })),
@@ -154,7 +154,7 @@ describe('sf10 roster mode', () => {
   });
 
   it('is not mistaken for a form, and builds one SF10 per learner', async () => {
-    const { looksLikeForm, runRosterImport } = await import('@/server/sf10Roster');
+    const { looksLikeForm, runRosterImport } = await import('@/server/import/sf10Roster');
     const grid = readSheets('x.xlsx', workbook(rows))[0];
     expect(looksLikeForm(grid)).toBe(false);
     const out = await runRosterImport(grid, mapping);
@@ -173,7 +173,7 @@ describe('sf10 roster mode', () => {
   });
 
   it('keeps reading past total rows and reports skipped rows', async () => {
-    const { runRosterImport } = await import('@/server/sf10Roster');
+    const { runRosterImport } = await import('@/server/import/sf10Roster');
     const body: unknown[][] = [];
     for (let i = 0; i < 900; i += 1) {
       body.push([String(100000000000 + i), `LAST${i}`, 'FIRST', 'MS. GALLO', 80, 82, 81, '', '', '']);
@@ -188,14 +188,14 @@ describe('sf10 roster mode', () => {
   });
 
   it('warns when the LRN column does not hold LRNs', async () => {
-    const { runRosterImport } = await import('@/server/sf10Roster');
+    const { runRosterImport } = await import('@/server/import/sf10Roster');
     const grid = readSheets('x.xlsx', workbook(rows))[0];
     const out = await runRosterImport(grid, async () => ({ ...(await mapping()), learner: { lrn: 'D', lastName: 'B', firstName: 'C' } }));
     expect(out.warnings.some((w) => w.includes('LRN'))).toBe(true);
   });
 
   it('recognises a real SF10 form', async () => {
-    const { looksLikeForm } = await import('@/server/sf10Roster');
+    const { looksLikeForm } = await import('@/server/import/sf10Roster');
     const grid = readSheets('x.xlsx', workbook([["LEARNER'S INFORMATION"], ['LAST NAME:', 'CULLO']]))[0];
     expect(looksLikeForm(grid)).toBe(true);
   });
@@ -203,7 +203,7 @@ describe('sf10 roster mode', () => {
 
 describe('toCol', () => {
   it('accepts numbers, numeric strings, "7(H)" and letters', async () => {
-    const { toCol } = await import('@/server/sf10Roster');
+    const { toCol } = await import('@/server/import/sf10Roster');
     expect([toCol(7, 50), toCol('7', 50), toCol('7(H)', 50), toCol('H', 50), toCol('AB', 50), toCol('b', 50)]).toEqual([7, 7, 7, 7, 27, 1]);
     expect([toCol(-1, 50), toCol(99, 50), toCol('zzz', 50), toCol(null, 50), toCol('x1', 50)]).toEqual([-1, -1, -1, -1, -1]);
   });
@@ -211,7 +211,7 @@ describe('toCol', () => {
 
 describe('splitSemesters', () => {
   it('starts semester 2 where the COR code restarts', async () => {
-    const { splitSemesters } = await import('@/server/sf10Roster');
+    const { splitSemesters } = await import('@/server/import/sf10Roster');
     const codes = ['APP 001', 'COR 001', 'COR 003', 'COR 005', 'COR 007', 'COR 008', 'COR 011', 'COR 012', 'COR 017', 'ABM 001', 'COR 002', 'COR 004', 'COR 006', 'COR 009', 'APP 005', 'ABM 002'];
     const subjects = codes.map((code) => ({ code, gradeLevel: '11', sem: '1' }));
     const warnings: string[] = [];
@@ -225,7 +225,7 @@ describe('splitSemesters', () => {
 });
 
 describe('sf10 quality and bulk details', () => {
-  const mk = (id: number, lrn: string, finals: string[], school = '', sy = ''): import('@/lib/types').Student => ({
+  const mk = (id: number, lrn: string, finals: string[], school = '', sy = ''): import('@/lib/domain/types').Student => ({
     id, roll: '', name: `L${id}`, age: '', sex: '', lrn, grades: {}, attendance: { present: null, total: null, months: {}, schoolDays: {}, absent: {} },
     transfer: {}, observedValues: {}, comment: '', commentReviewed: true, traits: null, nextSteps: null,
     sf10: {
@@ -237,8 +237,8 @@ describe('sf10 quality and bulk details', () => {
   });
 
   it('flags missing LRN, missing finals and missing details', async () => {
-    const { learnerIssues, expectedSemesters } = await import('@/lib/sf10Quality');
-    const { initialState } = await import('@/lib/store');
+    const { learnerIssues, expectedSemesters } = await import('@/lib/sf10/quality');
+    const { initialState } = await import('@/lib/state/store');
     const good = mk(1, '115675140180', ['80', '81'], 'PUI', '2024-2025');
     const bad = mk(2, '', ['80', ''], '', '');
     const all = [good, bad];
@@ -248,7 +248,7 @@ describe('sf10 quality and bulk details', () => {
   });
 
   it('applies details only to blanks unless told to overwrite, and only to the chosen learners', async () => {
-    const { applyDetails, emptyDetails } = await import('@/lib/sf10Quality');
+    const { applyDetails, emptyDetails } = await import('@/lib/sf10/quality');
     const a = mk(1, '1', ['80'], 'KEEP ME', ''), b = mk(2, '2', ['80'], '', '');
     const v = { ...emptyDetails, schoolName: 'PHINMA', sy: '2024-2025', principal: 'DR. LIM' };
     const r1 = applyDetails([a, b], new Set([1, 2]), v, false);
@@ -266,7 +266,7 @@ describe('sf10 quality and bulk details', () => {
 
 describe('accuracy checks after the AI maps columns', () => {
   it('flags a grade column that does not hold grades, duplicate LRNs and names with numbers', async () => {
-    const { gradeColumnWarnings, learnerColumnWarnings } = await import('@/server/checks');
+    const { gradeColumnWarnings, learnerColumnWarnings } = await import('@/server/import/checks');
     const grid = readSheets('x.xlsx', workbook([
       ['LRN', 'NAME', 'MATH', 'REMARKS'],
       ['111111111111', 'CRUZ, ANA', 88, 'good'],
@@ -283,7 +283,7 @@ describe('accuracy checks after the AI maps columns', () => {
   });
 
   it('SF9 import keeps reading past a total row and reports it', async () => {
-    const { applyMapping } = await import('@/server/mapper');
+    const { applyMapping } = await import('@/server/import/mapper');
     const grid = readSheets('x.xlsx', workbook([
       ['NAME'], ['A ONE'], ['B TWO'], ['Total'], ['C THREE']
     ]))[0];

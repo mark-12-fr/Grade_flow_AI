@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Draws the SF9 report card PDF with jsPDF (ported from the original printing module).
 import type { jsPDF } from 'jspdf';
-import { ATTENDANCE_MONTHS, SEMESTERS, SUBJECTS } from '../curriculum';
-import { prettyYear } from '../format';
-import { remarkFor, semesterAverage as semAvg, type ReportContext } from '../grading';
-import type { AppState, Student } from '../types';
+import { ALL_SUBJECTS, ATTENDANCE_MONTHS, semestersFor } from '@/lib/domain/curriculum';
+import { prettyYear } from '@/lib/domain/format';
+import { remarkFor, semesterAverage as semAvg, studentContext, type ReportContext } from '@/lib/domain/grading';
+import type { AppState, Student } from '@/lib/domain/types';
 
 function pdfSafe(value: unknown): string {
   return String(value == null ? '' : value)
@@ -28,14 +28,26 @@ function setDrawColor(doc: any, color: any) {
   doc.setDrawColor(color[0], color[1], color[2]);
 }
 
-export function drawFront(doc: jsPDF, student: Student, context: ReportContext, logoData: string | null) {
+/**
+ * Draws one learner's report card.
+ * 'landscape': the whole card on one landscape page (the original layout).
+ * 'portrait': A4 portrait, exactly two pages: the front (school header, learner details, grades) and the back
+ * (certificate of transfer, attendance, observed values, legends and the parent/guardian signature).
+ * The same drawing code serves both; in portrait each block is drawn at its own scale on its own page.
+ */
+export function drawFront(doc: jsPDF, student: Student, classContext: ReportContext, logoData: string | null, mode: 'landscape' | 'portrait' = 'landscape') {
+  const portrait = mode === 'portrait';
+  const context = studentContext(classContext, student);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   // The card is designed on A4 landscape. Scale it down when the user picks
   // Letter or portrait so the same proportions still fit on one page.
-  const scale = Math.min(pageWidth / 297, pageHeight / 210);
-  const offsetX = (pageWidth - 297 * scale) / 2;
-  const offsetY = (pageHeight - 210 * scale) / 2;
+  let scale = Math.min(pageWidth / 297, pageHeight / 210);
+  let offsetX = (pageWidth - 297 * scale) / 2;
+  let offsetY = (pageHeight - 210 * scale) / 2;
+  const frontPage = doc.getNumberOfPages();
+  let backPage = frontPage;
+  if (portrait) { doc.addPage(); backPage = doc.getNumberOfPages(); doc.setPage(frontPage); }
   const X = function (value: number) { return offsetX + value * scale; };
   const Y = function (value: any) { return offsetY + value * scale; };
   const S = function (value: any) { return value * scale; };
@@ -47,7 +59,7 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
   const leftWidth = (contentWidth - columnGap) * (48.5 / 98);
   const rightWidth = contentWidth - columnGap - leftWidth;
   const rightX = left + leftWidth + columnGap;
-  const bodyTop = 26;
+  const bodyTop = portrait ? 29 : 26;
   const bodyBottom = 200;
 
   const line = [70, 68, 62];
@@ -55,6 +67,21 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
   const cream = [244, 241, 228];
   const ink = [34, 34, 34];
   const soft = [85, 84, 80];
+
+  // Portrait (A4, two pages): the FRONT is the grades side (title, both semesters, legends and parent signatures);
+  // the BACK is the learner side (school header, details, certificate of transfer, attendance, observed values).
+  // Both sides are laid out on the landscape design grid and enlarged to fill the 190 mm printable width and the page height.
+  const MARGIN = 10;
+  const leftScale = 190 / leftWidth;
+  const rightScale = 190 / rightWidth;
+  const headOffsetY = MARGIN - 8.4 * leftScale;
+  function stage(name: 'head' | 'title' | 'grades') {
+    if (!portrait) return;
+    if (name === 'head') { doc.setPage(backPage); scale = leftScale; offsetX = MARGIN - left * scale; offsetY = headOffsetY; }
+    if (name === 'title') { doc.setPage(frontPage); scale = rightScale; offsetX = MARGIN - rightX * scale; offsetY = MARGIN + 4 - 16.2 * scale; }
+    if (name === 'grades') { doc.setPage(frontPage); scale = rightScale; offsetX = MARGIN - rightX * scale; offsetY = MARGIN + 14 - 27 * scale; }
+  }
+  stage('head');
 
   function setFont(style: any, size: any, color: any) {
     doc.setFont('helvetica', style || 'normal');
@@ -108,24 +135,31 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
       baseline: 'middle',
       maxWidth: S(width - labelWidth - 2.4)
     });
+    // A thin line under the value, like the printed form.
+    const gap = width < leftWidth ? 4 : 0; // keeps the two columns of a row apart
+    setDrawColor(doc, line);
+    doc.setLineWidth(S(0.2));
+    doc.line(X(x + labelWidth + 1), Y(y + 1.9), X(x + width - gap), Y(y + 1.9));
   }
 
   /* ---------- Header ---------- */
-  if (logoData) doc.addImage(logoData, 'PNG', X(12), Y(8.4), S(11.4), S(12.9));
+  const H = portrait ? 1.3 : 1; // the header is drawn larger on the portrait page, where there is room
+  if (logoData) doc.addImage(logoData, 'PNG', X(left + 2), Y(8.4), S(11.4 * H), S(12.9 * H));
   const addressLines = String(context.schoolAddress || '')
     .split(' · ')
     .map(function (part: any) { return part.trim(); })
     .filter(function (part: any) {
       return part && part.toLowerCase().indexOf('senior high school department') === -1;
     });
-  setFont('normal', 4.1, soft);    addressLines.slice(0, 4).forEach(function (address: any, index: any) {
-    centeredText(address, left + 18, 9.6 + index * 2.15, leftWidth - 20);
+  setFont('normal', 4.1 * H, soft);    addressLines.slice(0, 4).forEach(function (address: any, index: any) {
+    centeredText(address, left + 18 * H, 9.6 + index * 2.15 * H, leftWidth - 20 * H);
   });
-  setFont('bold', 9.2, ink);
-  centeredText(context.schoolName, left + 18, 19.7, leftWidth - 20);
-  setFont('normal', 4.8, soft);
-  centeredText('Senior High School Department', left + 18, 22.4, leftWidth - 20);
+  setFont('bold', 9.2 * (portrait ? 1.15 : 1), ink);
+  centeredText(context.schoolName, left + 18 * H, 19.7 + (portrait ? 3.4 : 0), leftWidth - 20 * H);
+  setFont('normal', 4.8 * H, soft);
+  centeredText('Senior High School Department', left + 18 * H, 22.4 + (portrait ? 4.6 : 0), leftWidth - 20 * H);
 
+  stage('title');
   setFont('bold', 10.8, ink);
   doc.setFont('times', 'bold');
   doc.setFontSize(S(10.8));
@@ -133,9 +167,12 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
   doc.text(pdfSafe('REPORT ON LEARNING PROGRESS AND ACHIEVEMENT'),
     X(rightX + rightWidth / 2), Y(16.2), { align: 'center', baseline: 'middle' });
 
-  setDrawColor(doc, line);
-  doc.setLineWidth(S(0.35));
-  doc.line(X(left), Y(24.1), X(rightEdge), Y(24.1));
+  stage('head');
+  if (!portrait) {
+    setDrawColor(doc, line);
+    doc.setLineWidth(S(0.35));
+    doc.line(X(left), Y(24.1), X(rightEdge), Y(24.1));
+  }
 
   /* ---------- Learner details ---------- */
   const fieldRows = [
@@ -182,14 +219,16 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
     setDrawColor(doc, line);
     doc.setLineWidth(S(0.22));
     doc.line(X(signature[1] + 1), Y(leftY + 1.5), X(signature[1] + signature[2] - 1), Y(leftY + 1.5));
+    setFont('normal', 4.2, soft);
+    centeredText(signature[3], signature[1], leftY + 3.6, signature[2]);
   });
-  leftY += 3.6;
+  leftY += 5.4;
 
   /* ---------- Certificate panels ---------- */
   const panelWidth = leftWidth / 2;
   const headingHeight = 4.6;
   const transferRowHeight = 4.7;
-  const signatureHeight = 7.2;
+  const signatureHeight = 10.8; // room to sign above the line
   function transferPanel(x: any, title: any, fields: any, signatureLabel: any) {
     cell(x, leftY, panelWidth, headingHeight, { fill: tan, stroke: line });
     setFont('bold', 4.4, ink);
@@ -210,10 +249,10 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
     setDrawColor(doc, line);
     doc.setLineWidth(S(0.22));
     const signatureCenter = x + panelWidth / 2;
-    doc.line(X(signatureCenter - signatureWidth / 2), Y(rowY + 2.0),
-      X(signatureCenter + signatureWidth / 2), Y(rowY + 2.0));
+    doc.line(X(signatureCenter - signatureWidth / 2), Y(rowY + 7.4),
+      X(signatureCenter + signatureWidth / 2), Y(rowY + 7.4));
     setFont('normal', 3.8, soft);
-    centeredText(signatureLabel, x, rowY + 4.3, panelWidth);
+    centeredText(signatureLabel, x, rowY + 9.4, panelWidth);
   }
 
   const transfer = student.transfer || {};
@@ -259,10 +298,10 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
   cell(left + panelWidth, rightRowY, panelWidth, signatureHeight, { stroke: line });
   const rightSignatureCenter = left + panelWidth + panelWidth / 2;
   const rightSignatureWidth = panelWidth * 0.55;
-  doc.line(X(rightSignatureCenter - rightSignatureWidth / 2), Y(rightRowY + 2.0),
-    X(rightSignatureCenter + rightSignatureWidth / 2), Y(rightRowY + 2.0));
+  doc.line(X(rightSignatureCenter - rightSignatureWidth / 2), Y(rightRowY + 7.4),
+    X(rightSignatureCenter + rightSignatureWidth / 2), Y(rightRowY + 7.4));
   setFont('normal', 3.8, soft);
-  centeredText('Principal', left + panelWidth, rightRowY + 4.3, panelWidth);
+  centeredText('Principal', left + panelWidth, rightRowY + 9.4, panelWidth);
   leftY += headingHeight + 4 * transferRowHeight + signatureHeight + 1.6;
 
   /* ---------- Attendance ---------- */
@@ -330,7 +369,7 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
 
   /* ---------- Observed values ---------- */
   const valuesTop = leftY;
-  const valuesBottom = bodyBottom;
+  const valuesBottom = portrait ? (285 - headOffsetY) / leftScale : bodyBottom; // the observed values stretch to the foot of the page
   const valuesCaptionHeight = 4.3;
   const valuesHeaderOne = 3.7;
   const valuesHeaderTwo = 3.3;
@@ -425,18 +464,22 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
     doc.setFont('times', 'bold');
     doc.setFontSize(S(7.4));
     setTextColor(doc, ink);
-    doc.text(pdfSafe(semester.label), X(rightX + rightWidth / 2), Y(top + headingHeight * 0.55),
-      { align: 'center', baseline: 'middle' });
+    doc.text(pdfSafe(semester.label), X(rightX), Y(top + headingHeight * 0.55),
+      { align: 'left', baseline: 'middle' });
 
     const tableTop = top + headingHeight + 0.8;
-    const tableHeight = bottom - tableTop;
+    let tableHeight = bottom - tableTop;
     const headerOne = 4.6;
     const headerTwo = 3.4;
     const groupHeight = 3.8;
     const averageHeight = 5.0;
-    const subjectHeight = (tableHeight - headerOne - headerTwo -
-      semester.groups.length * groupHeight - averageHeight) /
-      semester.groups.reduce(function (sum: any, group: any) { return sum + group.subjects.length; }, 0);
+    const subjectCount = semester.groups.reduce(function (sum: any, group: any) { return sum + group.subjects.length; }, 0);
+    let subjectHeight = (tableHeight - headerOne - headerTwo - semester.groups.length * groupHeight - averageHeight) / subjectCount;
+    if (portrait && subjectHeight > 10.5) {
+      // A strand with few subjects: keep the rows a sensible height instead of stretching them over the page.
+      subjectHeight = 10.5;
+      tableHeight = headerOne + headerTwo + semester.groups.length * groupHeight + averageHeight + subjectCount * subjectHeight;
+    }
     const subjectWidth = rightWidth * 0.38;
     const scoreWidth = rightWidth * 0.14;
     const finalWidth = rightWidth * 0.16;
@@ -480,7 +523,7 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
       leftText(group.name, rightX, rowY + groupHeight / 2, rightWidth, { inset: 1.0 });
       rowY += groupHeight;
       group.subjects.forEach(function (item: any) {
-        const subject = SUBJECTS.find(function (entry: any) { return entry.key === item[0]; })!;
+        const subject = ALL_SUBJECTS.find(function (entry: any) { return entry.key === item[0]; })!;
         const grades: Record<string, any> = student.grades[subject.key] || {};
         cell(rightX, rowY, subjectWidth, subjectHeight, { stroke: line });
         cell(scoresX, rowY, scoreWidth, subjectHeight, { stroke: line });
@@ -517,14 +560,24 @@ export function drawFront(doc: jsPDF, student: Student, context: ReportContext, 
       { inset: 0.3 });
     centeredText(remarkFor(semAvg(student, semester.key)), remarksX,
       rowY + averageHeight / 2, remarksWidth, { inset: 0.3 });
+    return rowY + averageHeight; // where the table ends, so the next block can follow it
   }
 
-  drawSemester(SEMESTERS[0], 27.0, 105.0);
-  drawSemester(SEMESTERS[1], 107.4, 184.4);
+  const strandSemesters = semestersFor(student.strand);
+  let semestersEnd = 176.4;
+  stage('grades');
+  if (portrait) {
+    const firstEnd = drawSemester(strandSemesters[0], 27.0, 107.0);
+    semestersEnd = drawSemester(strandSemesters[1], firstEnd + 2.5, 194.0);
+  } else {
+    drawSemester(strandSemesters[0], 27.0, 105.0);
+    drawSemester(strandSemesters[1], 107.4, 176.4);
+  }
 
   /* ---------- Joined legend strip ---------- */
-  const legendTop = 186.0;
-  const legendHeight = bodyBottom - legendTop;
+  // The legends follow the second semester (portrait) or sit at the foot of the page (landscape); tall enough for the parent/guardian to sign each quarter.
+  const legendTop = portrait ? semestersEnd + 3 : 178.0;
+  const legendHeight = portrait ? 22 : bodyBottom - legendTop;
   const legendGap = 0;
   const firstLegendWidth = rightWidth * (0.9 / 3.7);
   const middleLegendWidth = rightWidth * (1.9 / 3.7);
@@ -618,23 +671,88 @@ export function loadLogoData(source: string): Promise<string> {
 
 export { pdfSafe, safeFilename };
 
-/** Builds the report-card PDF for the given learners and downloads it. */
-export async function downloadReportCards(
-  reports: Student[], context: ReportContext, state: AppState, options: { single?: boolean } = {}
-): Promise<string> {
+/** Builds the report-card PDF (A4 portrait, front and back for every learner) without saving it. */
+async function buildReportCardsPdf(reports: Student[], context: ReportContext, state: AppState, single: boolean) {
   const { jsPDF: PDF } = await import('jspdf');
   const logoData = await loadLogoData(state.school.logo || '/assets/ui-logo.png');
-  const doc = new PDF({ orientation: state.orientation === 'landscape' ? 'landscape' : 'portrait', unit: 'mm', format: state.paperSize === 'letter' ? 'letter' : 'a4', compress: true });
+  const doc = new PDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   const first = reports[0];
-  const title = options.single ? `${context.term} report card for ${first.name}` : `${context.term} report cards for ${context.className}`;
+  const title = single ? `${context.term} report card for ${first.name}` : `${context.term} report cards for ${context.className}`;
   doc.setProperties({ title: pdfSafe(title), subject: 'GradeFlow AI report card', author: state.teacher, creator: 'GradeFlow AI' });
   reports.forEach((student, index) => {
     if (index > 0) doc.addPage();
-    drawFront(doc, student, context, logoData);
+    drawFront(doc, student, context, logoData, 'portrait');
   });
-  const filename = options.single
+  const filename = single
     ? `GradeFlow_${safeFilename(first.name)}_${safeFilename(context.term)}.pdf`
     : `GradeFlow_${safeFilename(context.term)}_${safeFilename(context.className)}_${reports.length}-Reports.pdf`;
-  doc.save(filename);
+  return { doc, filename };
+}
+
+/** Several learners: a ZIP with one folder per strand (STEM, GAS, HUMSS...), each holding one PDF per section. One learner: a single PDF. */
+export async function downloadReportCards(
+  reports: Student[], context: ReportContext, state: AppState, options: { single?: boolean } = {}
+): Promise<string> {
+  if (reports.length <= 1 || options.single) {
+    const { doc, filename } = await buildReportCardsPdf(reports, context, state, true);
+    doc.save(filename);
+    return filename;
+  }
+  const { zipSync } = await import('fflate');
+  const folders = new Map<string, Map<string, Student[]>>();
+  reports.forEach((student) => {
+    const strand = safeFilename(student.strand || context.strand || 'Other');
+    const section = safeFilename(student.section || context.section || 'Class');
+    if (!folders.has(strand)) folders.set(strand, new Map());
+    const sections = folders.get(strand)!;
+    sections.set(section, [...(sections.get(section) ?? []), student]);
+  });
+  const files: Record<string, Uint8Array> = {};
+  for (const [strand, sections] of [...folders.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    for (const [section, list] of [...sections.entries()].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))) {
+      const { doc } = await buildReportCardsPdf(list, context, state, false);
+      files[`${strand}/${section}.pdf`] = new Uint8Array(doc.output('arraybuffer'));
+      await new Promise((resolve) => setTimeout(resolve)); // let the page breathe between sections
+    }
+  }
+  const zip = zipSync(files, { level: 0 }); // PDFs are already compressed
+  const filename = `GradeFlow_${safeFilename(context.term)}_${safeFilename(context.className)}_${reports.length}-Reports.zip`;
+  const url = URL.createObjectURL(new Blob([zip as BlobPart], { type: 'application/zip' }));
+  const link = document.createElement('a');
+  link.href = url; link.download = filename;
+  document.body.appendChild(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   return filename;
+}
+
+/** A temporary address of the PDF, for showing it on screen. Release it with URL.revokeObjectURL. */
+export async function reportCardsPdfUrl(reports: Student[], context: ReportContext, state: AppState, onlyPage?: 1 | 2): Promise<string> {
+  const { doc } = await buildReportCardsPdf(reports, context, state, reports.length === 1);
+  if (onlyPage && reports.length === 1) doc.deletePage(onlyPage === 1 ? 2 : 1); // preview one side at a time
+  return URL.createObjectURL(doc.output('blob'));
+}
+
+/** Prints exactly the pages that the PDF download contains, so the preview, the print and the file always match. */
+/** Opens the browser's print dialog for a PDF at `url` (through a hidden frame); the URL is released afterwards. */
+export function printPdfUrl(url: string): void {
+  const frame = document.createElement('iframe');
+  frame.setAttribute('aria-hidden', 'true');
+  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  const cleanup = () => { frame.remove(); URL.revokeObjectURL(url); };
+  frame.onload = () => {
+    try {
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+      window.setTimeout(cleanup, 120_000);
+    } catch {
+      window.open(url, '_blank'); // the browser would not print inside the page: open the PDF so it can be printed from there
+      window.setTimeout(cleanup, 120_000);
+    }
+  };
+  frame.src = url;
+  document.body.appendChild(frame);
+}
+
+export async function printReportCards(reports: Student[], context: ReportContext, state: AppState): Promise<void> {
+  printPdfUrl(await reportCardsPdfUrl(reports, context, state));
 }

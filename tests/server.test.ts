@@ -114,7 +114,10 @@ describe('guard', () => {
 });
 
 describe('llm', () => {
-  afterEach(() => { vi.unstubAllGlobals(); delete process.env.AI_API_KEY; delete process.env.AI_PROVIDER; });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    for (const k of ['AI_API_KEY', 'AI_PROVIDER', 'AI_PROVIDERS', 'AI_ROTATE', 'GEMINI_API_KEY', 'GROQ_API_KEY', 'OPENROUTER_API_KEY']) delete process.env[k];
+  });
   it('parses fenced JSON', () => {
     expect(parseJson('```json\n{"a":1}\n```')).toEqual({ a: 1 });
     expect(() => parseJson('nope')).toThrow(AiError);
@@ -131,6 +134,22 @@ describe('llm', () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toMatch(/groq\.com\/openai\/v1\/chat\/completions$/);
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer k');
+  });
+  const ok = () => new Response(JSON.stringify({ choices: [{ message: { content: '{"a":"ok"}' }, finish_reason: 'stop' }] }));
+  it('falls back to the next provider when the first is out of quota', async () => {
+    process.env.GEMINI_API_KEY = 'g'; process.env.GROQ_API_KEY = 'q';
+    const fetchMock = vi.fn(async (url: string) => (url.includes('googleapis') ? new Response('', { status: 429 }) : ok()));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(callAi('hi', { name: 't', input_schema: {} })).resolves.toEqual({ a: 'ok' });
+    expect(fetchMock.mock.calls.map((c) => c[0])).toEqual([expect.stringMatching(/googleapis/), expect.stringMatching(/groq\.com/)]);
+  });
+  it('rotates between keys when AI_ROTATE=1', async () => {
+    process.env.GROQ_API_KEY = 'k1,k2'; process.env.AI_ROTATE = '1';
+    const fetchMock = vi.fn(async () => ok());
+    vi.stubGlobal('fetch', fetchMock);
+    for (let i = 0; i < 2; i++) await callAi('hi', { name: 't', input_schema: {} });
+    const auth = fetchMock.mock.calls.map((c) => ((c as unknown as [string, RequestInit])[1].headers as Record<string, string>).Authorization);
+    expect(new Set(auth).size).toBe(2);
   });
 });
 

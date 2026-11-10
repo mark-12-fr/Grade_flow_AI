@@ -15,7 +15,7 @@ npm run dev              # http://localhost:3000
 
 Production: `npm run build && npm start`.
 
-Free AI keys (pick one provider in `.env`): Gemini https://aistudio.google.com/apikey, Groq https://console.groq.com/keys, OpenRouter https://openrouter.ai/keys. Ollama (https://ollama.com) needs no key and runs on your own computer.
+Free AI keys (one provider is enough; to serve more teachers at once, add keys for several providers or several comma-separated keys in `.env` and the app switches to the next when one is busy or out of quota, see `.env.example`): Gemini https://aistudio.google.com/apikey, Groq https://console.groq.com/keys, OpenRouter https://openrouter.ai/keys. Ollama (https://ollama.com) needs no key and runs on your own computer.
 
 ## How the AI import works
 

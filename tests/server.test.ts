@@ -56,7 +56,7 @@ describe('extract', () => {
     expect(readSheets('a.xlsx', workbook([['x', 1]]))).toHaveLength(1);
   });
   it('reads the real sample workbook', () => {
-    const file = 'samples/messy_class.xlsx';
+    const file = 'public/samples/messy_class.xlsx';
     if (!fs.existsSync(file)) return;
     const grid = readGrid(file, fs.readFileSync(file));
     expect(grid.rows.length).toBeGreaterThan(10);

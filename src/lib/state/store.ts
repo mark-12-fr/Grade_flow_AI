@@ -50,10 +50,39 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const getState = () => state;
 
+/** Whether the learners and grades are safely stored in this browser (shown as a small badge in the top bar). */
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+let saveStatus: SaveStatus = 'idle';
+const saveListeners = new Set<() => void>();
+function setSaveStatus(next: SaveStatus) {
+  if (saveStatus === next) return;
+  saveStatus = next;
+  saveListeners.forEach((l) => l());
+}
+export function useSaveStatus(): SaveStatus {
+  return useSyncExternalStore((cb) => { saveListeners.add(cb); return () => { saveListeners.delete(cb); }; }, () => saveStatus, () => 'idle' as SaveStatus);
+}
+
+async function writeNow(): Promise<boolean> {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  setSaveStatus('saving');
+  const ok = await save(state);
+  // A newer change may have started another save while this one ran; that one will report its own result.
+  if (!saveTimer) setSaveStatus(ok ? 'saved' : 'error');
+  return ok;
+}
+
+/** Saves right away (Ctrl+S) instead of waiting for the short delay. */
+export function saveNow(): Promise<boolean> {
+  if (!hydrated || typeof window === 'undefined') return Promise.resolve(false);
+  return writeNow();
+}
+
 function scheduleSave() {
   if (!hydrated || typeof window === 'undefined') return;
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { void save(state); }, 500);
+  setSaveStatus('saving');
+  saveTimer = setTimeout(() => { void writeNow(); }, 500);
 }
 
 export function setState(patch: Partial<AppState> | ((s: AppState) => Partial<AppState>)): void {

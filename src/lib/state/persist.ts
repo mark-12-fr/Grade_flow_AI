@@ -41,17 +41,17 @@ export async function loadSaved(): Promise<Partial<AppState> | null> {
   } catch { return null; } // private mode or blocked storage: the app still works, it just forgets on refresh
 }
 
-export async function save(state: AppState): Promise<void> {
+export async function save(state: AppState): Promise<boolean> {
   try {
     const picked: Record<string, unknown> = {};
     PERSISTED.forEach((k) => { picked[k] = state[k]; });
     picked.version = VERSION;
     const db = await open();
-    await new Promise<void>((resolve) => {
+    return await new Promise<boolean>((resolve) => {
       const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).put(picked, KEY);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => resolve();
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
     });
-  } catch { /* storage full or blocked */ }
+  } catch { return false; } // storage full or blocked
 }

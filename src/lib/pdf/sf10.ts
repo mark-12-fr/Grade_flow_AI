@@ -1,5 +1,5 @@
 import type { jsPDF } from 'jspdf';
-import { printPdfUrl } from '@/lib/pdf/sf9';
+import { printPdfUrl, saveBlob, type Downloaded } from '@/lib/pdf/sf9';
 import { recordFor } from '@/lib/sf10/record';
 import type { AppState, Student } from '@/lib/domain/types';
 
@@ -164,8 +164,8 @@ async function buildSf10(students: Student[], state: AppState) {
 }
 
 /** Builds the SF10 PDF for the given learners and downloads it. */
-export async function downloadSf10(students: Student[], state: AppState, filename: string) {
-  (await buildSf10(students, state)).save(filename);
+export async function downloadSf10(students: Student[], state: AppState, filename: string): Promise<Downloaded> {
+  return saveBlob((await buildSf10(students, state)).output('blob'), filename);
 }
 
 /** Builds the SF10 PDF for the given learners and opens the print dialog. */

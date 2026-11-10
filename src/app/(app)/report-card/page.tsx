@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { FitToWidth } from '@/components/ui/FitToWidth';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
 import { Sf9Sheet } from '@/components/report/Sf9Sheet';
@@ -10,6 +11,7 @@ import { approvedCount, reportContext } from '@/lib/domain/grading';
 import { applySf9Details, emptySf9Details, sf9Issues, TRANSFER_DETAILS, type Sf9Details } from '@/lib/sf9/quality';
 import { applyObservedValues, askObservedValues } from '@/lib/sf9/observed';
 import { learnerMeta } from '@/lib/sf10/record';
+import { formatFileSize } from '@/lib/domain/format';
 import { getState, setState, useAppState } from '@/lib/state/store';
 import type { Student } from '@/lib/domain/types';
 
@@ -86,6 +88,7 @@ export default function ReportCardPage() {
   const approved = approvedCount(students);
 
   const [busy, setBusy] = useState(false);
+  const [zip, setZip] = useState<{ done: number; total: number } | null>(null);
   const picked = new Set(state.selectedReportIds);
   const selectedStudents = students.filter((s) => picked.has(s.id));
   // One learner by default; when learners are checked in the list (or Select all is ticked), the buttons apply to all of them.
@@ -126,11 +129,11 @@ export default function ReportCardPage() {
     if (!list.length) { toast('Choose at least one learner first.', 'error'); return; }
     setBusy(true);
     try {
-      await downloadReportCards(list, context, state, { single });
-      toast(single ? `Downloaded ${list[0].name}'s report card as a PDF.` : `Downloaded ${list.length} report cards as a ZIP: one folder per strand, one PDF per section.`);
+      const out = await downloadReportCards(list, context, state, { single, onProgress: (done, total) => setZip({ done, total }) });
+      toast(single ? `Downloaded ${out.filename} (${formatFileSize(out.size)}).` : `Downloaded ${out.filename} (${formatFileSize(out.size)}): ${list.length} report cards, one folder per strand and one PDF per section.`);
     } catch (error) {
       toast(`The PDF could not be prepared. ${(error as Error).message}`, 'error');
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setZip(null); }
   }
 
   async function print(list: Student[]) {
@@ -223,7 +226,7 @@ export default function ReportCardPage() {
         <div className="sf10-actions">
           <span className="sf10-target">{target.length > 1 ? `${target.length} learners checked` : target.length === 1 ? (selectedStudents.length ? '1 learner checked' : student?.name) : ''}</span>
           <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length || busy} onClick={() => void download(target, target.length === 1)}>
-            <Icon name="download" /> {target.length > 1 ? `Download ZIP by strand (${target.length})` : 'Download PDF'}
+            <Icon name="download" /> {zip && zip.total > 0 ? `Preparing section ${Math.min(zip.done + 1, zip.total)} of ${zip.total}…` : target.length > 1 ? `Download ZIP by strand (${target.length})` : 'Download PDF'}
           </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => void print(target)}>
             <Icon name="printer" /> Print{target.length > 1 ? ` (${target.length})` : ''}
@@ -306,7 +309,7 @@ export default function ReportCardPage() {
           <div className="preview-label"><strong>{side === 'front' ? 'Front' : 'Back'}</strong><span>{side === 'front' ? 'Grades and learning progress' : 'Learner details, transfer, attendance and observed values'}</span><span>A4 portrait · page {side === 'front' ? 1 : 2} of 2</span></div>
           {student
             ? (
-              <div className="sf9-scroll"><Sf9Sheet key={student.id} student={student} context={context} state={state} side={side} /></div>
+              <div className="sf9-scroll"><FitToWidth width={800}><Sf9Sheet key={student.id} student={student} context={context} state={state} side={side} /></FitToWidth></div>
             )
             : <p className="sf10-incomplete" role="status">No learners yet. Upload an SF9 file first.</p>}
         </div>

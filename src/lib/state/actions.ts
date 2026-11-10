@@ -3,7 +3,7 @@
 import { SUBJECTS, subjectsFor, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from '@/lib/domain/curriculum';
 import { ageFromBirthdate } from '@/lib/domain/format';
 import { buildComment, isValidGrade, makeNextSteps, makeTraits, missingGradeCells, scaleMinimum } from '@/lib/domain/grading';
-import { setReadProgress } from '@/lib/state/progress';
+import { setCanceller, setReadProgress } from '@/lib/state/progress';
 import { getState, setState } from '@/lib/state/store';
 import type { AppState, Student, UploadInfo } from '@/lib/domain/types';
 
@@ -20,7 +20,7 @@ export const aiSchema = () => ({
 const UPLOAD_SHARE = 25; // the upload is the first 25% of the bar; the server's own stages fill the rest
 
 /** Sends the form with XMLHttpRequest so the upload reports real bytes; the server then streams its own progress. */
-function send(url: string, body: FormData, timeoutMs: number): Promise<{ status: number; text: string; aborted: boolean }> {
+function send(url: string, body: FormData, timeoutMs: number): Promise<{ status: number; text: string; aborted: boolean; cancelled?: boolean }> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url);
@@ -42,9 +42,12 @@ function send(url: string, body: FormData, timeoutMs: number): Promise<{ status:
         } catch { /* partial line */ }
       });
     };
-    xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText, aborted: false });
-    xhr.onerror = () => resolve({ status: 0, text: '', aborted: false });
-    xhr.ontimeout = () => resolve({ status: 0, text: '', aborted: true });
+    const done = () => setCanceller(null);
+    xhr.onload = () => { done(); resolve({ status: xhr.status, text: xhr.responseText, aborted: false }); };
+    xhr.onerror = () => { done(); resolve({ status: 0, text: '', aborted: false }); };
+    xhr.ontimeout = () => { done(); resolve({ status: 0, text: '', aborted: true }); };
+    xhr.onabort = () => { done(); resolve({ status: 0, text: '', aborted: false, cancelled: true }); };
+    setCanceller(() => xhr.abort());
     xhr.send(body);
   });
 }
@@ -63,7 +66,23 @@ async function post(url: string, make: () => FormData, timeoutMs: number) {
   return res;
 }
 
-async function callApi<T>(url: string, file: File, extra: Record<string, string> = {}, timeoutMs = 120_000): Promise<{ data?: T; error?: string }> {
+/**
+ * Turns a technical server message into what the teacher can do about it.
+ * The original text stays underneath as "Details" so whoever sets up the server can still read it.
+ */
+export function explainError(raw: string): string {
+  const text = raw.trim();
+  const say = (advice: string) => `${advice}\nDetails: ${text}`;
+  if (/quota|rate limit|too many requests|daily limit/i.test(text)) return say('The AI is busy right now (its free limit was reached). Wait about a minute, then press Try again.');
+  if (/rejected the key|api key|AI_API_KEY|No AI key/i.test(text)) return say('The AI is not set up correctly on this server. Ask the person who installed GradeFlow to check the AI key.');
+  if (/took too long|timed out|timeout/i.test(text)) return say('The AI took too long to answer. Press Try again, or upload a smaller file (one class at a time).');
+  if (/not reachable|could not reach/i.test(text)) return say('GradeFlow could not reach the server. Check your internet connection, then press Try again.');
+  if (/cut off|too long for this model/i.test(text)) return say('This file is too big for the AI to read in one go. Split it into smaller files and upload them one at a time.');
+  if (/access code/i.test(text)) return say('The access code was missing or wrong. Press Try again and enter the code you were given.');
+  return text;
+}
+
+async function callApi<T>(url: string, file: File, extra: Record<string, string> = {}, timeoutMs = 120_000): Promise<{ data?: T; error?: string; cancelled?: boolean }> {
   setReadProgress({ percent: 0, label: 'Uploading your file' });
   const make = () => {
     const body = new FormData();
@@ -72,17 +91,18 @@ async function callApi<T>(url: string, file: File, extra: Record<string, string>
     return body;
   };
   const res = await post(url, make, timeoutMs);
-  if (res.aborted) return { error: 'The AI import took too long.' };
-  if (!res.status) return { error: 'The server is not reachable.' };
+  if (res.cancelled) return { cancelled: true };
+  if (res.aborted) return { error: explainError('The AI import took too long.') };
+  if (!res.status) return { error: explainError('The server is not reachable.') };
   if (res.status !== 200) {
     let detail = `HTTP ${res.status}`;
     try { detail = (JSON.parse(res.text) as { detail?: string }).detail || detail; } catch { /* not JSON */ }
-    return { error: detail };
+    return { error: explainError(detail) };
   }
   const last = res.text.trim().split('\n').pop() ?? '';
   try {
     const ev = JSON.parse(last) as { done?: T; error?: string };
-    if (ev.error) return { error: ev.error };
+    if (ev.error) return { error: explainError(ev.error) };
     if (ev.done !== undefined) {
       setReadProgress({ percent: 100, label: 'Done' });
       await new Promise((r) => setTimeout(r, 700)); // let the bar glide to 100% before the indicator closes
@@ -125,7 +145,9 @@ function applySchoolDetails(details: Record<string, string>, school: AppState['s
   return next;
 }
 
-export interface ImportOutcome { ok: boolean; error?: string; message?: string; type?: 'success' | 'info' | 'error' }
+export interface ImportOutcome { ok: boolean; error?: string; message?: string; type?: 'success' | 'info' | 'error'; cancelled?: boolean }
+
+const CANCELLED: ImportOutcome = { ok: false, cancelled: true, message: 'Import cancelled. Nothing was changed.', type: 'info' };
 
 function checkFile(file: File, allowed: string[]): string | null {
   const ext = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase() : '';
@@ -139,7 +161,8 @@ function checkFile(file: File, allowed: string[]): string | null {
 export async function importSf9(file: File): Promise<ImportOutcome> {
   const problem = checkFile(file, ['.csv', '.xlsx', '.xls']);
   if (problem) return { ok: false, error: problem, message: 'No class grade files were added.', type: 'error' };
-  const { data, error } = await callApi<Sf9Response>('/api/import', file, { spec: JSON.stringify(aiSchema()) });
+  const { data, error, cancelled } = await callApi<Sf9Response>('/api/import', file, { spec: JSON.stringify(aiSchema()) });
+  if (cancelled) return CANCELLED;
   if (error || !data) return { ok: false, error: error, message: "No class grade files were added.", type: "error" };
   if (!data.students?.length) return { ok: false, error: `${file.name}: no learners were found.`, message: 'No class grade files were added.', type: 'error' };
   if (data.students.length > MAX_LEARNERS) {
@@ -207,8 +230,9 @@ interface Sf10Response { counts?: RowCounts; students?: Student[]; warnings?: st
 export async function importSf10(file: File, sheet?: string): Promise<ImportOutcome> {
   const problem = checkFile(file, ['.csv', '.xlsx', '.xls']);
   if (problem) return { ok: false, error: problem, type: 'error', message: problem };
-  const { data, error } = await callApi<Sf10Response>('/api/import-sf10', file, sheet ? { sheet } : {}, 240_000);
-  if (error || !data) return { ok: false, error, type: 'error', message: `SF10 could not be read: ${error}` };
+  const { data, error, cancelled } = await callApi<Sf10Response>('/api/import-sf10', file, sheet ? { sheet } : {}, 240_000);
+  if (cancelled) return CANCELLED;
+  if (error || !data) return { ok: false, error, type: 'error', message: `SF10 could not be read: ${(error ?? '').split('\n')[0]}` };
   const students = data.students ?? [];
   if (!students.length) return { ok: false, error: 'No SF10 record was found in this file.', type: 'error', message: 'SF10 could not be read: no SF10 record was found.' };
   setState((s) => ({
@@ -230,6 +254,23 @@ export function removeSf9() {
     reportsPage: 1, reportsSearch: '', selectedReportIds: [], processed: false, processing: false, progress: 0, generated: false, generatedAt: null
   });
 }
+
+const SF9_KEYS = [
+  'upload', 'students', 'selectedStudentId', 'previewIndex', 'verificationPage', 'verificationSearch', 'verificationFilter', 'reportsPage', 'reportsSearch',
+  'selectedReportIds', 'processed', 'processing', 'progress', 'generated', 'generatedAt'
+] as const satisfies readonly (keyof AppState)[];
+const SF10_KEYS = ['sf10Students', 'sf10File', 'sf10Index'] as const satisfies readonly (keyof AppState)[];
+
+/** Runs a removal and returns a function that puts back exactly what the removal took away (only those fields, nothing else). */
+function withUndo(apply: () => void, keys: readonly (keyof AppState)[]): () => void {
+  const before = getState();
+  const kept: Record<string, unknown> = {};
+  keys.forEach((k) => { kept[k] = before[k]; });
+  apply();
+  return () => setState(kept as Partial<AppState>);
+}
+export const removeSf9Undoable = () => withUndo(removeSf9, SF9_KEYS);
+export const removeSf10Undoable = () => withUndo(removeSf10, SF10_KEYS);
 
 /** Checks done when the teacher clicks "Prepare reports". Returns an error message, or null when OK. */
 export function validateBeforeProcessing(): string | null {

@@ -1,4 +1,4 @@
-"""Generate samples/messy_class.xlsx: a realistic, NON-template gradebook with fictional learners."""
+"""Generate public/samples/messy_class.xlsx: a realistic, NON-template gradebook with fictional learners."""
 import random
 from pathlib import Path
 
@@ -50,6 +50,6 @@ for r in rows:
 if len(rows) > 3:  # blank a grade to prove we never invent one
     ws.cell(row=7 + 3, column=9).value = None
 ws.append([]); ws.append(["", "Class Average"])
-out = Path(__file__).parent / "messy_class.xlsx"
+out = Path(__file__).parent.parent / "public" / "samples" / "messy_class.xlsx"
 wb.save(out)
 print("wrote", out)

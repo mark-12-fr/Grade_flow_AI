@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
-import { prettyYear } from '@/lib/domain/format';
+import { formatFileSize, prettyYear } from '@/lib/domain/format';
 import { averageLabel, reportContext } from '@/lib/domain/grading';
 import { downloadReportCards, printReportCards } from '@/lib/pdf/sf9';
 import { setState, useAppState } from '@/lib/state/store';
@@ -42,8 +42,8 @@ export default function GeneratedReportsPage() {
   async function download(list: Student[], single = false) {
     if (!list.length) { toast('Choose at least one report first.', 'error'); return; }
     try {
-      await downloadReportCards(list, context, state, { single });
-      toast(single ? `Downloaded ${list[0].name}'s report as a PDF.` : `Downloaded ${list.length} report cards as a ZIP: one folder per strand, one PDF per section.`);
+      const out = await downloadReportCards(list, context, state, { single });
+      toast(single ? `Downloaded ${out.filename} (${formatFileSize(out.size)}).` : `Downloaded ${out.filename} (${formatFileSize(out.size)}): ${list.length} report cards, one folder per strand and one PDF per section.`);
     } catch (error) {
       toast(`The PDF could not be prepared. ${(error as Error).message}`, 'error');
     }

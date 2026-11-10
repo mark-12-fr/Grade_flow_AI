@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useReadProgress } from '@/lib/state/progress';
+import { cancelRead, useReadProgress } from '@/lib/state/progress';
 
 const STEPS: Record<'sf9' | 'sf10' | 'sheet', string[]> = {
   sf9: ['Uploading your file', 'Reading the sheet', 'Finding the learners and subjects', 'Copying the grades into the report cards'],
@@ -32,6 +32,11 @@ export function Reading({ fileName, kind }: { fileName: string; kind: 'sf9' | 's
     }, 40);
     return () => window.clearInterval(id);
   }, []);
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setSlow(true), 25_000);
+    return () => window.clearTimeout(id);
+  }, []);
   const steps = STEPS[kind];
   const stage = percent >= 100 ? steps.length : STARTS.filter((s) => percent >= s).length - 1;
   return (
@@ -43,10 +48,12 @@ export function Reading({ fileName, kind }: { fileName: string; kind: 'sf9' | 's
           <span className="reading-file">{fileName}</span>
         </div>
         <span className="reading-time"><strong>{percent}%</strong></span>
+        <button type="button" className="btn btn-secondary btn-sm reading-cancel" onClick={cancelRead}>Cancel</button>
       </div>
       <div className="reading-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
         <span style={{ width: `${percent}%`, animation: 'none', background: 'var(--blue)', transition: 'width 0.3s var(--ease-soft)' }} />
       </div>
+      {slow && percent < 100 && <p className="reading-slow">This is taking longer than usual. The free AI can be slow when many people use it. You can keep waiting or press Cancel and try again.</p>}
       <ol className="reading-steps" aria-hidden="true">
         {steps.map((text, i) => (
           <li key={text} className={i < stage ? 'done' : i === stage ? 'current' : ''}>{text}</li>

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Hint } from '@/components/ui/Hint';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
 import { ALL_SUBJECTS, ATTENDANCE_MONTHS, semestersFor, subjectsFor } from '@/lib/domain/curriculum';
@@ -61,6 +62,7 @@ export default function VerificationPage() {
   const [error, setError] = useState('');
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [badAttendance, setBadAttendance] = useState<string | null>(null);
+  const editorRef = useRef<HTMLElement>(null);
 
   const students = state.students;
   const total = students.length;
@@ -126,6 +128,39 @@ export default function VerificationPage() {
     updateStudent(student.id, (s) => ({ ...s, observedValues: { ...s.observedValues, [key]: { ...(s.observedValues[key] || {}), [period]: value } } }));
   }
 
+  function showStudent(student: Student) {
+    const index = filtered.findIndex((s) => s.id === student.id);
+    if (index === -1) { setState({ verificationSearch: '', verificationFilter: 'all', verificationPage: Math.floor(students.findIndex((s) => s.id === student.id) / PAGE_SIZE) + 1, selectedStudentId: student.id }); return; }
+    setState({ selectedStudentId: student.id, verificationPage: Math.floor(index / PAGE_SIZE) + 1 });
+  }
+
+  /** Jumps to the next learner (after the one on screen) that still has a missing grade, and scrolls to their grades. */
+  function goNextMissing() {
+    if (hasInvalidDraft) { setError('Fix the highlighted grade before moving to another learner.'); return; }
+    const withGaps = students.filter((s) => missingGradeCells([s]).length > 0);
+    if (!withGaps.length) { toast('No missing grades left.', 'success'); return; }
+    const at = selected ? students.findIndex((s) => s.id === selected.id) : -1;
+    const next = withGaps.find((s) => students.indexOf(s) > at) ?? withGaps[0];
+    setState({ verificationSearch: '', verificationFilter: 'all', verificationPage: Math.floor(students.indexOf(next) / PAGE_SIZE) + 1, selectedStudentId: next.id });
+    setTab('grades');
+    window.setTimeout(() => editorRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 60);
+  }
+
+  // Alt + Left / Right moves to the previous / next learner without leaving the grade boxes.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!event.altKey || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+      const at = filtered.findIndex((s) => s.id === selected?.id);
+      const next = filtered[at + (event.key === 'ArrowRight' ? 1 : -1)];
+      if (!next) return;
+      event.preventDefault();
+      if (hasInvalidDraft) { setError('Fix the highlighted grade before selecting another student.'); return; }
+      showStudent(next);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  });
+
   function goPreview() {
     const issue = students.map(attendanceIssue).find(Boolean);
     if (issue) {
@@ -165,7 +200,6 @@ export default function VerificationPage() {
           <h1 id="verification-title">Grade verification</h1>
           <p>Review the grades and correct anything that needs a second look.</p>
         </div>
-        <span className="pill pill-green"><Icon name="check-circle" /> Changes saved</span>
       </div>
 
       {ai && (
@@ -187,6 +221,17 @@ export default function VerificationPage() {
         <article className="card stat-card compact"><div className="stat-label"><span>Students approved</span><Icon name="check" /></div><strong>{approvedCount(students)}<span className="stat-total"> / {total}</span></strong></article>
         <article className="card stat-card compact"><div className="stat-label"><span>Missing grades</span><Icon name="pencil" /></div><strong>{missing}</strong></article>
         <article className="card stat-card compact"><div className="stat-label"><span>AI comments included</span><Icon name="message" /></div><strong>{reviewedCommentCount(students)}<span className="stat-total"> / {total}</span></strong></article>
+      </div>
+
+      <div className="card verify-progress">
+        <div className="verify-progress-text">
+          <strong>{approvedCount(students)} of {total} learners checked</strong>
+          <span>{missing ? `${missing} missing grade${missing === 1 ? '' : 's'} left` : 'No missing grades left'}</span>
+        </div>
+        <div className="verify-progress-bar" role="progressbar" aria-label="Learners checked" aria-valuemin={0} aria-valuemax={total} aria-valuenow={approvedCount(students)}>
+          <span style={{ width: `${total ? Math.round((approvedCount(students) / total) * 100) : 0}%` }} />
+        </div>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={!missing} onClick={goNextMissing}>Next learner with a missing grade <Icon name="arrow-right" /></button>
       </div>
 
       <article className="card table-card verification-roster-card">
@@ -215,8 +260,8 @@ export default function VerificationPage() {
           <table className="grade-table">
             <caption className="sr-only">Student grades for the selected class and term. Each score is editable.</caption>
             <thead><tr>
-              <th scope="col">Roll</th><th scope="col">Student name</th><th scope="col">Age / sex</th><th scope="col">LRN</th>
-              <th scope="col">General average</th><th scope="col">Grade entries</th><th scope="col">Review status</th><th scope="col">Review</th>
+              <th scope="col">Roll</th><th scope="col">Student name</th><th scope="col">Age / sex</th><th scope="col">LRN <Hint text="Learner Reference Number: the 12-digit ID the DepEd gives each learner." /></th>
+              <th scope="col">General average <Hint text="The average of the learner's final grades across all subjects." /></th><th scope="col">Grade entries</th><th scope="col">Review status</th><th scope="col">Review</th>
             </tr></thead>
             <tbody>
               {visible.length === 0
@@ -249,7 +294,7 @@ export default function VerificationPage() {
         </div>
       </article>
 
-      <article className="card grade-editor-card">
+      <article className="card grade-editor-card" ref={editorRef} style={{ scrollMarginTop: 'calc(var(--header-height, 56px) + 12px)' }}>
         {error && <div className="form-error" role="alert">{error}</div>}
         <section className="grade-editor" aria-live="polite">
           {!selected ? (
@@ -333,7 +378,7 @@ export default function VerificationPage() {
                 )}
                 {tab === 'values' && (
                   <section className="review-data-section">
-                    <div className="review-data-heading"><div><h4>Edit learner observed values</h4><p>Choose an observation rating for each core value and quarter.</p></div></div>
+                    <div className="review-data-heading"><div><h4>Edit learner observed values <Hint text="AO = Always Observed, SO = Sometimes Observed, RO = Rarely Observed, NO = Not Observed. Teachers rate each core value every quarter." /></h4><p>Choose an observation rating for each core value and quarter.</p></div></div>
                     <div className="grade-editor-scroll"><table className="grade-editor-table report-data-table observed-editor-table">
                       <thead><tr><th scope="col">Core values</th>{[1, 2, 3, 4].map((q) => <th key={q} scope="col">Quarter {q}</th>)}</tr></thead>
                       <tbody>

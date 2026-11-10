@@ -6,12 +6,13 @@ import { useUi } from '@/components/layout/Providers';
 import { Sf10Sheet } from '@/components/report/Sf10Sheet';
 import { downloadSf10, printSf10 } from '@/lib/pdf/sf10';
 import { sf10Edits } from '@/lib/sf10/edit';
+import { formatFileSize } from '@/lib/domain/format';
 import { learnerMeta, sf10Source } from '@/lib/sf10/record';
 import { applyDetails, emptyDetails, expectedSemesters, learnerIssues, type DetailValues } from '@/lib/sf10/quality';
 import { setState, useAppState } from '@/lib/state/store';
 import type { Student } from '@/lib/domain/types';
 
-const slug = (value: string) => value.replace(/[^\x20-\x7E]/g, '?').replace(/\W+/g, '_').replace(/^_+|_+$/g, '') || 'SF10';
+const slug = (value: string) => value.replace(/[^\x20-\x7E]/g, '?').replace(/\W+/g, '-').replace(/^-+|-+$/g, '') || 'SF10';
 
 export default function Sf10Page() {
   const { toast } = useUi();
@@ -69,6 +70,18 @@ export default function Sf10Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, visibleIndex]);
 
+  // Left / Right arrow keys move between learners (not while typing in a box).
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.target as HTMLElement)?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      show(filtered[visibleIndex + (event.key === 'ArrowRight' ? 1 : -1)]);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  });
+
   const pickedSet = new Set(picked);
   const pickedShown = filtered.filter((s) => pickedSet.has(s.id)).length;
   const selectedStudents = source.filter((s) => pickedSet.has(s.id));
@@ -84,10 +97,15 @@ export default function Sf10Page() {
   const hasSf10 = state.sf10Students.length > 0;
   const toggle = (id: number, on: boolean) => setPicked((p) => (on ? [...new Set([...p, id])] : p.filter((x) => x !== id)));
 
-  async function download(students: Student[], name: string) {
+  async function download(students: Student[]) {
     if (!students.length) { toast('Choose at least one learner first.', 'error'); return; }
     setBusy(true);
-    try { await downloadSf10(students, state, `SF10-${name}.pdf`); toast(`Downloaded ${students.length} SF10 record${students.length === 1 ? '' : 's'} as one PDF.`); }
+    // e.g. SF10_UI-FA-ABM12-1_Princess-Cullo.pdf for one learner, SF10_Selected_12-Records.pdf for several
+    const one = students.length === 1;
+    const filename = one
+      ? `SF10_${slug(metas.get(students[0].id)?.section || state.section)}_${slug(students[0].name)}.pdf`
+      : `SF10_${selectedStudents.length ? 'Selected' : 'Class'}_${students.length}-Records.pdf`;
+    try { const out = await downloadSf10(students, state, filename); toast(`Downloaded ${out.filename} (${formatFileSize(out.size)}).`); }
     catch { toast('PDF support did not load. Reload the page and try again.', 'error'); }
     finally { setBusy(false); }
   }
@@ -181,7 +199,7 @@ export default function Sf10Page() {
         <div className="sf10-actions">
           <span className="sf10-target">{target.length > 1 ? `${target.length} learners checked` : target.length === 1 ? (selectedStudents.length ? '1 learner checked' : current?.name) : ''}</span>
           <button type="button" className="btn btn-secondary btn-sm" disabled={!target.length || busy}
-            onClick={() => void download(target, target.length === 1 ? slug(target[0].lrn || target[0].name) : selectedStudents.length ? 'selected' : 'class')}>
+            onClick={() => void download(target)}>
             <Icon name="download" /> {target.length > 1 ? `Download PDF (${target.length})` : 'Download PDF'}
           </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={!target.length || busy} onClick={() => void print(target)}>

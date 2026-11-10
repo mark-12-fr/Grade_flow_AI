@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';
-import { removeSf10, removeSf9 } from '@/lib/state/actions';
+import { removeSf10Undoable, removeSf9Undoable } from '@/lib/state/actions';
 import { formatDate, prettyYear } from '@/lib/domain/format';
 import { useAppState } from '@/lib/state/store';
 
@@ -13,12 +13,12 @@ export default function HistoryPage() {
   const count = state.students.length;
   const sf10Count = state.sf10Students.length;
 
-  function confirmDelete(what: string, detail: string, onDelete: () => void) {
+  function confirmDelete(what: string, detail: string, onDelete: () => () => void) {
     openModal({
       title: `Delete ${what}?`,
-      body: <p>{detail} This removes it from this browser session. Your original file is not changed, and you can upload it again.</p>,
+      body: <p>{detail} This removes it from this browser. Your original file is not changed, and you can upload it again. Right after deleting, you can press Undo.</p>,
       confirmLabel: 'Delete', cancelLabel: 'Keep it', tone: 'danger',
-      onConfirm: () => { onDelete(); toast(`${what[0].toUpperCase()}${what.slice(1)} deleted.`, 'info'); }
+      onConfirm: () => { const undo = onDelete(); toast(`${what[0].toUpperCase()}${what.slice(1)} deleted.`, 'info', { label: 'Undo', onClick: undo }); }
     });
   }
 
@@ -53,7 +53,7 @@ export default function HistoryPage() {
                 {state.generated ? 'Open current reports' : 'Continue'}
               </Link>
               <button type="button" className="btn btn-secondary btn-sm" aria-label="Delete the SF9 reports"
-                onClick={() => confirmDelete('the SF9 reports', `${count} learner${count === 1 ? '' : 's'} from ${state.className}.`, removeSf9)}>
+                onClick={() => confirmDelete('the SF9 reports', `${count} learner${count === 1 ? '' : 's'} from ${state.className}.`, removeSf9Undoable)}>
                 <Icon name="x" /> Delete
               </button>
             </div>
@@ -68,7 +68,7 @@ export default function HistoryPage() {
               <span className="status-badge status-approved">Ready</span>
               <Link className="btn btn-secondary btn-sm" href="/sf10">Open</Link>
               <button type="button" className="btn btn-secondary btn-sm" aria-label="Delete the SF10 records"
-                onClick={() => confirmDelete('the SF10 records', `${sf10Count} learner${sf10Count === 1 ? '' : 's'} read from ${state.sf10File?.name ?? 'the file'}.`, removeSf10)}>
+                onClick={() => confirmDelete('the SF10 records', `${sf10Count} learner${sf10Count === 1 ? '' : 's'} read from ${state.sf10File?.name ?? 'the file'}.`, removeSf10Undoable)}>
                 <Icon name="x" /> Delete
               </button>
             </div>
@@ -88,8 +88,8 @@ export default function HistoryPage() {
       <div className="info-strip">
         <Icon name="info" />
         <div>
-          <strong>Saved for this workspace session</strong>
-          <p>Generated reports are available while this page remains open.</p>
+          <strong>Saved in this browser</strong>
+          <p>Your learners and corrections are kept on this computer, so they are still here after a refresh. They are not sent to anyone, and clearing the browser data removes them.</p>
         </div>
       </div>
     </section>

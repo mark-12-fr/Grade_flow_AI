@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { useUi } from '@/components/layout/Providers';
+import { SaveStatus } from '@/components/layout/SaveStatus';
 import { PAGE_META, STEP_ORDER } from '@/lib/domain/curriculum';
 import { formatDate } from '@/lib/domain/format';
 import { allCommentsReviewed, missingGradeCells } from '@/lib/domain/grading';
-import { useAppState } from '@/lib/state/store';
+import { saveNow, useAppState } from '@/lib/state/store';
 import type { PageId } from '@/lib/domain/types';
 
 const NAV: { page: PageId; icon: IconName; label: string }[] = [
@@ -39,6 +41,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const state = useAppState();
   const { theme, toggle } = useTheme();
+  const { toast } = useUi();
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -63,6 +66,17 @@ export function Shell({ children }: { children: ReactNode }) {
     window.addEventListener('resize', onResize);
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); };
   }, [menuOpen]);
+
+  // Ctrl+S (or Cmd+S) saves right now instead of opening the browser's own "save page" dialog.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return;
+      event.preventDefault();
+      void saveNow().then((ok) => toast(ok ? 'Saved in this browser.' : 'Could not save in this browser. Download your files before closing the page.', ok ? 'success' : 'error'));
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [toast]);
 
   const missing = missingGradeCells(state.students);
   const items: { icon: IconName; title: string; text: string; link?: string; linkLabel?: string }[] = [];
@@ -118,6 +132,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </nav>
           </div>
           <div className="topbar-right">
+            <SaveStatus />
             <button type="button" className="icon-btn theme-toggle" aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} aria-pressed={theme === 'dark'} onClick={toggle}>
               <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
               <span className="sr-only">{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>

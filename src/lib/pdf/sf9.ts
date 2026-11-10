@@ -671,6 +671,18 @@ export function loadLogoData(source: string): Promise<string> {
 
 export { pdfSafe, safeFilename };
 
+export interface Downloaded { filename: string; size: number }
+
+/** Starts the browser download of a file and tells the caller its name and size. */
+export function saveBlob(blob: Blob, filename: string): Downloaded {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = filename;
+  document.body.appendChild(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  return { filename, size: blob.size };
+}
+
 /** Builds the report-card PDF (A4 portrait, front and back for every learner) without saving it. */
 async function buildReportCardsPdf(reports: Student[], context: ReportContext, state: AppState, single: boolean) {
   const { jsPDF: PDF } = await import('jspdf');
@@ -683,20 +695,21 @@ async function buildReportCardsPdf(reports: Student[], context: ReportContext, s
     if (index > 0) doc.addPage();
     drawFront(doc, student, context, logoData, 'portrait');
   });
+  // e.g. SF9_UI-FA-ABM12-1_Princess-Cullo.pdf: the document, the section and the learner, so files sort and search well
   const filename = single
-    ? `GradeFlow_${safeFilename(first.name)}_${safeFilename(context.term)}.pdf`
-    : `GradeFlow_${safeFilename(context.term)}_${safeFilename(context.className)}_${reports.length}-Reports.pdf`;
+    ? `SF9_${safeFilename(first.section || context.section || 'Class')}_${safeFilename(first.name)}.pdf`
+    : `SF9_${safeFilename(context.className)}_${reports.length}-Reports.pdf`;
   return { doc, filename };
 }
 
 /** Several learners: a ZIP with one folder per strand (STEM, GAS, HUMSS...), each holding one PDF per section. One learner: a single PDF. */
 export async function downloadReportCards(
-  reports: Student[], context: ReportContext, state: AppState, options: { single?: boolean } = {}
-): Promise<string> {
+  reports: Student[], context: ReportContext, state: AppState,
+  options: { single?: boolean; onProgress?: (done: number, total: number) => void } = {}
+): Promise<Downloaded> {
   if (reports.length <= 1 || options.single) {
     const { doc, filename } = await buildReportCardsPdf(reports, context, state, true);
-    doc.save(filename);
-    return filename;
+    return saveBlob(doc.output('blob'), filename);
   }
   const { zipSync } = await import('fflate');
   const folders = new Map<string, Map<string, Student[]>>();
@@ -708,21 +721,19 @@ export async function downloadReportCards(
     sections.set(section, [...(sections.get(section) ?? []), student]);
   });
   const files: Record<string, Uint8Array> = {};
+  const totalSections = [...folders.values()].reduce((n, sections) => n + sections.size, 0);
+  let doneSections = 0;
+  options.onProgress?.(0, totalSections);
   for (const [strand, sections] of [...folders.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     for (const [section, list] of [...sections.entries()].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))) {
       const { doc } = await buildReportCardsPdf(list, context, state, false);
-      files[`${strand}/${section}.pdf`] = new Uint8Array(doc.output('arraybuffer'));
+      files[`${strand}/SF9_${section}.pdf`] = new Uint8Array(doc.output('arraybuffer'));
+      options.onProgress?.(++doneSections, totalSections);
       await new Promise((resolve) => setTimeout(resolve)); // let the page breathe between sections
     }
   }
   const zip = zipSync(files, { level: 0 }); // PDFs are already compressed
-  const filename = `GradeFlow_${safeFilename(context.term)}_${safeFilename(context.className)}_${reports.length}-Reports.zip`;
-  const url = URL.createObjectURL(new Blob([zip as BlobPart], { type: 'application/zip' }));
-  const link = document.createElement('a');
-  link.href = url; link.download = filename;
-  document.body.appendChild(link); link.click(); link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  return filename;
+  return saveBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), `SF9_${safeFilename(context.className)}_${reports.length}-Reports.zip`);
 }
 
 /** A temporary address of the PDF, for showing it on screen. Release it with URL.revokeObjectURL. */

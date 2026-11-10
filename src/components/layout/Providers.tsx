@@ -16,8 +16,11 @@ interface ModalOptions {
   onConfirm?: () => boolean | void;
 }
 
+/** A button inside a toast, e.g. Undo. The toast stays longer so there is time to press it. */
+export interface ToastAction { label: string; onClick: () => void }
+
 interface Ui {
-  toast: (message: string, type?: ToastType) => void;
+  toast: (message: string, type?: ToastType, action?: ToastAction) => void;
   openModal: (options: ModalOptions) => void;
 }
 
@@ -30,15 +33,15 @@ export function useUi(): Ui {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [toast, setToast] = useState<{ message: string; type: ToastType; show: boolean }>({ message: '', type: 'success', show: false });
+  const [toast, setToast] = useState<{ message: string; type: ToastType; show: boolean; action?: ToastAction }>({ message: '', type: 'success', show: false });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [modal, setModal] = useState<ModalOptions | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
 
-  const showToast = useCallback((message: string, type: ToastType = 'success') => {
+  const showToast = useCallback((message: string, type: ToastType = 'success', action?: ToastAction) => {
     if (timer.current) clearTimeout(timer.current);
-    setToast({ message, type, show: true });
-    timer.current = setTimeout(() => setToast((t) => ({ ...t, show: false })), 4200);
+    setToast({ message, type, show: true, action });
+    timer.current = setTimeout(() => setToast((t) => ({ ...t, show: false })), action ? 9000 : 4200);
   }, []);
 
   const openModal = useCallback((options: ModalOptions) => setModal(options), []);
@@ -61,6 +64,9 @@ export function Providers({ children }: { children: ReactNode }) {
       <div className={`toast ${toast.type}${toast.show ? ' show' : ''}`} role="status" aria-live="polite">
         <span className="toast-icon"><Icon name={icon} /></span>
         <span>{toast.message}</span>
+        {toast.action && (
+          <button type="button" className="toast-action" onClick={() => { toast.action?.onClick(); setToast((t) => ({ ...t, show: false })); }}>{toast.action.label}</button>
+        )}
         <button type="button" className="icon-btn toast-close" aria-label="Dismiss notification" onClick={() => setToast((t) => ({ ...t, show: false }))}>
           <Icon name="x" />
         </button>

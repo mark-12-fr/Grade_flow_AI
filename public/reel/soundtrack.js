@@ -279,11 +279,12 @@
         if (o.kick === 'four' && e % 2 === 0) kicks.push({ t, g: 1 });
         if (o.kick === 'half' && (e % 8 === 0 || e % 8 === 5)) kicks.push({ t, g: e % 8 ? 0.8 : 1 });
         if (o.kick === 'heart' && e % 8 === 0) kicks.push({ t, g: 0.8 }, { t: t + 0.22, g: 0.45 });
+        if (o.kick === 'soft' && e % 4 === 0) kicks.push({ t, g: 0.5 });
         if (o.clap && e % 4 === 2) clap(t, o.clap);
         if (o.snare && e % 8 === 4) snare(t, o.snare);
         if (o.hats && e % 2 === 1) hat(t, o.hats, e % 8 === 7);
         if (o.hats8) hat(t, o.hats8 * (e % 2 ? 1 : 0.55), false);
-        if (o.bass === '8ths') bassNote(t, 0.2, c.root + (e % 2 ? 12 : 0), e % 2 ? 0.7 : 1);
+        if (o.bass === '8ths') bassNote(t, 0.2, c.root + (e % 2 ? 12 : 0), (e % 2 ? 0.7 : 1) * (o.bassVel ?? 1));
       }
       if (o.pluck) {
         const pat = [0, 1, 2, 3, 2, 1, 2, 3], n16 = Math.floor((t1 - t0) / 0.125 + 1e-6);
@@ -297,7 +298,8 @@
     /* ---------- arrangement ----------
        A plan is a list of sections: { at, kind, chords, pluck, hit, riser, riserG, roll, marks }.
          kind    intro (dark pad, drone) · hook (low drone, the reel adds hits) · groove (120 BPM four on
-                 the floor, side-chained) · half (half time) · drop (heartbeat) · end (ringing C major)
+                 the floor, side-chained) · soft (light and upbeat) · half (half time) · drop (heartbeat) ·
+                 end (ringing C major)
          hit     an impact on the cut, this size · riser / roll: seconds of riser / snare roll into the cut
          marks   extra light hits inside the section
        A reel can pass score.plan; without one the plan comes from the 16:9 reel's timeline T. */
@@ -328,6 +330,10 @@
       } else if (sec.kind === 'groove') {
         section(s, e, chords, { kick: 'four', clap: 0.9, hats: 1, bass: '8ths', pluck: sec.pluck ? 0.8 : 0,
           pad: sec.pluck ? { gain: 0.022, cut: [1800, 2400] } : { gain: 0.026, cut: [1400, 2600] } });
+      } else if (sec.kind === 'soft') {
+        // soft and upbeat: kick on 1 and 3, light snaps and shaker, a gentle plucked arpeggio
+        section(s, e, chords, { kick: 'soft', clap: 0.35, hats: 0.55, bass: '8ths', bassVel: 0.7, pluck: sec.pluck ? 0.65 : 0,
+          pad: { gain: 0.024, cut: [1600, 2600] } });
       } else if (sec.kind === 'half') {
         section(s, e, chords, { kick: 'half', snare: 0.8, hats8: 0.45, bass: 'sustain', pad: { gain: 0.028, cut: [700, 1400] } });
       } else if (sec.kind === 'drop') {

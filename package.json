@@ -10,7 +10,9 @@
     "test": "vitest run",
     "reel": "node scripts/render-reel.mjs",
     "reel:vertical": "node scripts/render-reel.mjs --vertical",
-    "reel:capture": "node scripts/capture-reel.mjs"
+    "reel:capture": "node scripts/capture-reel.mjs",
+    "reel:ad": "node scripts/render-reel.mjs --page ad",
+    "reel:capture-ad": "node scripts/capture-ad.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",

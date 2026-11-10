@@ -51,10 +51,24 @@ scripts/            capture-reel.mjs (films the real app for the reels), render-
 
 `public/reel/vertical.html` is a 26-second, 1080×1920 cut for Facebook Reels and TikTok. It opens with a hook ("Still encoding SF9s by hand?"), cuts on every bar at 120 BPM with whip transitions, and uses big word-pop captions and punch zooms on the same real screens and PDFs. Its text stays clear of the bottom of the frame, where Reels and TikTok draw their own captions. Export it with `npm run reel:vertical`. It accepts the same flags as `npm run reel`.
 
-Both reels run on `public/reel/engine.js` (timeline, tracks, the window over the captures, the player) and `public/reel/reel.css`.
+`public/reel/ad.html` is a 45-second, 1080×1920 ad and quick tutorial in bright blue and white, with soft upbeat music.
+- **The scenes:**
+  - The hook is an illustrated teacher at a desk covered in papers, with a spinning clock: "Hirap mag-encode ng SF9 at SF10?"
+  - Then the logo, "Your grades, ready in a few clicks."
+  - Then four steps on the current app:
+    1. Piliin ang learner: the list, and the sticky learner bar.
+    2. Kumpletuhin ang kulang: the Fill in missing details panel opens, and the highlighted blank grades are typed in.
+    3. I-preview at i-edit agad: the editable SF9 front and back, then the SF10 record.
+    4. I-download: the Download PDF toast and the finished forms.
+  - It ends with the same teacher, relaxed with a coffee: "Less paperwork. More teaching."
+- **The teacher is an original SVG illustration.** The app scenes are filmed from the real app by `npm run reel:capture-ad` (`scripts/capture-ad.mjs`, output in `public/reel/shots-ad/`).
+- **Export:** `npm run reel:ad -- --url your-site`. `--srt ad.srt` also writes subtitles for the voiceover lines.
+- **Voiceover:** the English lines are in `VOICE` in `ad.html`. Record them, then mix them in with `npm run reel:ad -- --voice vo.wav` (one recording from 0 s) or `--voice vo/` (one file per line, sorted by name, each placed at its line's time). The music dips under the voice.
+
+All three run on `public/reel/engine.js` (timeline, tracks, the window over the captures, the player) and `public/reel/reel.css`.
 
 - **The app scenes are real.** Scenes 3 to 5 show screenshots of the running app, not mockups: the Upload page, the progress indicator frame by frame, the LRN search one key at a time, the SF9 page, the download toast, the SF10 page, and a blank grade flagged "2 to check". They also show the SF9 and SF10 PDFs the app downloads, page for page. The cursor and camera are animated on top of the captures.
-- **After a UI change, film it again:** run `npm run build`, then `npm run reel:capture`. `scripts/capture-reel.mjs` starts the built app with no AI key, uploads `samples/template_class.xlsx` (fictional learners, read by the built-in template reader, so no data leaves the machine), and writes the captures, element positions and PDF pages to `public/reel/shots/`. It needs Playwright, ffmpeg and `pdftoppm` (poppler-utils). `python3 samples/make_template_class.py` rebuilds the sample.
+- **After a UI change, film it again:** run `npm run build`, then `npm run reel:capture-ad` for the ad. `npm run reel:capture` films the 16:9 and 9:16 reels, which follow the UI as of 7 Nov 2026. On today's SF9 page it stops without touching the committed captures, because captures are written to a `.new` folder and swapped in only at the end. `scripts/capture-reel.mjs` starts the built app with no AI key, uploads `samples/template_class.xlsx` (fictional learners, read by the built-in template reader, so no data leaves the machine), and writes the captures, element positions and PDF pages to `public/reel/shots/`. It needs Playwright, ffmpeg and `pdftoppm` (poppler-utils). `python3 samples/make_template_class.py` rebuilds the sample.
 - The captures show what the app shows, including the school name and seal set in `src/lib/store.ts` and `public/assets/`.
 
 - **Watch it:** run `npm run dev` and open http://localhost:3000/reel/index.html, or just open the file in a browser. Keys: Space play/pause, ← → seek, R restart, M sound, F fullscreen.

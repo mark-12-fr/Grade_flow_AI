@@ -1,6 +1,6 @@
 """Generate samples/template_class.xlsx: a class gradebook in the app's standard template, fictional learners.
 
-The built-in template reader (src/server/template.ts) reads this file without any AI key, so the whole
+The built-in template reader (src/server/import/template.ts) reads this file without any AI key, so the whole
 upload -> SF9 -> SF10 flow works offline. scripts/capture-reel.mjs uses it to film the real app.
 """
 import random
@@ -11,6 +11,7 @@ from openpyxl.styles import Font
 
 random.seed(2026)
 
+# The default subject list (src/lib/domain/curriculum.ts SUBJECTS), which is the HUMSS report card.
 FIRST = [
     "Media and Information Literacy",
     "Introduction to Philosophy of the Human Person/Pambungad sa Pilosopiya ng Tao",
@@ -55,14 +56,14 @@ for v in VALUES:
 
 wb = Workbook()
 ws = wb.active
-ws.title = "Grade 12 ABM"
+ws.title = "Grade 12 HUMSS"
 ws.append(header)
 for c in ws[1]:
     c.font = Font(bold=True)
 
 for i, (name, sex) in enumerate(NAMES, start=1):
     level = random.randint(82, 94)  # each learner has a typical level; grades vary around it
-    row = [i, name, f"1089152{40000 + i * 37:05d}", sex, random.choice([17, 17, 18]), "ABM", "12", "UI-FA-ABM12-1", "2026-2027", "Rosa D. Lim"]
+    row = [i, name, f"1089152{40000 + i * 37:05d}", sex, random.choice([17, 17, 18]), "HUMSS", "12", "HUMSS 12-A", "2026-2027", "Rosa D. Lim"]
     for _ in FIRST + SECOND:
         a = max(75, min(99, level + random.randint(-4, 4)))
         b = max(75, min(99, level + random.randint(-3, 5)))
@@ -74,10 +75,12 @@ for i, (name, sex) in enumerate(NAMES, start=1):
         row += [random.choice(["AO", "AO", "SO"]) for _ in range(4)]
     ws.append(row)
 
-# One blank grade on purpose: the app must leave it blank and flag it, never invent it.
+# One blank grade on purpose, for the 4th learner (Dela Rosa, Mika Ella, near the top of the list): the app
+# must leave it blank and flag it, never invent it.
+BLANK_LEARNER = 4
 miss = header.index("Culminating Activity Q4")
-ws.cell(row=1 + 11, column=1 + miss).value = None
-ws.cell(row=1 + 11, column=2 + miss).value = None  # its Semester 2 Final cannot be computed either
+ws.cell(row=1 + BLANK_LEARNER, column=1 + miss).value = None
+ws.cell(row=1 + BLANK_LEARNER, column=2 + miss).value = None  # its Semester 2 Final cannot be computed either
 
 out = Path(__file__).with_name("template_class.xlsx")
 wb.save(out)

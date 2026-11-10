@@ -12,3 +12,5 @@ next-env.d.ts
 *.mp4
 *.wav
 reel-frame.png
+public/reel/*.new/
+*.srt

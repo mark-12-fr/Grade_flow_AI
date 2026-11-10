@@ -87,7 +87,8 @@
     /* ---------- Screen: a browser window over captures of the real app ----------
        Captures, element boxes and PDF pages come from scripts/capture-reel.mjs (shots/manifest.js).
        The window has a camera (zoom and pan), page scrolling and a cursor, all keyed to the clock. */
-    const SH = window.REEL_SHOTS || null;
+    const SH = opts.shots !== undefined ? opts.shots : window.REEL_SHOTS || null;
+    const DIR = opts.shotsDir || 'shots/';
     const CURSOR_SVG = '<svg viewBox="0 0 34 34" width="34" height="34"><path d="M5 3.5v24.2l6.3-6 4.4 9.6 4.3-1.9-4.3-9.4h8.8z" fill="#0f172a" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>';
     const screens = [];
     class Screen {
@@ -113,21 +114,22 @@
         this.layers = new Map();
         this.seq = []; this.camKeys = []; this.scrollKeys = []; this.curKeys = []; this.clicks = []; this.curVis = []; this.urls = [];
         this.curStart = { x: vw * 0.72, y: vh * 0.78 };
+        this.stickies = []; this.accordions = [];
         screens.push(this);
       }
       layer(name, fixedFrom) {
         if (this.layers.has(name)) return;
         const s = SH.shots[name];
         if (!s) throw new Error('Missing capture: ' + name);
-        const img = new Image(); img.alt = ''; img.src = 'shots/' + s.file;
+        const img = new Image(); img.alt = ''; img.src = DIR + s.file;
         Object.assign(img.style, { left: (s.x || 0) + 'px', top: (s.y || 0) + 'px', width: s.w + 'px', height: s.h + 'px' });
         this.page.appendChild(img);
         const fixed = [];
         // a full-page capture scrolls; the fixed sidebar and the sticky top bar stay where they are
         if (fixedFrom) for (const b of [SH.layout.sidebar, SH.layout.topbar]) {
           const clip = document.createElement('div'); clip.className = 'fixclip';
-          Object.assign(clip.style, { left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px' });
-          const fi = new Image(); fi.alt = ''; fi.src = 'shots/' + SH.shots[fixedFrom].file;
+          Object.assign(clip.style, { left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px', zIndex: 40 });
+          const fi = new Image(); fi.alt = ''; fi.src = DIR + SH.shots[fixedFrom].file;
           Object.assign(fi.style, { left: -b.x + 'px', top: -b.y + 'px', width: SH.view.width + 'px', height: SH.view.height + 'px' });
           clip.appendChild(fi); this.fixed.appendChild(clip); fixed.push(clip);
         }
@@ -149,6 +151,57 @@
         this.page.appendChild(el);
         A(el, at, 0.45, { o: [0, 1], s: [1.25, 1] }, 'back');
         if (dur) A(el, at + dur, 0.3, { o: [1, 0] }, 'in3');
+        return this;
+      }
+      /* a highlight that draws itself around a box: an ellipse, or a pill for wide boxes, with an optional
+         label. Page coordinates (scrolls with the page), or viewport ones with fixed: true (sticky things). */
+      circle(at, dur, b, { pad = 14, fixed = false, label = '', labelClass = '', below = false, color = '#2563eb' } = {}) {
+        const w = b.w + 2 * pad, h = b.h + 2 * pad, pill = w / h > 2.6;
+        const el = document.createElement('div'); el.className = 'hl-circle';
+        Object.assign(el.style, { left: b.x - pad + 'px', top: b.y - pad + 'px', width: w + 'px', height: h + 'px' });
+        const shape = pill
+          ? `<rect x="0" y="0" width="${w}" height="${h}" rx="${h / 2}" ry="${h / 2}"/>`
+          : `<ellipse cx="${w / 2}" cy="${h / 2}" rx="${w / 2}" ry="${h / 2}"/>`;
+        el.innerHTML = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" overflow="visible" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round">${shape}</svg>`;
+        (fixed ? this.fixed : this.page).appendChild(el);
+        drawPath(el.querySelector('rect, ellipse'), at, 0.55, 'out3');
+        A(el, at, 0.55, { s: [1.08, 1] }, 'out3');
+        if (label) {
+          const tag = document.createElement('div'); tag.className = ('hl-label ' + labelClass).trim(); tag.textContent = label;
+          Object.assign(tag.style, { left: b.x + b.w / 2 + 'px', top: (below ? b.y + b.h + pad + 14 : b.y - pad - 14) + 'px' });
+          tag.style.translate = below ? '-50% 0' : '-50% -100%';
+          (fixed ? this.fixed : this.page).appendChild(tag);
+          A(tag, at + 0.25, 0.4, { o: [0, 1], s: [0.6, 1] }, 'back');
+          if (dur) A(tag, at + dur, 0.3, { o: [1, 0] }, 'in3');
+        }
+        if (dur) A(el, at + dur, 0.3, { o: [1, 0] }, 'in3');
+        return this;
+      }
+      /* a sticky element (the learner bar): cut from a full-page capture at its natural place (b, page
+         coordinates). It rides along with the scroll, then stays at `top` (viewport), as position: sticky
+         does. Shown whenever that full-page capture is. */
+      sticky(name, b, top) {
+        const s = SH.shots[name];
+        const clip = document.createElement('div'); clip.className = 'fixclip sticky';
+        Object.assign(clip.style, { left: b.x + 'px', top: '0px', width: b.w + 'px', height: b.h + 'px', zIndex: 30 });
+        const im = new Image(); im.alt = ''; im.src = DIR + s.file;
+        Object.assign(im.style, { left: -b.x + 'px', top: -b.y + 'px', width: s.w + 'px', height: s.h + 'px' });
+        clip.appendChild(im); this.fixed.appendChild(clip);
+        this.stickies.push({ name, b, top, clip });
+        return this;
+      }
+      /* replays an open transition between a closed and an open capture: the page above body.y stays, the
+         body grows from nothing to its full height and everything below slides down with it */
+      accordion(at, dur, closedName, openName, body, ease = 'inOut3') {
+        const mk = (name) => {
+          const s = SH.shots[name], clip = document.createElement('div'); clip.className = 'fixclip';
+          const im = new Image(); im.alt = ''; im.src = DIR + s.file;
+          Object.assign(im.style, { left: '0px', width: s.w + 'px', height: s.h + 'px' });
+          clip.style.zIndex = 50; clip.style.width = s.w + 'px'; clip.appendChild(im); this.page.appendChild(clip);
+          return { clip, im, s };
+        };
+        const top = mk(openName), low = mk(closedName);
+        this.accordions.push({ at, dur, body, top, low, ease: E[ease] });
         return this;
       }
       /* keyframes: each key eases from the value before it to its own */
@@ -176,6 +229,22 @@
         }
         const s = Screen.keyed(this.scrollKeys, t, { s: 0 }).s;
         this.page.style.transform = `translate3d(0,${(-s).toFixed(2)}px,0)`;
+        const opening = this.accordions.some((ac) => t >= ac.at && t < ac.at + ac.dur); // the page moves under it
+        for (const st of this.stickies) {
+          const L = this.layers.get(st.name), o = L && !opening ? L.img.style.opacity : '0';
+          st.clip.style.opacity = o; st.clip.style.visibility = +o > 0 ? 'visible' : 'hidden';
+          st.clip.style.transform = `translate3d(0,${Math.max(st.top, st.b.y - s).toFixed(2)}px,0)`;
+        }
+        for (const ac of this.accordions) {
+          const on = t >= ac.at && t < ac.at + ac.dur;
+          for (const part of [ac.top, ac.low]) part.clip.style.visibility = on ? 'visible' : 'hidden';
+          if (!on) continue;
+          const h = ac.body.h * ac.ease(clamp((t - ac.at) / ac.dur)), cut = ac.body.y + h;
+          Object.assign(ac.top.clip.style, { top: '0px', height: cut.toFixed(1) + 'px' });
+          ac.top.im.style.top = '0px';
+          Object.assign(ac.low.clip.style, { top: cut.toFixed(1) + 'px', height: (ac.low.s.h - ac.body.y).toFixed(1) + 'px' });
+          ac.low.im.style.top = (-ac.body.y).toFixed(1) + 'px';
+        }
         const c = Screen.keyed(this.camKeys, t, { z: 1, x: this.vw / 2, y: this.vh / 2 });
         // keep the camera inside the capture
         const tx = clamp(this.vw / 2 - c.x * c.z, Math.min(0, this.vw - this.cw * c.z), 0);
@@ -209,7 +278,7 @@
     function sceneState(i, t) {
       const start = scenes[i].at, next = i + 1 < scenes.length ? scenes[i + 1].at : Infinity;
       if (t < start || t >= next + XD) return null;
-      const ein = transition.type === 'whip' ? E.out3 : E.inOut3;
+      const ein = transition.type === 'fade' ? E.inOut3 : E.out3;
       const pin = i > 0 && t < start + XD ? ein(clamp((t - start) / XD)) : 1;      // coming in
       const pout = t >= next ? E.in3(clamp((t - next) / XD)) : 0;                     // going out
       return { pin, pout };
@@ -222,7 +291,12 @@
         el.style.zIndex = String(i + 1);
         if (!st) { el.style.visibility = 'hidden'; el.style.opacity = '0'; return; }
         el.style.visibility = 'visible';
-        if (transition.type === 'whip') {
+        if (transition.type === 'slide') {
+          // slide: a soft push up, the incoming scene fading in as the outgoing one fades out
+          const dy = (1 - st.pin) * height * 0.035 - st.pout * height * 0.03;
+          el.style.opacity = (st.pout > 0 ? 1 - st.pout : st.pin).toFixed(4);
+          el.style.transform = `translate3d(0,${dy.toFixed(1)}px,0)`;
+        } else if (transition.type === 'whip') {
           const dx = (1 - st.pin) * width * 0.32 - st.pout * width * 0.32, blur = (1 - st.pin) * 26 + st.pout * 26;
           el.style.opacity = (st.pout > 0 ? 1 - st.pout : st.pin).toFixed(4);
           el.style.transform = `translate3d(${dx.toFixed(1)}px,0,0) scale(${(1 + 0.06 * (1 - st.pin)).toFixed(4)})`;
@@ -378,6 +452,7 @@
       window.__SIZE = { width, height };
       window.__seek = (t) => { render(t); return t; };
       window.__SOUND = score();
+      window.__VOICE = opts.voice || null; // voiceover lines [{ t, text }], for recording or synthesis
       // every capture must be decoded before the first frame is drawn
       await Promise.all([...document.images].map((im) => (im.decode ? im.decode().catch(() => {}) : null)));
       render(current);

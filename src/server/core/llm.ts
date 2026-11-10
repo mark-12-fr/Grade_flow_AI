@@ -115,7 +115,7 @@ async function callSlot({ name, base, model, key }: Slot, prompt: string, tool: 
 
 export const callAi: Caller = async (prompt, tool, maxTokens = 4096) => {
   const all = slots();
-  if (!all.length) throw new AiError('No AI key is set on the server. Set AI_API_KEY (or GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY). See .env.example.', 'config');
+  if (!all.length) throw new AiError('No AI key is set on the server. Set AI_API_KEY (or GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY). See docs/ENV.md.', 'config');
   const start = process.env.AI_ROTATE === '1' ? turn++ % all.length : 0;
   const order = [...all.slice(start), ...all.slice(0, start)];
   const pauses = order.length > 1 ? [0, 2000] : [0, 2000, 5000, 10000]; // with a spare provider, switch sooner

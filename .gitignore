@@ -1,9 +1,22 @@
+# secrets: never commit
 .env
-__pycache__/
-*.pyc
-.pytest_cache/
+.env.*
+*.pem
+*.key
+*service-account*.json
+.vercel/
 
+# dependencies and build output
 node_modules/
 .next/
 next-env.d.ts
 *.tsbuildinfo
+
+# python (samples script)
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# editor / OS
+.DS_Store
+.idea/

@@ -143,7 +143,6 @@ export default function UploadPage() {
 
           <div className="page-actions">
             <div className="action-end">
-              <span className="action-note">Your original file won&apos;t be changed.</span>
               <button type="button" className="btn btn-primary" disabled={!hasFiles || Boolean(sf9Busy) || Boolean(sf10Busy)} onClick={prepare}>
                 Prepare reports <Icon name="chevron-right" />
               </button>

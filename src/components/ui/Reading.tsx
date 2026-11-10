@@ -1,5 +1,7 @@
 'use client';
 
+/** The progress card shown while a file is being read: percent, stage, steps and a Cancel button. */
+
 import { useEffect, useRef, useState } from 'react';
 import { cancelRead, useReadProgress } from '@/lib/state/progress';
 

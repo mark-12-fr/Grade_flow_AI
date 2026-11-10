@@ -1,3 +1,4 @@
+/** What is missing or doubtful on each SF10, and applying "fill in missing details" to many learners. */
 import { recordFor } from '@/lib/sf10/record';
 import type { AppState, Sf10Semester, Student } from '@/lib/domain/types';
 

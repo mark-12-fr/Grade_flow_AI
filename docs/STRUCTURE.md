@@ -11,6 +11,7 @@ Grade_flow_AI/
     components/           FRONTEND UI: layout/, report/ (SF9, SF10 sheets), ui/
     lib/                  FRONTEND logic: domain/, state/, sf9/, sf10/, pdf/
     server/               BACKEND logic (never imported by the browser): core/ (llm, guard, http, stream), import/, observed/
+    styles/               CSS, one file per area (globals.css only imports them, in order)
     vendor/               bundled third-party code
   public/assets/          images and logos
   tests/                  vitest tests for the backend code

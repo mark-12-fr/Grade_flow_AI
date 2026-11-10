@@ -1,3 +1,4 @@
+/** BACKEND: GET /api/health. Says whether the AI is set up. Never shows the key. */
 import { NextResponse } from 'next/server';
 import { isConfigured } from '@/server/core/llm';
 

@@ -1,3 +1,4 @@
+/** The SHS subjects per strand and semester, attendance months, core values and the page/step names. */
 import type { PageId } from '@/lib/domain/types';
 
 export const ATTENDANCE_MONTHS = [

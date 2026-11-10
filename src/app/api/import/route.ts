@@ -1,3 +1,4 @@
+/** BACKEND: POST /api/import. Reads an SF9 class grade sheet (AI column mapping, or the built-in template reader) and streams progress. */
 import { NextResponse } from 'next/server';
 import { extractLogo, masterListSize, readGrid, readSheets } from '@/server/import/extract';
 import { guard, HttpError, limiter } from '@/server/core/guard';

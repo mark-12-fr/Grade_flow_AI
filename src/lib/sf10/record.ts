@@ -1,3 +1,4 @@
+/** Builds one learner's SF10 data from the stored learner (semesters, rows, eligibility, completion). */
 import { semestersFor, strandKey } from '@/lib/domain/curriculum';
 import { formatLongDate, prettyYear } from '@/lib/domain/format';
 import { averageGrade, reportContext, remarkFor, semesterAverage, studentStatus } from '@/lib/domain/grading';

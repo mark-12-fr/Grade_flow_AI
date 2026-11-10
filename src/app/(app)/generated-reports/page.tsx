@@ -1,5 +1,7 @@
 'use client';
 
+/** List of finished SF9 report cards with download and print buttons (opened after "generate"). */
+
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';

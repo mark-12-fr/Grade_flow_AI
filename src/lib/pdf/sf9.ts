@@ -1,3 +1,4 @@
+/** Draws the SF9 report cards into PDFs; builds the single PDF or the ZIP by strand; opens the print dialog. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Draws the SF9 report card PDF with jsPDF (ported from the original printing module).
 import type { jsPDF } from 'jspdf';

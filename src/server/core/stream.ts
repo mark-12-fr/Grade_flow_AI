@@ -1,3 +1,4 @@
+/** BACKEND: runs a job and streams its progress to the browser. */
 import { toResponse } from '@/server/core/http';
 
 /** Reports how far along the server is: percent 0-100 of the server's own work, plus a short label. */

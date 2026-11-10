@@ -1,3 +1,4 @@
+/** Small formatting helpers: dates, file sizes, initials, school year, age from birthdate. */
 export function prettyYear(year: string): string {
   return String(year || '').replace('-', '–');
 }

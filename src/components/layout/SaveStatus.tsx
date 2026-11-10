@@ -1,5 +1,7 @@
 'use client';
 
+/** Top-bar badge: "Saving…", "Saved" or "Not saved" for the data stored in this browser. */
+
 import { Icon } from '@/components/ui/Icon';
 import { useAppState, useSaveStatus } from '@/lib/state/store';
 

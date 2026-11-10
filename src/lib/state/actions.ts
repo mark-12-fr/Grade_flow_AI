@@ -1,5 +1,7 @@
 'use client';
 
+/** What the buttons do: upload and read files (SF9/SF10), plain-language errors, remove with Undo, checks before preparing. */
+
 import { SUBJECTS, subjectsFor, ATTENDANCE_MONTHS, CORE_VALUE_KEYS, TRANSFER_FIELDS } from '@/lib/domain/curriculum';
 import { ageFromBirthdate } from '@/lib/domain/format';
 import { buildComment, isValidGrade, makeNextSteps, makeTraits, missingGradeCells, scaleMinimum } from '@/lib/domain/grading';

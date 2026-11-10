@@ -1,3 +1,4 @@
+/** Help: the workflow, a glossary of terms and the keyboard shortcuts. */
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 

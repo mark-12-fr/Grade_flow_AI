@@ -1,5 +1,7 @@
 'use client';
 
+/** The frame around every page: sidebar, top bar, notifications, step bar and the Ctrl+S shortcut. */
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';

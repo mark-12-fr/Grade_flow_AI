@@ -1,5 +1,7 @@
 'use client';
 
+/** Progress and cancel handle of the file read that is running now. */
+
 import { useSyncExternalStore } from 'react';
 
 export interface ReadProgress { percent: number; label: string }

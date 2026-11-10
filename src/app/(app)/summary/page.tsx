@@ -1,5 +1,7 @@
 'use client';
 
+/** Class summary and ranking, with a CSV export. */
+
 import { subjectsFor } from '@/lib/domain/curriculum';
 import { computeRanks, remarkFor, semesterAverage } from '@/lib/domain/grading';
 import { useAppState } from '@/lib/state/store';

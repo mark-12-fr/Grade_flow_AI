@@ -1,0 +1,94 @@
+/* ==========================================================================
+   Motion: smooth, calm transitions. Everything is switched off for people
+   who ask their system for reduced motion (see the last block).
+   ========================================================================== */
+:root { --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1); --ease-soft: cubic-bezier(0.4, 0, 0.2, 1); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes swapIn { from { opacity: 0; transform: translateY(8px) scale(0.995); } to { opacity: 1; transform: none; } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* Cards and sections glide in one after another when a page opens. */
+.page.active > * { animation: rise 0.5s var(--ease-out) both; }
+.page.active > *:nth-child(2) { animation-delay: 0.05s; }
+.page.active > *:nth-child(3) { animation-delay: 0.1s; }
+.page.active > *:nth-child(4) { animation-delay: 0.15s; }
+.page.active > *:nth-child(5) { animation-delay: 0.2s; }
+.page.active > *:nth-child(n+6) { animation-delay: 0.25s; }
+.page.active { animation: none; }
+
+/* Switching learner: the report fades and settles instead of jumping. */
+.swap-in { animation: swapIn 0.35s var(--ease-out) both; }
+
+/* Table rows and uploaded files appear softly. */
+.grade-table tbody tr, .reports-table tbody tr, .summary-table tbody tr { animation: fadeIn 0.35s var(--ease-soft) both; }
+.grade-table tbody tr:nth-child(2), .reports-table tbody tr:nth-child(2) { animation-delay: 0.04s; }
+.grade-table tbody tr:nth-child(3), .reports-table tbody tr:nth-child(3) { animation-delay: 0.08s; }
+.grade-table tbody tr:nth-child(4), .reports-table tbody tr:nth-child(4) { animation-delay: 0.12s; }
+.grade-table tbody tr:nth-child(5), .reports-table tbody tr:nth-child(5) { animation-delay: 0.16s; }
+.grade-table tbody tr:nth-child(n+6), .reports-table tbody tr:nth-child(n+6) { animation-delay: 0.2s; }
+.uploaded-file, .sf10-file-row, .form-error, .student-search-results { animation: swapIn 0.35s var(--ease-out) both; }
+.notifications-popover { animation: slideDown 0.22s var(--ease-out) both; }
+
+/* Progress and processing: the ring and bar move continuously. */
+@property --progress { syntax: '<number>'; inherits: true; initial-value: 0; }
+.progress-ring { transition: --progress 0.25s linear; }
+.progress-fill { transition: width 0.25s linear; }
+.timeline-item { transition: background-color 0.35s var(--ease-soft), border-color 0.35s var(--ease-soft), opacity 0.35s var(--ease-soft); }
+.timeline-icon { transition: background-color 0.35s var(--ease-soft), color 0.35s var(--ease-soft), transform 0.35s var(--ease-out); }
+.timeline-item.done .timeline-icon { transform: scale(1.06); }
+.timeline-status { transition: color 0.3s var(--ease-soft); }
+
+/* Buttons, links and cards respond to the pointer. */
+.btn { transition: background-color 0.2s var(--ease-soft), border-color 0.2s var(--ease-soft), color 0.2s var(--ease-soft), box-shadow 0.25s var(--ease-soft), transform 0.2s var(--ease-out); }
+.btn:not(:disabled):hover { transform: translateY(-1px); }
+.btn:not(:disabled):active { transform: translateY(0) scale(0.985); }
+.icon-btn { transition: background-color 0.2s var(--ease-soft), color 0.2s var(--ease-soft), transform 0.2s var(--ease-out); }
+.icon-btn:not(:disabled):active { transform: scale(0.92); }
+.card { transition: box-shadow 0.3s var(--ease-soft), border-color 0.3s var(--ease-soft); }
+.nav-link, .step-link, .step-marker { transition: background-color 0.25s var(--ease-soft), color 0.25s var(--ease-soft), border-color 0.25s var(--ease-soft); }
+.grade-table tbody tr, .reports-table tbody tr { transition: background-color 0.2s var(--ease-soft); }
+.grade-input, .report-data-input, select, input[type="search"] { transition: border-color 0.2s var(--ease-soft), box-shadow 0.2s var(--ease-soft), background-color 0.2s var(--ease-soft); }
+.toast { transition: opacity 0.3s var(--ease-soft), transform 0.35s var(--ease-out), visibility 0.3s; }
+.modal[open] { animation: modalIn 0.28s var(--ease-out); }
+.modal[open]::backdrop { animation: fadeIn 0.28s var(--ease-soft); }
+.sidebar { transition: transform 0.3s var(--ease-out), width 0.3s var(--ease-out), margin 0.3s var(--ease-out); }
+
+/* Smooth scrolling for in-page jumps. */
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* Reading a file: a clear "the AI is working" state, then a small success pop. */
+.reading { display: grid; gap: 12px; margin-top: 4px; padding: 14px 16px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; animation: swapIn 0.35s var(--ease-out) both; }
+.reading-head { display: flex; align-items: center; gap: 12px; }
+.reading-spinner { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid rgba(37, 99, 235, 0.18); border-top-color: var(--blue); animation: spin 0.8s linear infinite; }
+.reading-text { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.reading-step { color: var(--navy); font-size: 12.5px; font-weight: 600; animation: fadeIn 0.4s var(--ease-soft) both; }
+.reading-file { overflow: hidden; color: var(--muted-light); font-size: 10.5px; text-overflow: ellipsis; white-space: nowrap; }
+.reading-time { color: var(--muted-light); font-size: 11px; font-variant-numeric: tabular-nums; }
+.reading-dots::after { content: ''; animation: dots 1.4s steps(4, end) infinite; }
+.reading-bar { position: relative; height: 5px; overflow: hidden; background: rgba(37, 99, 235, 0.12); border-radius: 99px; }
+.reading-bar span { position: absolute; inset: 0 auto 0 0; width: 40%; background: linear-gradient(90deg, transparent, var(--blue), transparent); border-radius: inherit; animation: slide 1.4s var(--ease-soft) infinite; }
+.reading-steps { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.reading-steps li { position: relative; padding-left: 20px; color: var(--muted-light); font-size: 11px; transition: color 0.3s var(--ease-soft); }
+.reading-steps li::before { content: ''; position: absolute; left: 3px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; border: 1.5px solid currentColor; transition: background-color 0.3s, border-color 0.3s; }
+.reading-steps li.current { color: var(--navy); font-weight: 600; }
+.reading-steps li.current::before { border-color: var(--blue); background: var(--blue); animation: softPulse 1.2s ease-in-out infinite; }
+.reading-steps li.done { color: #1f9d55; }
+.reading-steps li.done::before { border-color: #1f9d55; background: #1f9d55; }
+.upload-inline.is-busy { opacity: 0.85; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75%, 100% { content: '...'; } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.6); } 60% { opacity: 1; transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes drawCheck { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+/* Success: the green "Ready" pill pops and its check draws itself. */
+.uploaded-file .pill-green { animation: popIn 0.5s var(--ease-out) 0.1s both; }
+.uploaded-file .pill-green .icon polyline { stroke-dasharray: 24; animation: drawCheck 0.45s var(--ease-soft) 0.35s both; }
+.uploaded-file .file-type-icon, .sf10-file-row .file-type-icon { animation: popIn 0.45s var(--ease-out) both; }

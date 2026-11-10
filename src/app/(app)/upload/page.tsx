@@ -1,5 +1,7 @@
 'use client';
 
+/** Step 1. Upload the SF9 class grade sheet and/or the SF10 file, watch the AI read it, then continue to the reports. */
+
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';

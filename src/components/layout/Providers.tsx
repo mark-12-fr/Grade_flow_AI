@@ -1,5 +1,7 @@
 'use client';
 
+/** App-wide helpers: toast messages (with an optional Undo button), the confirm dialog, and loading the saved data at start-up. */
+
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { hydrate } from '@/lib/state/store';

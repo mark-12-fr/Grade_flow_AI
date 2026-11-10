@@ -1,5 +1,7 @@
 'use client';
 
+/** The app's single in-memory state, how components read it, and when it is saved to the browser. */
+
 import { useSyncExternalStore } from 'react';
 import type { AppState } from '@/lib/domain/types';
 import { loadSaved, save } from '@/lib/state/persist';

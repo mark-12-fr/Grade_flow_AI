@@ -1,5 +1,7 @@
 'use client';
 
+/** Step 3. SF10 permanent record: pick a learner, edit values on the page, fill in missing details, download or print. */
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';

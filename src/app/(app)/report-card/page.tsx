@@ -1,5 +1,7 @@
 'use client';
 
+/** Step 2. SF9 report card: pick a learner, edit values on the page, fill in missing details, download (PDF/ZIP) or print. */
+
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FitToWidth } from '@/components/ui/FitToWidth';

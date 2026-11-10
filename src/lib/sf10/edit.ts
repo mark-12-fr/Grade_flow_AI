@@ -1,3 +1,4 @@
+/** The functions that change a learner's SF10 when a value is edited on the page. */
 import { nameParts, toSf10Data } from '@/lib/sf10/record';
 import { setState } from '@/lib/state/store';
 import type { AppState, Sf10Data, Sf10Row, Sf10Semester, Student } from '@/lib/domain/types';

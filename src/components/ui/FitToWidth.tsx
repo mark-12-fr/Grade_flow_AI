@@ -1,5 +1,7 @@
 'use client';
 
+/** Shrinks a fixed-width page to fit a narrow screen, with an "Actual size" switch. */
+
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 
 /**

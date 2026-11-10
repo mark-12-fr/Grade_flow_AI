@@ -19,6 +19,7 @@ Free AI keys (one provider is enough; to serve more teachers at once, add keys f
 
 ## Documentation
 
+- [docs/CODE_MAP.md](docs/CODE_MAP.md): "where do I change X?" table
 - [docs/STRUCTURE.md](docs/STRUCTURE.md): folder layout (frontend, backend, docs, secrets)
 - [docs/AI_IMPORT.md](docs/AI_IMPORT.md): how the AI import works
 - [docs/ENV.md](docs/ENV.md): every `.env` variable (AI keys, limits)

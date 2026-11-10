@@ -1,0 +1,67 @@
+/* SF9 + SF10 documents: one card, two aligned columns (stacked when the card is narrow) */
+.docs-upload { container-type: inline-size; }
+.docs-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; align-items: start; }
+.docs-item { min-width: 0; }
+.docs-row { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.docs-label { color: var(--navy); font-size: 12px; font-weight: 600; }
+.docs-row .dropzone-actions { justify-content: flex-start; margin-top: 0; }
+.docs-row .file-help { margin: 0; }
+.docs-row .file-help:empty, .docs-item > .sf10-file-list:empty { display: none; }
+.docs-upload .upload-inline { margin: 0; padding: 0; background: none; border: 0; border-radius: 8px; }
+.docs-upload .upload-inline.dragover { outline: 2px dashed var(--blue); outline-offset: 8px; background: none; }
+.docs-item > .sf10-file-list, .docs-item > .uploaded-file, .docs-item > .form-error { margin-top: 12px; }
+.docs-item .uploaded-file { flex-wrap: wrap; }
+.docs-item .uploaded-file-text { flex: 1 1 140px; }
+@container (max-width: 640px) {
+  .docs-list { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* SF10-SHS official layout */
+.sf10-sheet { font-family: Arial, "Liberation Sans", sans-serif; }
+.sf10-head { position: relative; }
+.sf10-formno { position: absolute; right: 0; top: 0; font-size: 0.65rem; font-weight: 700; }
+.sf10-band { background: #bebebe; text-align: center; font-weight: 700; font-size: 0.68rem; padding: 0.12rem; border: 1px solid #777; min-height: 0.9rem; }
+.sf10-info td { font-size: 0.72rem; }
+.sf10-info { margin-bottom: 0; }
+.sf10-school { margin-top: 0.7rem; }
+.sf10-grades thead th { text-align: center; font-size: 0.68rem; }
+.sf10-grades td:first-child, .sf10-grades .sf10-subject { text-align: left; }
+.sf10-grades td { font-size: 0.72rem; }
+.sf10-blank td { height: 1.1rem; }
+.sf10-remarks { margin: 0.3rem 0; font-size: 0.72rem; }
+.sf10-line { display: block; border-bottom: 1px solid #444; height: 1.1rem; }
+.sf10-sign small { display: block; color: #555; font-size: 0.6rem; text-align: center; }
+.sf10-left { text-align: left !important; }
+.sf10-note { font-size: 0.62rem; line-height: 1.35; }
+.sf10-grades td.sf10-subject { text-align: left; }
+.sf10-info.sf10-sign { width: 100%; margin-bottom: 0.5rem; }
+.sf10-info.sf10-sign td { vertical-align: top; }
+.sf10-remedial thead th { font-size: 0.66rem; }
+.sf10-head { display: grid; grid-template-columns: 90px 1fr 120px; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.sf10-head .sf10-title { text-align: center; }
+.sf10-seal { width: 70px; height: 70px; justify-self: end; }
+.sf10-deped { width: 110px; height: auto; justify-self: start; }
+.sf10-formno { position: absolute; right: 0; top: -0.4rem; }
+
+/* Upload cards: SF9 / SF10 */
+.docs-list { gap: 20px 0; }
+.docs-item { padding: 0 28px; }
+.docs-item:first-child { padding-left: 4px; }
+.docs-item:last-child { padding-right: 4px; border-left: 1px solid var(--border); }
+.docs-head { display: flex; align-items: center; gap: 12px; }
+.docs-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; color: var(--blue); background: var(--ice); border: 1px solid var(--border); border-radius: 9px; }
+.docs-icon .icon { width: 18px; height: 18px; }
+.docs-title { display: grid; gap: 2px; }
+.docs-row .docs-label { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+.docs-sub { color: var(--muted-light); font-size: 11.5px; }
+.docs-desc { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; max-width: 38ch; }
+.docs-row .dropzone-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+@container (max-width: 560px) {
+  .docs-item, .docs-item:first-child, .docs-item:last-child { padding: 0; border-left: 0; }
+  .docs-item:last-child { padding-top: 18px; border-top: 1px solid var(--border); }
+}
+
+/* SF10 sheet picker (school grading workbooks) */
+.sf10-pick { flex-wrap: wrap; }
+.sf10-pick .sf10-file-name { flex: 1 1 calc(100% - 40px); white-space: normal; }
+.sf10-pick .select-wrap { flex: 1 1 200px; }

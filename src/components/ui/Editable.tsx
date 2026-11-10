@@ -1,5 +1,7 @@
 'use client';
 
+/** A value on a form that can be typed over in place (Enter saves, Esc cancels). */
+
 import { useLayoutEffect, useRef } from 'react';
 
 /**

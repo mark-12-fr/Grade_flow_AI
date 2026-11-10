@@ -1,5 +1,7 @@
 'use client';
 
+/** Read-only view of the class and school details, and the light/dark switch. */
+
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/components/layout/Shell';

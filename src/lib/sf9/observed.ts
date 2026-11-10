@@ -1,3 +1,4 @@
+/** Builds the grade summary sent to the AI for observed values, and applies the AI's answer. */
 import { CORE_VALUE_KEYS, PASSING_GRADE, subjectsFor } from '@/lib/domain/curriculum';
 import type { Student } from '@/lib/domain/types';
 

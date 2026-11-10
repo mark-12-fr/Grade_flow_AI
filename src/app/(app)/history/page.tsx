@@ -1,5 +1,7 @@
 'use client';
 
+/** What is loaded in this browser (SF9 and SF10 sets), with delete (and Undo). */
+
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { useUi } from '@/components/layout/Providers';

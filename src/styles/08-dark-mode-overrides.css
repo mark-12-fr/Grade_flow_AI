@@ -1,0 +1,106 @@
+/* ---------- Dark mode component overrides ----------
+   The light theme above is the source of truth. These rules only adjust the
+   surfaces, borders, and text that are intentionally hard-coded in light mode.
+   The report sheet keeps its own paper palette so previews and printed pages
+   stay white in both themes. */
+[data-theme="dark"] ::selection { background: var(--selection-bg); color: var(--selection-text); }
+[data-theme="dark"] .topbar { background: var(--topbar-bg); }
+[data-theme="dark"] .sidebar-backdrop { background: var(--overlay); }
+[data-theme="dark"] .notifications-popover { box-shadow: var(--shadow-popover); }
+[data-theme="dark"] .notification-dot { border-color: var(--white); }
+[data-theme="dark"] .notification-item { border-top-color: var(--border-faint); }
+[data-theme="dark"] .nav-link { color: var(--text-soft); }
+[data-theme="dark"] .nav-link .icon { color: var(--text-faint); }
+[data-theme="dark"] .nav-link:hover { background: var(--surface-hover); }
+[data-theme="dark"] .help-card { background: var(--accent-soft); border-color: var(--accent-border); }
+[data-theme="dark"] .help-card:hover { background: var(--accent-soft-strong); }
+[data-theme="dark"] .help-card > span:not(.help-icon):not(.help-link) { color: var(--accent-text); }
+[data-theme="dark"] .avatar { background: var(--avatar-bg); border-color: var(--avatar-border); color: var(--avatar-text); }
+[data-theme="dark"] .crumb-chevron { color: var(--text-faint); }
+[data-theme="dark"] .academic-year strong { color: var(--text-soft); }
+[data-theme="dark"] .icon-btn { color: var(--muted); }
+
+[data-theme="dark"] .step-link.completed { color: var(--text-soft); }
+[data-theme="dark"] .step-marker { background: var(--step-bg); border-color: var(--step-border); color: var(--text-faint); }
+[data-theme="dark"] .step-link.completed .step-marker { border-color: var(--accent-border); }
+[data-theme="dark"] .step-link.active .step-marker { background: var(--blue-solid); border-color: var(--blue-solid); color: var(--on-accent); }
+
+[data-theme="dark"] .pill-blue { background: var(--accent-soft); border-color: var(--accent-border); }
+[data-theme="dark"] .pill-green { border-color: var(--success-border); }
+[data-theme="dark"] .pill-amber { color: var(--badge-warning-text); border-color: var(--warning-border); }
+
+[data-theme="dark"] .btn-primary { background: var(--blue-solid); color: var(--on-accent); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+[data-theme="dark"] .btn-primary:hover { background: var(--blue-solid-hover); }
+[data-theme="dark"] .btn-primary:disabled:hover { background: var(--blue-solid); }
+[data-theme="dark"] .btn-secondary:hover { border-color: var(--border-strong); }
+[data-theme="dark"] .btn-success { background: var(--success-solid); color: var(--on-accent); }
+[data-theme="dark"] .btn-success:hover { background: var(--success-solid-hover); }
+[data-theme="dark"] .btn-danger { background: var(--error-solid); color: var(--on-accent); }
+[data-theme="dark"] .btn-white { background: #fff; border-color: #d5e2f2; color: #0f172a; }
+[data-theme="dark"] .btn-white:hover { background: #f7fbff; }
+
+[data-theme="dark"] .select-wrap select:hover { border-color: var(--border-strong); }
+[data-theme="dark"] .search-field input::placeholder { color: var(--text-faint); }
+[data-theme="dark"] .form-error { border-color: var(--error-border); color: var(--error-text); }
+[data-theme="dark"] .info-card { background: var(--accent-soft); border-color: var(--accent-border); }
+[data-theme="dark"] .info-card p { color: var(--accent-text); }
+[data-theme="dark"] .app-footer { color: var(--text-faint); }
+
+[data-theme="dark"] .side-icon { background: var(--accent-soft); border-color: var(--accent-border); }
+[data-theme="dark"] .dropzone { background: var(--surface-tint); border-color: var(--dropzone-border); }
+[data-theme="dark"] .dropzone.dragover { background: var(--accent-soft-strong); }
+[data-theme="dark"] .file-type-icon { background: var(--success-surface); border-color: var(--success-border); }
+
+[data-theme="dark"] .progress-ring { background: conic-gradient(var(--blue) calc(var(--progress) * 1%), var(--progress-track) 0); }
+[data-theme="dark"] .progress-ring-inner { box-shadow: inset 0 0 0 1px var(--border); }
+[data-theme="dark"] .progress-track { background: var(--progress-track); }
+[data-theme="dark"] .timeline-item { border-bottom-color: var(--border-faint); }
+[data-theme="dark"] .timeline-icon { background: var(--surface-hover); color: var(--text-faint); }
+[data-theme="dark"] .timeline-copy h3 { color: var(--text-soft); }
+[data-theme="dark"] .timeline-item.current .timeline-icon { background: var(--accent-soft); }
+[data-theme="dark"] .simulation-note { color: var(--text-soft); }
+
+[data-theme="dark"] .grade-table th { background: var(--table-head-bg); color: var(--table-head-text); }
+[data-theme="dark"] .grade-table td { border-bottom-color: var(--border-soft); color: var(--text-soft); }
+[data-theme="dark"] .grade-table tbody tr:hover td { background: var(--row-hover); }
+[data-theme="dark"] .grade-table tbody tr.selected td { background: var(--row-selected); }
+[data-theme="dark"] .grade-table .roll { color: var(--text-faint); }
+[data-theme="dark"] .student-cell .mini-avatar { background: var(--avatar-bg); color: var(--avatar-text); }
+[data-theme="dark"] .grade-input:hover { background: var(--input-hover); border-color: var(--input-border-hover); }
+[data-theme="dark"] .grade-input:focus { background: var(--input-bg); }
+[data-theme="dark"] .grade-input.missing { background: var(--missing-bg); border-color: var(--missing-border); }
+[data-theme="dark"] .grade-input::placeholder { color: var(--missing-text); }
+[data-theme="dark"] .status-needs { color: var(--badge-warning-text); }
+
+[data-theme="dark"] .preview-canvas { background: var(--preview-bg); border-color: var(--border); }
+[data-theme="dark"] .preview-label { color: var(--text-faint); }
+[data-theme="dark"] .report-summary-banner { background: var(--accent-soft-strong); border-color: var(--accent-border); }
+[data-theme="dark"] .summary-icon { background: var(--white); border-color: var(--success-border); }
+[data-theme="dark"] .summary-copy p { color: var(--accent-text); }
+[data-theme="dark"] .summary-copy > span { color: var(--text-faint); }
+[data-theme="dark"] .archive-note { background: var(--white); color: var(--muted); }
+[data-theme="dark"] .reports-table th { background: var(--table-head-bg); color: var(--table-head-text); }
+[data-theme="dark"] .reports-table td { border-bottom-color: var(--border-soft); }
+[data-theme="dark"] .reports-table tbody tr:hover td { background: var(--row-hover); }
+[data-theme="dark"] .reports-table tbody tr.selected td { background: var(--row-selected); }
+[data-theme="dark"] .report-actions .icon-btn { color: var(--text-soft); }
+[data-theme="dark"] .info-strip { background: var(--accent-soft); border-color: var(--accent-border); }
+[data-theme="dark"] .info-strip p { color: var(--accent-text); }
+
+[data-theme="dark"] .toast { background: var(--white); box-shadow: var(--shadow-toast); }
+[data-theme="dark"] .modal { box-shadow: var(--shadow-modal); }
+[data-theme="dark"] .modal::backdrop { background: var(--overlay); }
+[data-theme="dark"] .modal-content { background: var(--white); }
+
+/* The report sheet is paper: it stays light in dark mode. */
+[data-theme="dark"] .report-sheet {
+  --navy: #0f172a;
+  --white: #ffffff;
+  --ice: #eff6ff;
+  --blue: #2563eb;
+  --text: #0f172a;
+  background: #ffffff;
+  border-color: #aebdce;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  color: #2b3a4d;
+}

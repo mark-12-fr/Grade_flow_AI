@@ -1,5 +1,7 @@
 'use client';
 
+/** Review and fix the learners' grades, attendance and observed values before previewing the SF9. */
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';

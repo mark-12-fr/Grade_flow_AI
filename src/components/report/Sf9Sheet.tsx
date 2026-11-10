@@ -1,5 +1,7 @@
 'use client';
 
+/** The SF9 report card as an editable page on screen (front and back). The PDF is drawn separately in lib/pdf/sf9.ts. */
+
 import { Editable } from '@/components/ui/Editable';
 import { useUi } from '@/components/layout/Providers';
 import { ATTENDANCE_MONTHS, CORE_VALUE_KEYS, semestersFor } from '@/lib/domain/curriculum';

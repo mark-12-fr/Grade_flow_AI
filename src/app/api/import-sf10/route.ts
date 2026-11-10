@@ -1,3 +1,4 @@
+/** BACKEND: POST /api/import-sf10. Reads an SF10 file (one learner per sheet, or a school grading workbook) and streams progress. */
 import { NextResponse } from 'next/server';
 import { extractLogo, readSheets } from '@/server/import/extract';
 import { guard, HttpError, limiter, limits } from '@/server/core/guard';

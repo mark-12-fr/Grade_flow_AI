@@ -1,3 +1,4 @@
+/** Shared types: Student, grades, attendance, SF10 records and the whole AppState. */
 export type Period = 'q1' | 'q2' | 'q3' | 'q4' | 'final';
 export type GradeValue = number | string | null | undefined;
 export type Grades = Record<string, Partial<Record<Period, GradeValue>>>;

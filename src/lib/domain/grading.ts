@@ -1,3 +1,4 @@
+/** Grade rules: validity, averages, pass/fail remarks, ranks, missing grades, comments and the report context. */
 import { PASSING_GRADE, STRAND_TRACK, subjectsFor, type Subject } from '@/lib/domain/curriculum';
 import { formatDate, formatLongDate, prettyYear } from '@/lib/domain/format';
 import type { AppState, GradeValue, Period, Student } from '@/lib/domain/types';

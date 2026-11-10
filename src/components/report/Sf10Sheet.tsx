@@ -1,5 +1,7 @@
 'use client';
 
+/** The SF10 permanent record as an editable page on screen. The PDF is drawn separately in lib/pdf/sf10.ts. */
+
 import { Editable } from '@/components/ui/Editable';
 import { recordFor } from '@/lib/sf10/record';
 import type { Sf10Edits } from '@/lib/sf10/edit';

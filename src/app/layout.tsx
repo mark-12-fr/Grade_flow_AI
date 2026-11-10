@@ -1,3 +1,4 @@
+/** Root layout: page title, fonts, the saved light/dark theme, the icon sprite and the toast/dialog providers. */
 import type { Metadata } from 'next';
 import { IconSprite } from '@/components/ui/Icon';
 import { Providers } from '@/components/layout/Providers';

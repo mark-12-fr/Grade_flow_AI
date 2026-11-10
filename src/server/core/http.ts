@@ -1,3 +1,4 @@
+/** BACKEND: reads uploads and turns server errors into clear JSON responses. */
 import { NextResponse } from 'next/server';
 import { HttpError, LimitExceeded } from '@/server/core/guard';
 import { ExtractError } from '@/server/import/extract';

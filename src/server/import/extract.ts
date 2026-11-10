@@ -1,3 +1,4 @@
+/** BACKEND: reads CSV/Excel files into a grid of cells and pulls out the school logo. */
 import { unzipSync } from 'fflate';
 import XLSX from '@/vendor/xlsx.cjs';
 

@@ -1,3 +1,4 @@
+/** What is missing or doubtful on each SF9, and applying "fill in missing details" to many learners. */
 import { ATTENDANCE_MONTHS, CORE_VALUE_KEYS } from '@/lib/domain/curriculum';
 import { missingGradeCells } from '@/lib/domain/grading';
 import type { AppState, Student } from '@/lib/domain/types';

@@ -1,3 +1,4 @@
+/** BACKEND: POST /api/observed-values. Asks the AI to draft AO/SO/RO/NO ratings from grade summaries (no names or LRNs are sent). */
 import { NextResponse } from 'next/server';
 import { guard, HttpError, limiter } from '@/server/core/guard';
 import { toResponse } from '@/server/core/http';

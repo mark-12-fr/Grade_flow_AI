@@ -1,3 +1,4 @@
+/** BACKEND: asks the AI for observed-value ratings and checks the answer. */
 import { CORE_VALUE_KEYS } from '@/lib/domain/curriculum';
 import type { Caller, Tool } from '@/server/core/llm';
 

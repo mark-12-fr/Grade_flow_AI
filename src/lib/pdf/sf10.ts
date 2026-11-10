@@ -1,3 +1,4 @@
+/** Draws the SF10 permanent records into one PDF; download and print. */
 import type { jsPDF } from 'jspdf';
 import { printPdfUrl, saveBlob, type Downloaded } from '@/lib/pdf/sf9';
 import { recordFor } from '@/lib/sf10/record';

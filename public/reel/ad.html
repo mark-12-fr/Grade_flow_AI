@@ -59,7 +59,8 @@
 
   /* done: the finished forms */
   #done { position: absolute; inset: 0; z-index: 8; }
-  #v6 .stepcap, #v6 .brand { z-index: 9; } /* the caption stays bright over the finished forms */
+  #v6 .stepcap { z-index: 9; } /* the caption stays bright over the finished forms */
+  #brandBar { z-index: 20; opacity: 0; } /* one brand line over all four steps, above the scenes */
   #doneDim { position: absolute; inset: 0; background: rgba(29, 78, 216, .72); }
   .donepage { position: absolute; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 30px 70px rgba(15, 23, 42, .4); }
   .donepage img { width: 100%; height: 100%; display: block; }
@@ -99,6 +100,7 @@
 <div id="stage" role="img" aria-label="GradeFlow AI ad: a tired teacher, then four steps in the real app (pick a learner, fill in what is missing, preview and edit SF9 and SF10, download the PDF), then the same teacher relaxed with a coffee.">
   <div class="blue-bg" id="bg"><div class="blob" style="width:700px;height:700px;left:-240px;top:380px"></div><div class="blob" style="width:620px;height:620px;right:-220px;top:1280px"></div></div>
   <div id="app"><div class="appwin" id="appwin"></div></div>
+  <div class="brand" id="brandBar"><svg><use href="#gf"/></svg><div>Grade<span>Flow</span><b>AI</b></div></div>
 
   <section class="scene" id="v1">
     <div id="v1ill"></div>
@@ -122,19 +124,15 @@
   </section>
 
   <section class="scene" id="v3">
-    <div class="brand"><svg><use href="#gf"/></svg><div>Grade<span>Flow</span><b>AI</b></div></div>
     <div class="stepcap" id="c3"><div class="badge w">1</div><div class="txt"><b class="w">Piliin ang learner.</b><span class="w">Pick a learner</span></div></div>
   </section>
   <section class="scene" id="v4">
-    <div class="brand"><svg><use href="#gf"/></svg><div>Grade<span>Flow</span><b>AI</b></div></div>
     <div class="stepcap" id="c4"><div class="badge w">2</div><div class="txt"><b class="w">Kumpletuhin ang kulang.</b><span class="w">Fill in what's missing</span></div></div>
   </section>
   <section class="scene" id="v5">
-    <div class="brand"><svg><use href="#gf"/></svg><div>Grade<span>Flow</span><b>AI</b></div></div>
     <div class="stepcap" id="c5"><div class="badge w">3</div><div class="txt"><b class="w">I-preview at i-edit agad.</b><span class="w">SF9 and SF10, edit on the page</span></div></div>
   </section>
   <section class="scene" id="v6">
-    <div class="brand"><svg><use href="#gf"/></svg><div>Grade<span>Flow</span><b>AI</b></div></div>
     <div class="stepcap" id="c6"><div class="badge w">4</div><div class="txt"><b class="w">I-download. Tapos na!</b><span class="w">Download the PDF</span></div></div>
     <div id="done">
       <div id="doneDim"></div>
@@ -330,6 +328,8 @@
     sfx(at + 0.2, 'pop', { g: 0.8 });
   };
   step('#c3', T.v3); step('#c4', T.v4); step('#c5', T.v5); step('#c6', T.v6);
+  A('#brandBar', T.v3, 0.5, { o: [0, 1], y: [-20, 0] }, 'out3');
+  A('#brandBar', T.v7 - 0.2, 0.4, { o: [1, 0] }, 'in3');
 
   /* ---------- 3-6 · the real app ---------- */
   if (!SH) {
